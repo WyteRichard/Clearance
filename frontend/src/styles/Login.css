@@ -1,0 +1,115 @@
+.login-page {
+  background-image: url('../assets/rc background 1.jpg');
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-container {
+  background: white;
+  opacity: 0.85;
+  padding: 45px;
+  border-radius: 20px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  width: 400px;
+  text-align: center;
+}
+
+.login-container h1 {
+  margin-bottom: 20px;
+  font-size: 25px;
+  color: black;
+}
+
+.login-container img {
+  width: 70px;
+  height: 70px;
+  margin-top: -5px;
+}
+
+.input-box {
+  margin-bottom: 15px;
+  text-align: left;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.input-box label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.input-box input, .input-box select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.filter-button {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.forgot-password {
+  margin-bottom: 20px;
+  font-size: 13px;
+  text-align: right;
+}
+
+.forgot-password a {
+  text-decoration: none;
+  color: #0174BE;
+}
+
+.forgot-password a:hover {
+  text-decoration: underline;
+}
+
+button[type="submit"] {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: none;
+  background-color: #2348A8;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+button[type="submit"]:hover {
+  background-color: #0056b3;
+}
+
+.create-account {
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.create-account a {
+  text-decoration: none;
+  color: #0174BE;
+}
+
+.create-account a:hover {
+  text-decoration: underline;
+}
+
+.dropdown-container {
+  text-align: left;
+  margin-bottom: 15px;
+}
+
+.dropdown-container label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
