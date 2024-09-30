@@ -1,16 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import homeIcon from '../assets/homeIcon.svg';
-import requestIcon from '../assets/Trello.svg';
-import userIcon from '../assets/User.svg';
+import { useNavigate } from 'react-router-dom';
 import rcLogo from '../assets/rc_logo.png';
-import avatar from '../assets/Avatar.svg';
-import Edit from '../assets/Edit.svg';
-import '../styles/StudentAccount.css';
+import dashIcon from '../assets/home.png';
+import requestIcon from '../assets/notes.png';
+import statusIcon from '../assets/idcard.png';
+import accountIcon from '../assets/buser.png';
+import avatar from '../assets/avatar.png';
+import contact from '../assets/phone.png';
+import yearLevel from '../assets/year.png';
+import mail from '../assets/mail.png';
+import course from '../assets/course.png';
+import styles from '../styles/StudentAccount.module.css';
 
 const StudentAccount = () => {
     const [student, setStudent] = useState(null);
+    const [showModal, setShowModal] = useState(false); // State to manage modal visibility
+    const modalRef = useRef(null);
+    const navigate = useNavigate();
     const studentId = 1; // Replace with the actual student ID you want to fetch
+
+    
 
     useEffect(() => {
         const fetchStudent = async () => {
@@ -25,88 +35,131 @@ const StudentAccount = () => {
         fetchStudent();
     }, [studentId]);
 
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+          if (modalRef.current && !modalRef.current.contains(event.target)) {
+              setShowModal(false);
+          }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+          document.removeEventListener("mousedown", handleClickOutside);
+      };
+  }, []);
+
+    const toggleModal = () => setShowModal(!showModal);
+    const handleLogout = () => {
+        // Implement logout logic here
+        console.log("Logged out");
+    };
+    const handleProfile = () => {
+        // Navigate to profile view or perform other actions
+        console.log("View Profile");
+    };
+
     if (!student) {
         return <div>Loading...</div>; // Show loading state while fetching data
     }
 
     return (
-        <div className="student-dashboard">
-            <div className="Dashboard">
-                <img src={rcLogo} alt="RC LOGO" />
-                <h3>ROGATIONIST COLLEGE CLEARANCE SYSTEM</h3>
-                <div className="dashboard-buttons">
-                    <img src={homeIcon} alt="Home" />
-                    <a href="/student-dashboard">Dashboard</a>
-                </div>
-                <div className="dashboard-buttons">
-                    <img src={requestIcon} alt="Request Icon" />
-                    <a href="/request-clearance">Clearance Request</a>
-                </div>
-                <div className="dashboard-buttons">
-                    <img src={requestIcon} alt="Request Icon" />
-                    <a href="/student-clearance-status">Clearance Status</a>
-                </div>
-                <div className="dashboard-buttons">
-                    <img src={userIcon} alt="User Icon" />
-                    <a href="/student-account">Account</a>
-                </div>
-            </div>
-
-            <div className="header">
-                <h4>Student</h4>
-                <h4>{student.firstName} {student.middleName} {student.lastName}</h4>
-                <img src={avatar} alt="Avatar"/>
-            </div>
-
-            <div className="my-profile">
-                <h1>My Profile</h1>
-            </div>
-
-            <div className="first-name">
-                <h4>First Name</h4>
-                <img src={Edit} alt="Edit Icon" />
-                <h3>{student.firstName}</h3>
-            </div>
-
-            <div className="middle-name">
-                <h4>Middle Name</h4>
-                <img src={Edit} alt="Edit Icon" />
-                <h3>{student.middleName}</h3>
-            </div>
-
-            <div className="last-name">
-                <h4>Last Name</h4>
-                <img src={Edit} alt="Edit Icon" />
-                <h3>{student.lastName}</h3>
-            </div>
-
-            <div className="student-id">
-                <h4>Student ID</h4>
-                <h3>{student.studentNumber}</h3>
-            </div>
-
-            <div className="contact-number">
-                <h4>Contact Number</h4>
-                <img src={Edit} alt="Edit Icon" />
-                <h3>{student.contactNumber}</h3>
-            </div>
-
-            <div className="email-address">
-                <h4>Email Address</h4>
-                <img src={Edit} alt="Edit Icon" />
-                <h3>{student.email}</h3>
-            </div>
-
-            <div className="year-level">
-                <h4>Year Level</h4>
-                <h3>{student.yearLevel.yearLevel}</h3> {/* Accessing the yearLevel property */}
-            </div>
-
-            <div className="course">
-                <h4>Course</h4>
-                <h3>{student.course?.courseName}</h3> {/* Ensure course object is present */}
-            </div>
+      <div className={styles.flexContainer}>
+        <div className={styles.sidebar}>
+          <div className={styles.logoContainer}>
+            <img src={rcLogo} alt="RC LOGO" className={styles.logo} />
+            <h1 className={styles.collegeName}>Rogationist College</h1>
+          </div>
+          <nav className={styles.nav}>
+            <button className={styles.ghostButton} onClick={() => navigate('/student-dashboard')}>
+              <img src={dashIcon} alt="Dashboard" className={styles.navIcon} />
+              Dashboard
+            </button>
+            <button className={styles.ghostButton} onClick={() => navigate('/request-clearance')}>
+              <img src={requestIcon} alt="Clearance Request" className={styles.navIcon} />
+              Clearance Request
+            </button>
+            <button className={styles.ghostButton} onClick={() => navigate('/student-clearance-status')}>
+              <img src={statusIcon} alt="Status Icon" className={styles.navIcon} />
+              Clearance Status
+            </button>
+            <button className={styles.whiteButton} onClick={() => navigate('/student-account')}>
+              <img src={accountIcon} alt="Account Icon" className={styles.navIcon} />
+              Account
+            </button>
+          </nav>
         </div>
+  
+        <div className={styles.mainContent}>
+            
+                <div className={styles.header}>
+                    <h2 className={styles.dashboardTitle}>My Information</h2>
+                    <div className={styles.headerRight}>
+                        <span className={styles.academicYear}>A.Y. 2024 - 2025</span>
+                        <span className={styles.semesterBadge}>First Semester</span>
+                        <div className={styles.avatar} onClick={toggleModal}>AN</div>
+                        {showModal && (
+                            <div className={styles.modal} ref={modalRef}>
+                                <ul>
+                                    <li onClick={handleProfile}>See Profile</li>
+                                    <li onClick={handleLogout}>Log Out</li>
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+          <div className={styles.header}>
+          </div>
+          <div className={styles.infoCard}>
+            <img src={avatar} alt="Profile" className={styles.profilePic} />
+            <div className={styles.info}>
+              <h3>{student.firstName} {student.middleName} {student.lastName}</h3>
+              <p className={styles.studentNumber}>{student.studentNumber}</p>
+              <div className={styles.detailRowSpace}></div>
+
+              <div className={styles.detailRow}>
+                <div className={styles.detail}>
+                  <img src={contact} alt="Contact" className={styles.smallIcon}/>
+                  <div>
+                    <strong>Contact Number</strong>
+                    <div className={styles.grayText}>{student.contactNumber}</div>
+                  </div>
+                </div>
+                <div className={styles.detail}>
+                  <img src={yearLevel} alt="Year Level" className={styles.smallIcon}/>
+                  <div>
+                    <strong>Year Level</strong>
+                    <div className={styles.grayText}>{student.yearLevel.yearLevel}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.RowSpace}></div>
+
+              <div className={styles.detailRow}>
+                <div className={styles.detail}>
+                  <img src={mail} alt="Email" className={styles.smallIcon}/>
+                  <div>
+                    <strong>Email Address</strong>
+                    <div className={styles.grayText}>{student.email}</div>
+                  </div>
+                </div>
+                <div className={styles.detail}>
+                  <img src={course} alt="Course" className={styles.smallIcon}/>
+                  <div>
+                    <strong>Course</strong>
+                    <div className={styles.grayText}>{student.course?.courseName}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className={styles.buttons}>
+            <div></div>
+            <button className={styles.button}>Edit Information</button>
+          </div>
+        </div>
+      </div>
     );
 };
 

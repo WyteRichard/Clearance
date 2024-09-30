@@ -2,11 +2,13 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import CreateAccount from "./pages/CreateAccount";
+import ForgotPassword from "./pages/ForgotPassword"
+import ForgotPass from "./pages/ForgotPass"
+import VerifyOTP from "./pages/VerifyOTP";
 import StudentDashboard from "./pages/StudentDashboard";
 import RequestClearance from "./pages/RequestClearance";
 import StudentClearanceStatus from "./pages/StudentClearanceStatus";
 import StudentAccount from "./pages/StudentAccount";
-import DepartmentDashboard from "./pages/DepartmentDashboard";
 import DepartmentClearanceRequest from "./pages/Department/SSCClearanceRequest";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminDeptAccounts from "./pages/AdminDeptAccounts";
@@ -37,6 +39,7 @@ import RegistrarDashboard from "./pages/Dashboard/RegistrarDashboard";
 import SpiritualAffairsDashboard from "./pages/Dashboard/SpiritualAffairsDashboard";
 import StudentAffairsDashboard from "./pages/Dashboard/StudentAffairsDashboard";
 import StudentDisciplineDashboard from "./pages/Dashboard/StudentDisciplineDashboard";
+import SSCDashboard from "./pages/Dashboard/SSCDashboard"
 
 
 const App = () => {
@@ -45,6 +48,9 @@ const App = () => {
           <Routes>
               <Route path="/" element={<Login />} />
               <Route path="/create-account" element={<CreateAccount/>} />
+              <Route path="/forgot-password" element={<ForgotPassword/>} />
+              <Route path="/forgot-pass" element={<ForgotPass/>} />
+              <Route path="/verify-otp" element={<VerifyOTP/>} />
 
               <Route path="/student-dashboard" element={<StudentDashboard/>} />
               <Route path="/request-clearance" element={<RequestClearance/>} />
@@ -64,7 +70,7 @@ const App = () => {
               <Route path="/spiritual-dashboard" element={<SpiritualAffairsDashboard/>} />
               <Route path="/student-affairs-dashboard" element={<StudentAffairsDashboard/>} />
               <Route path="/discipline-dashboard" element={<StudentDisciplineDashboard/>} />
-              <Route path="/department-dashboard" element={<DepartmentDashboard/>} />
+              <Route path="/student-council-dashboard" element={<SSCDashboard/>} />
 
 
               <Route path="/adviser-clearance-request" element={<AdviserClearanceRequest/>} />

@@ -1,25 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
-import homeIcon from '../assets/homeIcon.svg';
-import requestIcon from '../assets/Trello.svg';
-import userIcon from '../assets/User.svg';
+import styles from "../styles/RequestClearance.module.css";
+import { useNavigate } from 'react-router-dom';
 import rcLogo from '../assets/rc_logo.png';
-import avatar from '../assets/Avatar.svg';
-import dateIcon from '../assets/Date.svg';
-import '../styles/RequestClearance.css';
+import dashIcon from '../assets/home.png';
+import requestIcon from '../assets/bnotes.png';
+import statusIcon from '../assets/idcard.png';
+import accountIcon from '../assets/user.png';
 
 const RequestClearance = () => {
     const [semester, setSemester] = useState("FIRST");
-    const [schoolYear, setSchoolYear] = useState("2024-2025");
+    const [schoolYear] = useState("2024 - 2025");
     const [graduating, setGraduating] = useState(false);
-    const [currentTime, setCurrentTime] = useState(new Date());
+    const [showModal, setShowModal] = useState(false); // Modal visibility state
+    const navigate = useNavigate();
 
     const handleSemesterChange = (e) => {
         setSemester(e.target.value);
-    };
-
-    const handleSchoolYearChange = (e) => {
-        setSchoolYear(e.target.value);
     };
 
     const handleGraduatingChange = (e) => {
@@ -54,96 +51,112 @@ const RequestClearance = () => {
         }
     };
 
-    const getAcademicYearDisplay = () => {
-        const [startYear, endYear] = schoolYear.split('-');
-        return `A.Y. ${startYear} - ${endYear} - ${semester === "FIRST" ? "First Semester" : "Second Semester"}`;
+    const toggleModal = () => {
+        setShowModal(!showModal); // Toggle modal visibility
     };
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 1000);
+    const handleProfile = () => {
+        console.log("View Profile");
+        navigate("/student-account");
+    };
 
-        return () => clearInterval(timer); // Cleanup the timer on component unmount
-    }, []);
+    const handleLogout = () => {
+        console.log("Logged out");
+        // Implement logout logic here
+    };
 
     return (
-        <div className="student-dashboard">
-            <div className="Dashboard">
-                <img src={rcLogo} alt="RC LOGO" />
-                <h3>ROGATIONIST COLLEGE CLEARANCE SYSTEM</h3>
-                <div className="dashboard-buttons">
-                    <img src={homeIcon} alt="Home" />
-                    <a href="/student-dashboard">Dashboard</a>
+        <div className={styles.flexContainer}>
+            <div className={styles.sidebar}>
+                <div className={styles.logoContainer}>
+                    <img src={rcLogo} alt="RC LOGO" className={styles.logo} />
+                    <h1 className={styles.collegeName}>Rogationist College</h1>
                 </div>
-                <div className="dashboard-buttons">
-                    <img src={requestIcon} alt="Request Icon" />
-                    <a href="/request-clearance">Clearance Request</a>
-                </div>
-                <div className="dashboard-buttons">
-                    <img src={requestIcon} alt="Request Icon" />
-                    <a href="/student-clearance-status">Clearance Status</a>
-                </div>
-                <div className="dashboard-buttons">
-                    <img src={userIcon} alt="User Icon" />
-                    <a href="/student-account">Account</a>
-                </div>
+                <nav className={styles.nav}>
+                    <button className={styles.ghostButton} onClick={() => navigate('/student-dashboard')}>
+                        <img src={dashIcon} alt="Dashboard" className={styles.navIcon} />
+                        Dashboard
+                    </button>
+                    <button className={styles.whiteButton} onClick={() => navigate('/request-clearance')}>
+                        <img src={requestIcon} alt="Request Icon" className={styles.navIcon} />
+                        Clearance Request
+                    </button>
+                    <button className={styles.ghostButton} onClick={() => navigate('/student-clearance-status')}>
+                        <img src={statusIcon} alt="Clearance Status" className={styles.navIcon} />
+                        Clearance Status
+                    </button>
+                    <button className={styles.ghostButton} onClick={() => navigate('/student-account')}>
+                        <img src={accountIcon} alt="Account" className={styles.navIcon} />
+                        Account
+                    </button>
+                </nav>
             </div>
 
-            <div className="header">
-                <h4>Student</h4>
-                <h4>Aiah Nadine Quinones Delos Reyes</h4>
-                <img src={avatar} alt="Avatar"/>
-            </div>
-
-            <div className="academic-year-header">
-                <h2>{getAcademicYearDisplay()}</h2>
-                <img src={dateIcon} alt="date icon" />
-                <h4>{currentTime.toLocaleString()}</h4>
-            </div>
-
-            <div className="request-clearance-container">
-                <h1>Request Clearance</h1>
-                <form onSubmit={handleSubmit}>
-                    <div className="input-box">
-                        <label htmlFor="semester">Semester</label>
-                        <select
-                            className="filter-button"
-                            value={semester}
-                            onChange={handleSemesterChange}
-                        >
-                            <option value="FIRST">First Semester</option>
-                            <option value="SECOND">Second Semester</option>
-                        </select>
+            <div className={styles.mainContent}>
+                <div className={styles.header}>
+                    <h2 className={styles.dashboardTitle}>Clearance Request</h2>
+                    <div className={styles.headerRight}>
+                        <span className={styles.academicYear}>A.Y. 2024 - 2025</span>
+                        <span className={styles.semesterBadge}>First Semester</span>
+                        <div className={styles.avatar} onClick={toggleModal}>AN</div>
+                        {showModal && (
+                          <div className={styles.modal}>
+                            <ul>
+                              <li onClick={handleProfile}>See Profile</li>
+                              <li onClick={handleLogout}>Log Out</li>
+                            </ul>
+                          </div>
+                        )}
                     </div>
+                </div>
 
-                    <div className="input-box">
-                        <label htmlFor="schoolYear">School Year</label>
-                        <select
-                            className="filter-button"
-                            value={schoolYear}
-                            onChange={handleSchoolYearChange}
-                        >
-                            <option value="2024-2025">2024-2025</option>
-                            <option value="2025-2026">2025-2026</option>
-                            <option value="2026-2027">2026-2027</option>
-                            <option value="2027-2028">2027-2028</option>
-                        </select>
-                    </div>
+                <div className={styles.cardGrid}>
+                    <div className={styles.card}>
+                        <h3 className={styles.cardTitle}>Clearance Request</h3>
+                        <form onSubmit={handleSubmit}>
+                            <div className={styles.inputBox}>
+                                <label htmlFor="semester">Semester</label>
+                                <select
+                                    className={styles.filterButton}
+                                    value={semester}
+                                    onChange={handleSemesterChange}
+                                >
+                                    <option value="FIRST">First Semester</option>
+                                    <option value="SECOND">Second Semester</option>
+                                </select>
+                            </div>
 
-                    <div className="input-box">
-                        <label htmlFor="graduating">Graduating</label>
-                        <select
-                            className="filter-button"
-                            value={graduating ? "Yes" : "No"}
-                            onChange={handleGraduatingChange}
-                        >
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                        </select>
+                            <div className={styles.inputBox}>
+                                <label htmlFor="schoolYear">School Year</label>
+                                <select
+                                    className={styles.filterButton}
+                                >
+                                    <option value="2024-2025">2024-2025</option>
+                                    <option value="2025-2026">2025-2026</option>
+                                    <option value="2026-2027">2026-2027</option>
+                                    <option value="2027-2028">2027-2028</option>
+                                </select>
+                            </div>
+
+                            <div className={styles.inputBox}>
+                                <label htmlFor="graduating">Graduating</label>
+                                <select
+                                    className={styles.filterButton}
+                                    value={graduating ? "Yes" : "No"}
+                                    onChange={handleGraduatingChange}
+                                >
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                            <div className={styles.buttonContainer}>
+                                <button type="submit" className={styles.button}>
+                                    Submit Request
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                    <button type="submit">Request</button>
-                </form>
+                </div>
             </div>
         </div>
     );

@@ -1,0 +1,183 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-image: url('../assets/rc background 1.jpg'); /* Default background image */
+}
+
+.registerContainer {
+  display: flex;
+  width: 70%;
+  max-width: 900px;
+  height: 600px;
+  background-color: white;
+  border-radius: 20px;
+  box-shadow: 0px 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.leftPanel {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: white;
+  border-radius: 20px 0 0 20px;
+}
+
+.rightPanel {
+  flex: 1;
+  background: linear-gradient(135deg, #1669EF 0%, #1C82FF 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+.registerTitle {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 15px;
+  width: 100%;
+}
+
+.inputField {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 30px;
+  font-size: 16px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.inputField:focus {
+  border-color: #1669EF;
+}
+
+.selectField {
+  width: 100%; /* Adjust width as needed */
+  padding: 12px 20px; /* Adjust padding */
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 30px;
+  font-size: 16px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  -webkit-appearance: none; /* Remove default arrow (Safari/Chrome) */
+  -moz-appearance: none;    /* Remove default arrow (Firefox) */
+  appearance: none;
+  padding-right: 40px; /* Add space for the dropdown arrow */
+  background: white; /* Ensure a background for clarity */
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>'); /* Optional custom icon */
+  background-repeat: no-repeat;
+  background-position: right 15px center; /* Adjust icon position */
+}
+
+.selectField:focus {
+  border-color: #1669EF; /* Change border color on focus */
+}
+
+.inputContainer {
+  width: 100%;
+  position: relative;
+  margin: 0px;
+}
+.loginPrompt {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 15px;
+  color: #333;
+}
+
+.loginPrompt a {
+  color: #1669EF;
+  text-decoration: none;
+}
+
+.passwordContainer {
+  position: relative;
+  width: 100%;
+}
+
+.eyeIcon {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+}
+
+.registerButton {
+  padding: 15px;
+  background-color: #1669EF;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  display: block;
+  margin: 20px auto 0;
+  width: 60%;
+  text-align: center;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.registerButton:hover {
+  background-color: #1457cc;
+  transform: translateY(-3px);
+}
+
+.logo {
+  width: 150px;
+  height: 150px;
+  animation: bounce 1.5s infinite;
+}
+
+.systemTitle {
+  font-size: 22px;
+  font-weight: bold;
+  margin: 20px 0 10px;
+  text-align: center;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .registerContainer {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .rightPanel {
+    border-radius: 0 0 20px 20px;
+  }
+
+  .logo {
+    margin-bottom: 10px;
+  }
+}

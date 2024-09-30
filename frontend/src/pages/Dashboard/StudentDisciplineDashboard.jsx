@@ -1,102 +1,121 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import homeIcon from '../../assets/homeIcon.svg';
-import requestIcon from '../../assets/Trello.svg';
+import { useNavigate } from 'react-router-dom';
+import styles from '../../styles/DepartmentDashboard.module.css';
 import rcLogo from '../../assets/rc_logo.png';
-import sscIcon from '../../assets/sscIcon.svg';
-import dateIcon from '../../assets/Date.svg';
-import '../../styles/DepartmentDashboard.css';
+import dashIcon from '../../assets/bhome.png';
+import requestIcon from '../../assets/notes.png';
+import avatar from '../../assets/avatar.png';
 
 const StudentDisciplineDashboard = () => {
+
+    const [showModal, setShowModal] = useState(false);
+
     const [counts, setCounts] = useState({
         clearanceRequests: 0,
         cleared: 0,
-        pending: 0
+        pending: 0,
+        remarks: 0
     });
-    const [currentDateTime, setCurrentDateTime] = useState(new Date());
+    const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchCounts = async () => {
+        const fetchData = async () => {
             try {
-                // Fetch the status counts
                 const statusResponse = await axios.get(`http://localhost:8080/Status/status-counts`);
-                
-                // Log status counts for debugging
-                console.log('Status Response:', statusResponse.data);
-
-                // Fetch the total clearance requests count using the new endpoint
                 const clearanceResponse = await axios.get('http://localhost:8080/Requests/count');
-                const clearanceRequestsCount = clearanceResponse.data; // Assuming the API returns the count directly
-
-                // Log clearance requests count for debugging
-                console.log('Clearance Requests Count:', clearanceRequestsCount);
 
                 setCounts({
-                    clearanceRequests: clearanceRequestsCount,
+                    clearanceRequests: clearanceResponse.data,
                     cleared: statusResponse.data.cleared,
-                    pending: statusResponse.data.pending
+                    pending: statusResponse.data.pending,
+                    remarks: statusResponse.data.remarks
                 });
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
         };
 
-        fetchCounts();
-
-        // Update the current date and time every second
-        const updateDateTime = () => {
-            setCurrentDateTime(new Date());
-        };
-
-        const intervalId = setInterval(updateDateTime, 1000);
-
-        return () => clearInterval(intervalId);
+        fetchData();
     }, []);
 
+    const toggleModal = () => {
+        setShowModal(!showModal); // Toggle modal visibility
+    };
+
+    const handleLogout = () => {
+        console.log("Logged out");
+        // Implement logout logic here
+    };
+
     return (
-        <div className="student-dashboard">
-            <div className="Dashboard">
-                <img src={rcLogo} alt="RC LOGO" />
-                <h3>ROGATIONIST COLLEGE CLEARANCE SYSTEM</h3>
-                <div className="dashboard-buttons">
-                    <img src={homeIcon} alt="Home" />
-                    <a href="#">Dashboard</a>
+        <div className={styles.flexContainer}>
+            <div className={styles.sidebar}>
+                <div className={styles.logoContainer}>
+                    <img src={rcLogo} alt="College Logo" className={styles.logo} />
+                    <h1 className={styles.collegeName}>Rogationist College</h1>
                 </div>
-                <div className="dashboard-buttons">
-                    <img src={requestIcon} alt="Request Icon" />
-                    <a href="/department-clearance-request">Clearance Request</a>
+                <nav className={styles.nav}>
+                    <button className={styles.whiteButton} onClick={() => navigate('/adviser-dashboard')}>
+                        <img src={dashIcon} alt="Dashboard" className={styles.navIcon} />
+                        Dashboard
+                    </button>
+                    <button className={styles.ghostButton} onClick={() => navigate('/adviser-clearance-request')}>
+                        <img src={requestIcon} alt="Clearance Request" className={styles.navIcon} />
+                        Clearance Request
+                    </button>
+                </nav>
+            </div>
+            <div className={styles.mainContent}>
+                <header className={styles.header}>
+                    <h2 className={styles.dashboardTitle}>Student Discipline Dashboard</h2>
+                    <div className={styles.headerRight}>
+                        <span className={styles.academicYear}>A.Y. 2024 - 2025</span>
+                        <span className={styles.semesterBadge}>First Semester</span>
+                        <div className={styles.avatar} onClick={toggleModal}>
+                            <img src={avatar} alt="Avatar" />
+                        </div>
+                        {showModal && (
+                            <div className={styles.modal}>
+                                <ul>
+                                    <li onClick={handleLogout}>Log Out</li>
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                </header>
+                <div className={styles.cardGrid}>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Clearance Requests</span>
+                            <span className={styles.greenIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{counts.clearanceRequests}</div>
+                            <p className={styles.smallText}>Total Requests</p>
+                        </div>
+                    </div>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Cleared</span>
+                            <span className={styles.yellowIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{counts.cleared}</div>
+                            <p className={styles.smallText}>Department Approved</p>
+                        </div>
+                    </div>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Pending</span>
+                            <span className={styles.redIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{counts.pending}</div>
+                            <p className={styles.smallText}>Awaiting Approval</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-            <div className="header">
-                <h4>STUDENT DISCIPLINE</h4>
-                <h4>STUDENT DISCIPLINE</h4>
-                <img src={sscIcon} alt="Avatar"/>
-            </div>
-
-            <div className="academic-year-header">
-                <h2>A.Y. 2024 - 2025 - First Semester</h2>
-                <img src={dateIcon} alt="date icon" />
-                <h4>{currentDateTime.toLocaleString()}</h4>
-            </div>
-
-            <div className="clearance-status">
-                <h1>Clearance Status</h1>
-            </div>
-
-            <div className="cleared-header">
-                <h4>Clearance Requests</h4>
-                <h3>{counts.clearanceRequests}</h3>
-            </div>
-
-            <div className="pending-header">
-                <h4>Cleared</h4>
-                <h3>{counts.cleared}</h3>
-            </div>
-
-            <div className="remarks-header">
-                <h4>Pending</h4>
-                <h3>{counts.pending}</h3>
             </div>
         </div>
     );

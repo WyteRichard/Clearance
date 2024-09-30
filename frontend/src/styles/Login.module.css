@@ -1,0 +1,188 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-image: url('../assets/rc background 1.jpg'); /* Background image */
+}
+
+.loginContainer {
+  display: flex;
+  width: 70%;
+  max-width: 900px;
+  height: 500px;
+  background-color: white;
+  border-radius: 20px; /* More rounded corners */
+  box-shadow: 0px 10px 40px rgba(0, 0, 0, 0.2); /* Enhanced shadow for depth */
+}
+
+.leftPanel {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: white;
+  border-radius: 20px 0 0 20px;
+}
+
+.rightPanel {
+  flex: 1;
+  background: linear-gradient(135deg, #1669EF 0%, #1C82FF 100%); /* Gradient for right panel */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+.loginTitle {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #333; /* Darker title color */
+}
+
+.form {
+  display: flex;
+  flex-direction: column; /* Stack input fields vertically */
+  align-items: flex-start; /* Align input fields to the left */
+  width: 100%; /* Ensure full width */
+}
+
+.inputField {
+  width: 100%; /* Full width of the container */
+  padding: 12px 20px; /* Adjust as needed */
+  margin: 10px 0; /* Space between fields */
+  border: 1px solid #ddd;
+  border-radius: 30px; /* Rounded corners */
+  font-size: 16px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.3s; /* Smooth border transition */
+}
+
+.inputField:focus {
+  border-color: #1669EF; /* Change border color on focus for better visibility */
+}
+
+.inputField::placeholder {
+  color: #aaa;
+  opacity: 0.8;
+}
+
+.inputContainer {
+  width: 100%;
+  position: relative;
+  margin: 10px 0;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #666;
+}
+
+.passwordContainer {
+  position: relative;
+  width: 100%;
+}
+
+.eyeIcon {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+}
+
+.forgotPassword {
+  margin-left: auto;
+  display: flex; /* Enable flexbox */
+  justify-content: flex-end; /* Align content to the right */
+  color: #1669EF; /* Link color */
+  margin-top: 5px; /* Optional: Add some space above */
+}
+
+.forgotPassword a {
+  color: #1669EF; /* Change text color */
+  text-decoration: none; /* Remove underline */
+}
+
+.loginButton {
+  padding: 15px;
+  background-color: #1669EF;
+  color: white;
+  border: none;
+  border-radius: 30px; /* Rounded button */
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  display: block;
+  margin: 20px auto 0;
+  width: 60%;
+  text-align: center;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1); /* Soft shadow for the button */
+}
+
+.loginButton:hover {
+  background-color: #1457cc;
+  transform: translateY(-3px); /* Slight hover lift effect */
+}
+
+.signupPrompt {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 15px;
+}
+
+.signupPrompt a {
+  color: #1669EF;
+  text-decoration: none;
+}
+
+.logo {
+  width: 150px;
+  height: 150px;
+  animation: bounce 1.5s infinite; /* Subtle bounce animation */
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.systemTitle {
+  font-size: 22px;
+  font-weight: bold;
+  margin: 20px 0 10px;
+  text-align: center;
+}
+
+@media screen and (max-width: 768px) {
+  .loginContainer {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .rightPanel {
+    border-radius: 0 0 20px 20px;
+  }
+
+  .logo {
+    margin-bottom: 10px;
+  }
+}

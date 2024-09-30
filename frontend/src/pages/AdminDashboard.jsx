@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import homeIcon from '../assets/homeIcon.svg';
-import requestIcon from '../assets/Trello.svg';
-import userIcon from '../assets/User.svg';
+import { useNavigate } from 'react-router-dom';
+import homeIcon from '../assets/bhome.png';
+import requestIcon from '../assets/dept.png';
+import userIcon from '../assets/user.png';
 import rcLogo from '../assets/rc_logo.png';
-import adminAvatar from '../assets/adminAvatar.svg';
-import dateIcon from '../assets/Date.svg';
-import '../styles/AdminDashboard.css';
+import avatar from '../assets/avatar.png';
+import styles from '../styles/AdminDashboard.module.css'; // CSS module
 
 const AdminDashboard = () => {
     const [departmentsAccounts, setDepartmentsAccounts] = useState(0);
     const [studentsCount, setStudentsCount] = useState(0);
     const [error, setError] = useState("");
-    
     const [adviserCount, setAdviserCount] = useState(0);
     const [cashierCount, setCashierCount] = useState(0);
     const [clinicCount, setClinicCount] = useState(0);
@@ -26,8 +25,8 @@ const AdminDashboard = () => {
     const [studentAffairsCount, setStudentAffairsCount] = useState(0);
     const [prefectCount, setPrefectCount] = useState(0);
     const [councilCount, setCouncilCount] = useState(0);
-
-    const [currentDateTime, setCurrentDateTime] = useState(new Date());
+    const [showModal, setShowModal] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const endpoints = [
@@ -46,16 +45,16 @@ const AdminDashboard = () => {
             { url: 'http://localhost:8080/Council/councils/count', setState: setCouncilCount }
         ];
 
-        Promise.all(endpoints.map(({ url, setState }) => 
+        Promise.all(endpoints.map(({ url, setState }) =>
             axios.get(url)
                 .then(response => {
                     setState(response.data);
-                    return response.data; // Return the data to accumulate later
+                    return response.data;
                 })
                 .catch(error => {
                     console.error(`Error fetching data from ${url}:`, error);
                     setError("Failed to fetch some department accounts.");
-                    return 0; // Return 0 in case of an error to ensure the sum isn't affected
+                    return 0;
                 })
         ))
         .then(results => {
@@ -65,134 +64,221 @@ const AdminDashboard = () => {
 
         axios.get('http://localhost:8080/Student/students/count')
             .then(response => {
-                console.log("Students count response:", response.data);
                 setStudentsCount(response.data);
             })
             .catch(error => {
-                console.error("Error fetching students count:", error);
                 setError("Failed to fetch students count.");
             });
-
-        // Update the date and time every second
-        const updateDateTime = () => {
-            setCurrentDateTime(new Date());
-        };
-
-        const intervalId = setInterval(updateDateTime, 1000);
-
-        return () => clearInterval(intervalId);
     }, []);
 
+    const toggleModal = () => {
+        setShowModal(!showModal); // Toggle modal visibility
+    };
+
+    const handleLogout = () => {
+        console.log("Logged out");
+        // Implement logout logic here
+    };
+
     return (
-        <div className="student-dashboard">
-            <div className="Dashboard">
-                <img src={rcLogo} alt="RC LOGO" />
-                <h3>ROGATIONIST COLLEGE CLEARANCE SYSTEM</h3>
-                <div className="dashboard-buttons">
-                    <img src={homeIcon} alt="Home" />
-                    <a href="/admin-dashboard">Dashboard</a>
+        <div className={styles.flexContainer}>
+            <div className={styles.sidebar}>
+                <div className={styles.logoContainer}>
+                    <img src={rcLogo} alt="RC LOGO" className={styles.logo} />
+                    <h1 className={styles.collegeName}>Rogationist College</h1>
                 </div>
-                <div className="dashboard-buttons">
-                    <img src={requestIcon} alt="Request Icon" />
-                    <a href="/admin-dept-accounts">Department</a>
+                <nav className={styles.nav}>
+                    <button className={styles.whiteButton} onClick={() => navigate('/admin-dashboard')}>
+                        <img src={homeIcon} alt="Home" className={styles.navIcon} />
+                        Dashboard
+                    </button>
+                    <button className={styles.ghostButton} onClick={() => navigate('/admin-dept-accounts')}>
+                        <img src={requestIcon} alt="Department" className={styles.navIcon} />
+                        Department
+                    </button>
+                    <button className={styles.ghostButton} onClick={() => navigate('/admin-student-accounts')}>
+                        <img src={userIcon} alt="Students" className={styles.navIcon} />
+                        Students
+                    </button>
+                </nav>
+            </div>
+
+            <div className={styles.mainContent}>
+                <div className={styles.header}>
+                    <h2 className={styles.dashboardTitle}>Admin Dashboard</h2>
+                    <div className={styles.headerRight}>
+                        <span className={styles.academicYear}>A.Y. 2024 - 2025</span>
+                        <span className={styles.semesterBadge}>First Semester</span>
+                        <div className={styles.avatar} onClick={toggleModal}>
+                            <img src={avatar} alt="Avatar" />
+                        </div>
+                        {showModal && (
+                            <div className={styles.modal}>
+                                <ul>
+                                    <li onClick={handleLogout}>Log Out</li>
+                                </ul>
+                            </div>
+                        )}
+                    </div>
                 </div>
-                <div className="dashboard-buttons">
-                    <img src={userIcon} alt="User Icon" />
-                    <a href="/admin-student-accounts">Students</a>
+
+                {/* Top Row - Student Accounts and Department Accounts */}
+                <div className={styles.topRow}>
+                    <div className={styles.topCard}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Student Accounts</span>
+                            <span className={styles.greenIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{studentsCount}</div>
+                        </div>
+                    </div>
+
+                    <div className={styles.topCard}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Department Accounts</span>
+                            <span className={styles.redIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{departmentsAccounts}</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div className="header">
-                <h4>Administrator</h4>
-                <h4>Admin</h4>
-                <img src={adminAvatar} alt="Avatar"/>
-            </div>
+                {/* Department Cards - 3 Columns */}
+                <div className={styles.cardGrid}>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Adviser Accounts</span>
+                            <span className={styles.blueIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{adviserCount}</div>
+                        </div>
+                    </div>
 
-            <div className="academic-year-header">
-                <h2>A.Y. 2024 - 2025 - First Semester</h2>
-                <img src={dateIcon} alt="date icon" />
-                <h4>{currentDateTime.toLocaleString()}</h4>
-            </div>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Cashier Accounts</span>
+                            <span className={styles.blueIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{cashierCount}</div>
+                        </div>
+                    </div>
 
-            <div className="clearance-status">
-                <h1>Account Status</h1>
-            </div>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Clinic Accounts</span>
+                            <span className={styles.blueIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{clinicCount}</div>
+                        </div>
+                    </div>
 
-            {error && <div className="error-message">{error}</div>}
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Cluster Coordinator</span>
+                            <span className={styles.blueIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{clusterCoordinatorCount}</div>
+                        </div>
+                    </div>
 
-            <div className="cleared-header">
-                <h4>Student Accounts</h4>
-                <h3>{studentsCount}</h3>
-            </div>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Dean Accounts</span>
+                            <span className={styles.blueIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{deanCount}</div>
+                        </div>
+                    </div>
 
-            <div className="pending-header">
-                <h4>Department Accounts</h4>
-                <h3>{departmentsAccounts}</h3>
-            </div>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Guidance Accounts</span>
+                            <span className={styles.blueIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{guidanceCount}</div>
+                        </div>
+                    </div>
 
-            <div className="ssc">
-                <h4>SSC Accounts</h4>
-                <h3>{councilCount}</h3>
-            </div>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Laboratory Accounts</span>
+                            <span className={styles.blueIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{laboratoryCount}</div>
+                        </div>
+                    </div>
 
-            <div className="osa">
-                <h4>Student Affairs Accounts</h4>
-                <h3>{studentAffairsCount}</h3>
-            </div>
-            
-            <div className="spiritual-affairs">
-                <h4>Spiritual Affairs Accounts</h4>
-                <h3>{spiritualAffairsCount}</h3>
-            </div>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Library Accounts</span>
+                            <span className={styles.blueIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{libraryCount}</div>
+                        </div>
+                    </div>
 
-            <div className="prefect">
-                <h4>Student Discipline Accounts</h4>
-                <h3>{prefectCount}</h3>
-            </div>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Registrar Accounts</span>
+                            <span className={styles.blueIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{registrarCount}</div>
+                        </div>
+                    </div>
 
-            <div className="guidance">
-                <h4>Guidance Accounts</h4>
-                <h3>{guidanceCount}</h3>
-            </div>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Spiritual Affairs Accounts</span>
+                            <span className={styles.blueIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{spiritualAffairsCount}</div>
+                        </div>
+                    </div>
 
-            <div className="library">
-                <h4>Library Accounts</h4>
-                <h3>{libraryCount}</h3>
-            </div>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Student Affairs Accounts</span>
+                            <span className={styles.blueIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{studentAffairsCount}</div>
+                        </div>
+                    </div>
 
-            <div className="laboratory">
-                <h4>Laboratory Accounts</h4>
-                <h3>{laboratoryCount}</h3>
-            </div>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Student Discipline Accounts</span>
+                            <span className={styles.blueIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{prefectCount}</div>
+                        </div>
+                    </div>
 
-            <div className="clinic">
-                <h4>Clinic Accounts</h4>
-                <h3>{clinicCount}</h3>
-            </div>
-            
-            <div className="cashier">
-                <h4>Cashier Accounts</h4>
-                <h3>{cashierCount}</h3>
-            </div>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <span className={styles.cardTitle}>Supreme Student Council Accounts</span>
+                            <span className={styles.blueIcon}></span>
+                        </div>
+                        <div className={styles.cardContent}>
+                            <div className={styles.boldText}>{councilCount}</div>
+                        </div>
+                    </div>
+                </div>
 
-            <div className="adviser">
-                <h4>Adviser Accounts</h4>
-                <h3>{adviserCount}</h3>
-            </div>
-
-            <div className="registrar">
-                <h4>Registrar's Office Accounts</h4>
-                <h3>{registrarCount}</h3>
-            </div>
-
-            <div className="cluster-coordinator">
-                <h4>Cluster Coordinator Accounts</h4>
-                <h3>{clusterCoordinatorCount}</h3>
-            </div>
-
-            <div className="dean">
-                <h4>Dean/TED-Director Accounts</h4>
-                <h3>{deanCount}</h3>
+                {error && <div className={styles.errorMessage}>{error}</div>}
             </div>
         </div>
     );

@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import homeIcon from '../../assets/homeIcon.svg';
-import requestIcon from '../../assets/Trello.svg';
+import { useNavigate } from 'react-router-dom';
+import Modal from 'react-modal';
+import styles from '../../styles/DepartmentClearanceRequest.module.css';
 import rcLogo from '../../assets/rc_logo.png';
-import sscIcon from '../../assets/sscIcon.svg';
-import dateIcon from '../../assets/Date.svg';
+import homeIcon from '../../assets/home.png';
+import requestIcon from '../../assets/bnotes.png';
 import clearedtoggle from '../../assets/clearedtoggle.svg';
 import pendingtoggle from '../../assets/pendingtoggle.svg';
-import '../../styles/DepartmentClearanceRequest.css';
+import avatar from '../../assets/avatar.png';
 
 const GuidanceClearanceRequest = () => {
     const [clearanceRequests, setClearanceRequests] = useState([]);
@@ -16,12 +17,15 @@ const GuidanceClearanceRequest = () => {
     const [statusFilter, setStatusFilter] = useState("");
     const [yearLevelFilter, setYearLevelFilter] = useState("");
     const [courseFilter, setCourseFilter] = useState("");
-
     const [yearLevels, setYearLevels] = useState([]);
     const [courses, setCourses] = useState([]);
-    const [currentDateTime, setCurrentDateTime] = useState(new Date());
+    const [isModalOpen, setIsModalOpen] = useState(false); // For modal
+    const [selectedRequest, setSelectedRequest] = useState(null); // Selected request for editing
+    const [remarks, setRemarks] = useState("");
+    const [showModal, setShowModal] = useState(false);
+    const navigate = useNavigate();
 
-    // Fetch clearance requests data
+    // Fetch clearance requests, year levels, and courses
     useEffect(() => {
         axios.get("http://localhost:8080/Requests/all")
             .then(response => {
@@ -40,10 +44,7 @@ const GuidanceClearanceRequest = () => {
             .catch(error => {
                 console.error("Error fetching clearance requests:", error);
             });
-    }, []);
 
-    // Fetch year levels and courses data
-    useEffect(() => {
         axios.get("http://localhost:8080/Year/levels")
             .then(response => {
                 setYearLevels(response.data);
@@ -61,24 +62,12 @@ const GuidanceClearanceRequest = () => {
             });
     }, []);
 
-    // Update date and time every second
-    useEffect(() => {
-        const updateDateTime = () => {
-            setCurrentDateTime(new Date());
-        };
-
-        const intervalId = setInterval(updateDateTime, 1000);
-
-        return () => clearInterval(intervalId);
-    }, []);
-
-    // Handle search and filters
+    // Handle filtering (search, status, year level, course)
     useEffect(() => {
         let filtered = Array.isArray(clearanceRequests) ? clearanceRequests : [];
 
         if (searchTerm) {
-            const searchTerms = searchTerm.toLowerCase().split(/\s+/); // Split search term into parts
-
+            const searchTerms = searchTerm.toLowerCase().split(/\s+/);
             filtered = filtered.filter(request => {
                 const student = request.student || {};
                 const fullName = `${student.firstName || ''} ${student.middleName || ''} ${student.lastName || ''}`.toLowerCase();
@@ -112,109 +101,143 @@ const GuidanceClearanceRequest = () => {
         setFilteredRequests(filtered);
     }, [searchTerm, statusFilter, yearLevelFilter, courseFilter, clearanceRequests]);
 
-    const toggleStatus = async (id, currentStatus) => {
-        const normalizedStatus = currentStatus ? currentStatus.toLowerCase() : "pending"; // Default to "pending" if status is undefined
-        const newStatus = normalizedStatus === "cleared" ? "PENDING" : "CLEARED";
-        
-        try {
-            const response = await axios.put(`http://localhost:8080/Status/update-status/${1}`, {
-                status: newStatus
+    // Toggle status function
+        const toggleStatus = async (id, currentStatus) => {
+            const normalizedStatus = currentStatus ? currentStatus.toLowerCase() : "pending"; // Default to "pending" if status is undefined
+            const newStatus = normalizedStatus === "cleared" ? "PENDING" : "CLEARED";
+            
+            try {
+                const response = await axios.put(`http://localhost:8080/Status/update-status/${id}`, {
+                    status: newStatus
 
-            });
-            const updatedStatus = response.data;
+                });
+                const updatedStatus = response.data;
 
-            // Update status in local storage
-            const savedStatuses = JSON.parse(localStorage.getItem('clearanceStatuses')) || {};
-            savedStatuses[id] = updatedStatus.status;
-            localStorage.setItem('clearanceStatuses', JSON.stringify(savedStatuses));
+                // Update status in local storage
+                const savedStatuses = JSON.parse(localStorage.getItem('clearanceStatuses')) || {};
+                savedStatuses[id] = updatedStatus.status;
+                localStorage.setItem('clearanceStatuses', JSON.stringify(savedStatuses));
 
-            // Update status in state
-            setClearanceRequests(prevRequests =>
-                prevRequests.map(request =>
-                    request.id === id ? { ...request, status: updatedStatus.status} : request
-                )
-            );
-        } catch (error) {
-            console.error("Error updating status:", error);
+                // Update status in state
+                setClearanceRequests(prevRequests =>
+                    prevRequests.map(request =>
+                        request.id === id ? { ...request, status: updatedStatus.status} : request
+                    )
+                );
+            } catch (error) {
+                console.error("Error updating status:", error);
+            }
+        };
+
+
+    // Fetching remarks for each student
+    const getRemarks = (request) => {
+        if (request.clearanceStatuses?.length > 0) {
+            const foundStatus = request.clearanceStatuses.find(status => status.student?.studentId === request.student?.studentId);
+            return foundStatus?.remarks || 'N/A';
+        }
+        return 'N/A';
+    };
+
+    const openModal = (request) => {
+        setSelectedRequest(request);
+        setRemarks(getRemarks(request));
+        setIsModalOpen(true);
+    };
+
+    const handleSaveRemarks = async () => {
+        if (selectedRequest) {
+            try {
+                const response = await axios.put(`http://localhost:8080/Status/update-status/${selectedRequest.id}`, {
+                    remarks
+                });
+                const updatedRemarks = response.data.remarks;
+
+                setClearanceRequests(prevRequests =>
+                    prevRequests.map(request =>
+                        request.id === selectedRequest.id ? { ...request, remarks: updatedRemarks } : request
+                    )
+                );
+                setIsModalOpen(false);
+            } catch (error) {
+                console.error("Error updating remarks:", error);
+            }
         }
     };
 
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setSelectedRequest(null);
+        setRemarks("");
+    };
+
+    const toggleModal = () => {
+        setShowModal(!showModal); // Toggle modal visibility
+    };
+
+    const handleLogout = () => {
+        console.log("Logged out");
+        // Implement logout logic here
+    };
+
     return (
-        <div className="student-dashboard">
-            <div className="Dashboard">
-                <img src={rcLogo} alt="RC LOGO" />
-                <h3>ROGATIONIST COLLEGE CLEARANCE SYSTEM</h3>
-                <div className="dashboard-buttons">
-                    <img src={homeIcon} alt="Home" />
-                    <a href="/department-dashboard">Dashboard</a>
+        <div className={styles.flexContainer}>
+            <div className={styles.sidebar}>
+                <div className={styles.logoContainer}>
+                    <img src={rcLogo} alt="College Logo" className={styles.logo} />
+                    <h1 className={styles.collegeName}>Rogationist College</h1>
                 </div>
-                <div className="dashboard-buttons">
-                    <img src={requestIcon} alt="Request Icon" />
-                    <a href="#">Clearance Request</a>
-                </div>
+                <nav className={styles.nav}>
+                    <button className={styles.ghostButton} onClick={() => navigate('/adviser-dashboard')}>
+                        <img src={homeIcon} alt="Dashboard" className={styles.navIcon} />
+                        Dashboard
+                    </button>
+                    <button className={styles.whiteButton} onClick={() => navigate('/request-clearance')}>
+                        <img src={requestIcon} alt="Clearance Request" className={styles.navIcon} />
+                        Clearance Request
+                    </button>
+                </nav>
             </div>
-
-            <div className="header">
-                <h4>GUIDANCE</h4>
-                <h4>GUIDANCE</h4>
-                <img src={sscIcon} alt="Avatar" />
-            </div>
-
-            <div className="academic-year-header">
-                <h2>A.Y. 2024 - 2025 - First Semester</h2>
-                <img src={dateIcon} alt="date icon" />
-                <h4>{currentDateTime.toLocaleString()}</h4>
-            </div>
-
-            <div className="filter-container">
-                <div className="input-box">
+            <div className={styles.mainContent}>
+                <header className={styles.header}>
+                    <h2 className={styles.dashboardTitle}>Guidance Clearance Requests</h2>
+                    <div className={styles.headerRight}>
+                        <span className={styles.academicYear}>A.Y. 2024 - 2025</span>
+                        <span className={styles.semesterBadge}>First Semester</span>
+                        <div className={styles.avatar} onClick={toggleModal}>
+                            <img src={avatar} alt="Avatar" />
+                        </div>
+                        {showModal && (
+                            <div className={styles.modals}>
+                                <ul>
+                                    <li onClick={handleLogout}>Log Out</li>
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                </header>
+                <div className={styles.filterContainer}>
                     <input 
                         type="text" 
-                        id="searchInput" 
-                        className="search-input" 
                         placeholder="Search by name" 
-                        value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
+                        value={searchTerm} 
+                        onChange={e => setSearchTerm(e.target.value)} 
                     />
-                </div>
-
-                <div className="input-box">
-                    <select 
-                        className="filter-button" 
-                        defaultValue="" 
-                        id="statusFilter" 
-                        onChange={e => setStatusFilter(e.target.value)}
-                    >
-                        <option value="" disabled>Filter Type</option>
+                    <select onChange={e => setStatusFilter(e.target.value)}>
+                        <option value="">Filter by status</option>
                         <option value="cleared">Cleared</option>
                         <option value="pending">Pending</option>
                     </select>
-                </div>
-
-                <div className="input-box">
-                    <select 
-                        className="filter-button" 
-                        defaultValue="" 
-                        id="yearLevel" 
-                        onChange={e => setYearLevelFilter(e.target.value)}
-                    >
-                        <option value="" disabled>Year Level</option>
+                    <select onChange={e => setYearLevelFilter(e.target.value)}>
+                        <option value="">Filter by year level</option>
                         {yearLevels.map(level => (
                             <option key={level.yearLevelId} value={level.yearLevel}>
                                 {level.yearLevel}
                             </option>
                         ))}
                     </select>
-                </div>
-
-                <div className="input-box">
-                    <select 
-                        className="filter-button" 
-                        defaultValue="" 
-                        id="courseFilter" 
-                        onChange={e => setCourseFilter(e.target.value)}
-                    >
-                        <option value="" disabled>Course</option>
+                    <select onChange={e => setCourseFilter(e.target.value)}>
+                        <option value="">Filter by course</option>
                         {courses.map(course => (
                             <option key={course.courseId} value={course.courseName}>
                                 {course.courseName}
@@ -222,52 +245,62 @@ const GuidanceClearanceRequest = () => {
                         ))}
                     </select>
                 </div>
+                <div className={styles.tableContainer}>
+                    <table className={styles.table}>
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Year Level</th>
+                                <th>Course</th>
+                                <th>Status</th>
+                                <th>Remarks</th>
+                                <th>Action</th> {/* New header for Edit column */}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredRequests.map((request, index) => (
+                                <tr key={index}>
+                                    <td>{request.student?.studentNumber || 'N/A'}</td>
+                                    <td>{`${request.student?.firstName || ''} ${request.student?.middleName || ''} ${request.student?.lastName || ''}`}</td>
+                                    <td>{request.student?.yearLevel?.yearLevel || 'N/A'}</td>
+                                    <td>{request.student?.course?.courseName || 'N/A'}</td>
+                                    <td onClick={() => toggleStatus(request.id, request.status)}>
+                                        <img 
+                                            src={(request.status?.toLowerCase() === "cleared") ? clearedtoggle : pendingtoggle} 
+                                            alt={request.status || 'Unknown Status'} 
+                                            onClick={() => toggleStatus(request.id, request.status)} 
+                                            style={{ cursor: 'pointer' }}
+                                        />
+                                    </td>
+                                    <td>{getRemarks(request)}</td> {/* Fetch remarks */}
+                                    <td>
+                                    <button className={styles.editButton} onClick={() => openModal(request)}>Edit</button>
+                                    </td> {/* Edit button */}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <div className="table-container">
-                <table className="clearance-table">
-                    <thead>
-                        <tr>
-                            <th>Student ID</th>
-                            <th>Name</th>
-                            <th>Year Level</th>
-                            <th>Course</th>
-                            <th>Status</th>
-                            <th>Remarks</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-    {Array.isArray(filteredRequests) && filteredRequests.length > 0 ? (
-        filteredRequests.map(request => (
-            <tr key={request.id}>
-                <td>{request.student?.studentNumber || 'N/A'}</td>
-                <td>{`${request.student?.firstName || ''} ${request.student?.middleName || ''} ${request.student?.lastName || ''}`}</td>
-                <td>{request.student?.yearLevel?.yearLevel || 'N/A'}</td>
-                <td>{request.student?.course?.courseName || 'N/A'}</td>
-                <td>
-                    <img 
-                        src={(request.status?.toLowerCase() === "cleared") ? clearedtoggle : pendingtoggle} 
-                        alt={request.status || 'Unknown Status'} 
-                        onClick={() => toggleStatus(request.id, request.status)} 
-                        style={{ cursor: 'pointer' }}
+            {/* Modal for editing remarks */}
+            {isModalOpen && (
+                <Modal isOpen={isModalOpen} onRequestClose={closeModal} className={styles.modal}>
+                    <h2 className={styles.modalTitle}>Edit Remarks</h2>
+                    <textarea
+                        className={styles.modalTextarea}
+                        value={remarks}
+                        onChange={e => setRemarks(e.target.value)}
+                        placeholder="Type remarks here..."
+                        rows={4}
                     />
-                </td>
-                <td>
-                    {request.clearanceStatuses?.length > 0
-                    ? request.clearanceStatuses.find(status => status.student?.studentId === request.student?.studentid)?.remarks || 'N/A'
-                    : 'N/A'}
-                </td>
-            </tr>
-        ))
-    ) : (
-        <tr>
-            <td colSpan="6">No clearance requests available.</td>
-        </tr>
-    )}
-</tbody>
-
-                </table>
-            </div>
+                    <div className={styles.modalButtons}>
+                        <button className={styles.saveButton} onClick={handleSaveRemarks}>Save</button>
+                        <button className={styles.cancelButton} onClick={closeModal}>Cancel</button>
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 };
