@@ -1,10 +1,18 @@
-import * as React from "react";
-import { StyleSheet, Text, View, Image, ScrollView, TouchableOpacity } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import React from 'react';
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { FontFamily, Color } from "../../components/GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
+
+const clearanceData = [
+  { department: 'Supreme Student Council', status: 'Cleared', remarks: 'None' },
+  { department: 'Student Affairs', status: 'Cleared', remarks: 'None' },
+  { department: 'Spiritual Affairs', status: 'Cleared', remarks: 'None' },
+  { department: 'Student Discipline', status: 'Pending', remarks: 'None' },
+  { department: 'Guidance', status: 'Pending', remarks: 'None' },
+  { department: 'Library', status: 'Cleared', remarks: 'None' },
+  { department: 'Laboratory', status: 'Cleared', remarks: 'None' },
+];
 
 const ClearanceStatus = () => {
 
@@ -29,305 +37,202 @@ const ClearanceStatus = () => {
 
   return (
     <LinearGradient
-      style={styles.clearanceStatus}
-      locations={[0, 1]}
-      colors={["#266ca9", "#0042be"]}
+      style={styles.container}
+      colors={['#266ca9', '#0042be']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
     >
-
-        <Image
-          style={styles.avatarIcon}
-          source={require("../../assets/images/avatar.png")}
-        />
-
-        <View style={styles.curvedHeader}></View>
-
-        <Text style={styles.greet}>Hello</Text>
-        <Text style={styles.userName}>Aiah Nadine</Text>
-
-      <View style={styles.clearanceStatus1}>
-        <Text style={[styles.clearanceStatus2, styles.helloTypo]}>
-          Clearance Status
-        </Text>
-      </View>
-
-      <View style={styles.selectField}>
-        <View style={styles.select}>
-          <Picker
-            selectedValue={selectedStatus}
-            onValueChange={(itemValue) => setSelectedStatus(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Cleared" value="Cleared" />
-            <Picker.Item label="Pending" value="Pending" />
-          </Picker>
+      <SafeAreaView style={styles.content}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>Hello</Text>
+            <Text style={styles.name}>Aiah Nadine</Text>
+          </View>
+          <Image source={require('../../assets/images/avatar.png')} style={styles.avatar} />
         </View>
-      </View>
 
-      <View style={styles.tableContainer}>
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.table}>
-            <View style={styles.rowHeader}>
-              {["Department", "Status", "Remarks"].map((title) => (
-                <View style={styles.cell} key={title}>
-                  <Text style={styles.headerText}>{title}</Text>
-                </View>
-              ))}
-            </View>
+        <View style={styles.statusSection}>
+          <Text style={styles.statusLabel}>Clearance Status</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={selectedStatus}
+              onValueChange={(itemValue) => setSelectedStatus(itemValue)}
+              style={styles.picker}
+              itemStyle={styles.pickerItem}
+            >
+              <Picker.Item label="Cleared" value="cleared" />
+              <Picker.Item label="Pending" value="pending" />
+            </Picker>
+          </View>
+        </View>
 
-            {[
-              { department: "Supreme Student Council", status: "Cleared", remarks: "None" },
-              { department: "Student Affairs", status: "Cleared", remarks: "None" },
-              { department: "Spiritual Affairs", status: "Cleared", remarks: "None" },
-              { department: "Student Discipline", status: "Pending", remarks: "None" },
-              { department: "Guidance", status: "Pending", remarks: "None" },
-              { department: "Library", status: "Cleared", remarks: "None" },
-              { department: "Laboratory", status: "Cleared", remarks: "None" },
-              { department: "Clinic", status: "Pending", remarks: "None" },
-              { department: "Cashier", status: "Pending", remarks: "None" },
-              { department: "Adviser", status: "Pending", remarks: "None" },
-              { department: "Cluster Coordinator", status: "Pending", remarks: "None" },
-              { department: "Registrar’s Office", status: "Pending", remarks: "None" },
-              { department: "Dean/TED - Director", status: "Pending", remarks: "None" },
-            ].map(({ department, status, remarks }, index) => (
-              <View style={[styles.row, styles.grayRow]} key={index}>
-                <View style={styles.cell}>
-                  <Text style={styles.cellText}>{department}</Text>
-                </View>
-                <View style={styles.cell}>
-                  <Text style={status === "Cleared" ? styles.cleared : styles.pending}>{status}</Text>
-                </View>
-                <View style={styles.cell}>
-                  <Text style={styles.cellText}>{remarks}</Text>
-                </View>
+        <View style={styles.tableContainer}>
+          <View style={styles.tableHeader}>
+            <Text style={[styles.headerCell, styles.departmentCell]}>Department</Text>
+            <Text style={[styles.headerCell, styles.statusCell]}>Status</Text>
+            <Text style={[styles.headerCell, styles.remarksCell]}>Remarks</Text>
+          </View>
+          <ScrollView style={styles.tableContent}>
+            {clearanceData.map((item, index) => (
+              <View key={index} style={styles.tableRow}>
+                <Text style={[styles.cell, styles.departmentCell]}>{item.department}</Text>
+                <Text
+                  style={[
+                    styles.cell,
+                    styles.statusCell,
+                    item.status === 'Cleared' ? styles.cleared : styles.pending,
+                  ]}
+                >
+                  {item.status}
+                </Text>
+                <Text style={[styles.cell, styles.remarksCell]}>{item.remarks}</Text>
               </View>
             ))}
-          </View>
-        </ScrollView>
-      </View>
+          </ScrollView>
+        </View>
 
-      <View style={styles.iconContainer}>
-        <TouchableOpacity onPress={handleMenuPress}>
-          <Image
-            style={styles.menuIcon}
-            source={require("../../assets/images/home.png")}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleRequestPress}>
-          <Image
-            style={styles.request}
-            source={require("../../assets/images/request.png")}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleStatusPress}>
-          <Image
-            style={styles.status}
-            source={require("../../assets/images/status.png")}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleAccountPress}>
-          <Image
-            style={styles.account}
-            source={require("../../assets/images/user.png")}
-          />
-        </TouchableOpacity>
-      </View>
-
+        {/* Navbar fixed at the bottom with navigation */}
+        <View style={styles.navbar}>
+          <TouchableOpacity style={styles.navItem} onPress={handleMenuPress}>
+            <Image source={require('../../assets/images/blhome.png')} style={styles.navIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={handleRequestPress}>
+            <Image source={require('../../assets/images/blidcard.png')} style={styles.navIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={handleStatusPress}>
+            <Image source={require('../../assets/images/blnotes.png')} style={styles.navIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={handleAccountPress}>
+            <Image source={require('../../assets/images/bluser.png')} style={styles.navIcon} />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     </LinearGradient>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  clearanceStatus: {
+  container: {
     flex: 1,
-    width: "100%",
+  },
+  content: {
+    flex: 1,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: hp('7%'),
-    paddingHorizontal: wp('5%'),
-  },
-  greet: {
-    marginLeft: wp('12%'),
-    marginTop: hp('7%'),
-    fontSize: wp('5%'),
-    color: '#fff',
-    textShadowColor: "rgba(0, 0, 0, 0.25)",
-    shadowOpacity: 3,
-    textShadowOffset: { width: 1, height: 2 },
-    textShadowRadius: 3,
-  },
-  userName: {
-    marginLeft: wp('12%'),
-    marginTop: hp('0%'),
-    fontSize: wp('7%'),
-    fontWeight: "900",
-    color: '#fff',
-    textShadowColor: "rgba(0, 0, 0, 0.25)",
-    shadowOpacity: 5,
-    textShadowOffset: { width: 1, height: 3 },
-    textShadowRadius: 3,
-  },
-  avatarIcon: {
-    width: wp('13%'),
-    height: hp('6%'),
-    borderRadius: 50,
-    position: 'absolute',
-    marginLeft: wp('80%'),
-    marginTop: hp('7%'),
-  },
-  clearanceStatusText: {
-    fontSize: wp('5%'),
-    color: "#fff",
-    textAlign: "left",
-    marginLeft: wp('5%'),
-    marginTop: hp('5%'),
-  },
-  clearanceStatus1: {
-    marginTop: hp('5%'),
-    left: wp('5%'),
-  },
-  clearanceStatus2: {
-    marginTop: hp('5.5%'),
-    fontSize: wp('5.5%'),
-    color: "#fff3f3",
-  },
-  helloTypo: {
-    textShadowRadius: 4,
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowColor: "rgba(0, 0, 0, 0.25)",
-    textAlign: "center",
-    fontFamily: 'SF-Pro-Display-Regular',
-    position: "absolute",
-  },
-  selectField: {
-    marginTop: hp('5%'),
-    width: wp('40%'),
-    height: hp('5%'),
-    marginLeft: wp('55%'),
-  },
-  select: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: wp('2%'),
-    backgroundColor: Color.backgroundDefaultDefault,
-    borderRadius: 5,
-    height: '100%',
-  },
-  picker: {
-    flex: 1,
-    height: hp('5%'),
-    color: "#333",
-  },
-  tableContainer: {
-    height: hp('60%'),
-    marginTop: hp('2%'),
-    marginHorizontal: wp('5%'),
-  },
-  scrollContainer: {
-    paddingBottom: hp('2%'),
-  },
-  table: {
-    flexDirection: 'column',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    backgroundColor: '#fff',
-  },
-  rowHeader: {
-    flexDirection: "row",
-    height: hp('6%'),
-    backgroundColor: '#D7D6D6',
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  row: {
-    flexDirection: "row",
-    height: hp('8%'),
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  grayRow: {
-    backgroundColor: "#f0f0f0",
-  },
-  cell: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: wp('2%'),
-  },
-  headerText: {
-    fontSize: wp('4%'),
-    fontWeight: 'bold',
-    color: '#000',
-    textAlign: 'center',
-  },
-  cellText: {
-    fontSize: wp('4%'),
-    color: "#333",
-  },
-  cleared: {
-    fontSize: wp('4%'),
-    color: "#4caf50",
-  },
-  pending: {
-    fontSize: wp('4%'),
-    color: "#ff6f61",
-  },
-  iconContainer: {
+    marginTop: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: wp('100%'),
-    paddingHorizontal: wp('9%'),
-    paddingVertical: hp('1%'),
+    padding: 16,
+  },
+  greeting: {
+    color: 'white',
+    fontSize: 14,
+  },
+  name: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  statusSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    marginTop: 50,
+  },
+  statusLabel: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  pickerContainer: {
+    backgroundColor: 'white',
+    borderRadius: 4,
+    width: 150,
+  },
+  picker: {
+    height: 40,
+    width: 150,
+  },
+  pickerItem: {
+    fontSize: 16,
+  },
+  tableContainer: {
+    flex: 1,
+    backgroundColor: 'white',
+    marginHorizontal: 16,
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginTop: 10,
+    marginBottom: 100,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#E0E0E0',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  headerCell: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    textAlign: 'left',
+    paddingHorizontal: 8,
+  },
+  tableContent: {
+    flexGrow: 1,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+    paddingHorizontal: 10,
+  },
+  departmentCell: {
+    flex: 2.5,
+  },
+  statusCell: {
+    flex: 1.5,
+  },
+  remarksCell: {
+    flex: 1.2,
+  },
+  cell: {
+    fontSize: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+  },
+  cleared: {
+    color: 'green',
+  },
+  pending: {
+    color: 'red',
+  },
+  navbar: {
     position: 'absolute',
-    bottom: hp('1%'),
-    zIndex: 3,
-  },
-  menuIcon: {
-    marginTop: hp('1%'),
-    width: wp('9%'),
-    height: hp('4%'),
-    resizeMode: 'contain',
-  },
-  request: {
-    marginTop: hp('1%'),
-    width: wp('9%'),
-    height: hp('4%'),
-    resizeMode: 'contain',
-  },
-  status: {
-    marginTop: hp('1%'),
-    width: wp('9%'),
-    height: hp('4%'),
-    resizeMode: 'contain',
-  },
-  account: {
-    marginTop: hp('1%'),
-    width: wp('8%'),
-    height: hp('4%'),
-    resizeMode: 'contain',
-  },
-  curvedHeader: {
-    position: "absolute",
-    bottom: hp('-2%'),
-    marginLeft: 0,
-    width: wp('100%'),
-    height: hp('10%'),
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    borderTopWidth: 1,
+    borderTopColor: '#1E88E5',
+    paddingVertical: 8,
     backgroundColor: '#fff',
-    alignItems: "center",
-    justifyContent: 'center',
-    shadowColor: "rgba(0, 0, 0, 0.25)",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    zIndex: 1,
+  },
+  navItem: {
+    padding: 8,
+  },
+  navIcon: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
   },
 });
 

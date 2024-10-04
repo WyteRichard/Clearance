@@ -1,317 +1,182 @@
-import * as React from "react";
-import { Text, StyleSheet, View, Image, TouchableOpacity } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { Color, FontFamily, FontSize, StyleVariable, Border } from "../../components/GlobalStyles";
-import { useNavigation } from '@react-navigation/native';
+import React from 'react';
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation
 
 const StudentDashboard = () => {
+  const navigation = useNavigation(); // Initialize navigation
 
-  const navigation = useNavigation();
-
-  const handleMenuPress = () => {
-    navigation.navigate('StudentDashboard');
+  // Handlers for navigation
+  const handleHomePress = () => {
+    navigation.navigate('StudentDashboard'); // Replace with the actual route
   };
 
   const handleRequestPress = () => {
-    navigation.navigate('StudentClearanceRequest');
+    navigation.navigate('StudentClearanceRequest'); // Replace with the actual route
   };
 
   const handleStatusPress = () => {
-    navigation.navigate('StudentClearanceStatus');
+    navigation.navigate('StudentClearanceStatus'); // Replace with the actual route
   };
 
   const handleAccountPress = () => {
-    navigation.navigate('StudentProfile');
+    navigation.navigate('StudentProfile'); // Replace with the actual route
   };
 
   return (
     <LinearGradient
-      style={styles.studentDashboardView}
-      locations={[0, 1]}
-      colors={["#266ca9", "#0042be"]}
+      style={styles.container}
+      colors={['#266ca9', '#0042be']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
     >
+      <SafeAreaView style={styles.content}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>Hello</Text>
+            <Text style={styles.name}>Aiah Nadine</Text>
+          </View>
+          {/* Replace avatar with an image */}
+          <Image source={require('../../assets/images/avatar.png')} style={styles.avatar} />
+        </View>
 
-    <Image
-      style={styles.avatarIcon}
-      contentFit="cover"
-      source={require("../../assets/images/avatar.png")}
-    />
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>A.Y. 2024 - 2025 - First Semester</Text>
+          <Text style={styles.cardSubtitle}>Saturday, July 13, 2024 17:40:44</Text>
+        </View>
 
-      <View style={styles.curvedHeader}></View>
+        <Text style={styles.sectionTitle}>Clearance Status</Text>
 
-        <Text style={styles.hello}>Hello</Text>
-        <Text style={styles.username}>Aiah Nadine</Text>
-
-      <View style={styles.date}>
-        <View style={styles.dateBackground} />
-        <Image
-          style={styles.calendarIcon}
-          source={require("../../assets/images/calendar.png")}
-        />
-        <Text style={styles.academicYear}>A.Y. 2024 - 2025 - First Semester</Text>
-        <Text style={styles.currentDate}>Saturday, July 13, 2024 17:40:44</Text>
-      </View>
-
-      <Text style={styles.clearanceStatusLabel}>Clearance Status</Text>
-
-      <View style={styles.clearanceStatus}>
         <View style={styles.statusContainer}>
-          <View style={[styles.statusBox, styles.clearedBackground]}>
+          <View style={styles.statusCard}>
             <Text style={styles.statusLabel}>Cleared</Text>
-            <Text style={styles.statusCount}>0</Text>
+            <Text style={styles.statusValue}>0</Text>
           </View>
-        </View>
-        <View style={styles.statusContainer}>
-          <View style={[styles.statusBox, styles.pendingBackground]}>
+          <View style={styles.statusCard}>
             <Text style={styles.statusLabel}>Pending</Text>
-            <Text style={styles.statusCount}>0</Text>
+            <Text style={styles.statusValue}>0</Text>
           </View>
-        </View>
-        <View style={styles.statusContainer}>
-          <View style={[styles.statusBox, styles.remarksBackground]}>
+          <View style={[styles.statusCard, styles.fullWidth]}>
             <Text style={styles.statusLabel}>Remarks</Text>
-            <Text style={styles.statusCount}>0</Text>
+            <Text style={styles.statusValue}>0</Text>
           </View>
         </View>
-      </View>
 
-
-      <View style={styles.iconContainer}>
-        <TouchableOpacity onPress={handleMenuPress}>
-          <Image
-            style={styles.menuIcon}
-            source={require("../../assets/images/home.png")}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleRequestPress}>
-          <Image
-            style={styles.request}
-            source={require("../../assets/images/request.png")}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleStatusPress}>
-          <Image
-            style={styles.status}
-            source={require("../../assets/images/status.png")}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleAccountPress}>
-          <Image
-            style={styles.account}
-            source={require("../../assets/images/user.png")}
-          />
-        </TouchableOpacity>
-      </View>
-
+        <View style={styles.navbar}>
+          <TouchableOpacity style={styles.navItem} onPress={handleHomePress}>
+            <Image source={require('../../assets/images/blhome.png')} style={styles.navIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={handleRequestPress}>
+            <Image source={require('../../assets/images/blidcard.png')} style={styles.navIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={handleStatusPress}>
+            <Image source={require('../../assets/images/blnotes.png')} style={styles.navIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={handleAccountPress}>
+            <Image source={require('../../assets/images/bluser.png')} style={styles.navIcon} />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     </LinearGradient>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  studentDashboardView: {
+  container: {
     flex: 1,
-    width: wp('100%'),
-    height: hp('100%'),
-    backgroundColor: "transparent",
-    overflow: "hidden",
   },
-  hello: {
-    marginLeft: wp('12%'),
-    marginTop: hp('7%'),
-    fontSize: wp('5%'),
-    color: '#fff',
-    textShadowColor: "rgba(0, 0, 0, 0.25)",
-    shadowOpacity: 3,
-    textShadowOffset: { width: 1, height: 2 },
-    textShadowRadius: 3,
-  },
-  username: {
-    marginLeft: wp('12%'),
-    marginTop: hp('0%'),
-    fontSize: wp('7%'),
-    fontWeight: "900",
-    color: '#fff',
-    textShadowColor: "rgba(0, 0, 0, 0.25)",
-    shadowOpacity: 5,
-    textShadowOffset: { width: 1, height: 3 },
-    textShadowRadius: 3,
-  },
-  avatarIcon: {
-    width: wp('13%'),
-    height: hp('6%'),
-    borderRadius: 50,
-    position: 'absolute',
-    marginLeft: wp('80%'),
-    marginTop: hp('7%'),
-  },
-  dateBackground: {
-    marginTop: hp('0%'),
-    width: wp('85%'),
-    height: hp('10%'),
-    backgroundColor: '#fff',
-    borderRadius: 1,
-    shadowColor: "rgba(0, 0, 0, 0.25)",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 3,
-    shadowRadius: 4,
-    elevation: 4,
-    position: "absolute",
-  },
-  academicYear: {
-    fontFamily: 'SF-Pro-Display-Medium',
-    fontWeight: "600",
-    fontStyle: "italic",
-    color: '#000',
-    fontSize: wp('5.5%'),
-    textAlign: "center",
-    marginTop: hp('1%'),
-    marginLeft: wp('1%'),
-    position: 'absolute',
-  },
-  currentDate: {
-    fontFamily: 'SF-Pro-Display-Regular',
-    fontWeight: "300",
-    color: Color.colorGray_200,
-    fontSize: wp('4.5%'),
-    textAlign: "center",
-    marginTop: hp('5%'), 
-    marginLeft: wp('20%'),
-    position: 'absolute',
-  },
-  date: {
-    marginTop: hp('7%'),
-    alignItems: "center",
-  },
-  calendarIcon: {
-    width: wp('6%'),
-    height: wp('6%'),
-    marginTop: hp('5%'),
-    marginRight: wp('65%'),
-    position: 'relative',
-  },
-  clearanceStatusLabel: {
-    marginTop: hp('5%'),
-    marginRight: wp('40%'),
-    fontSize: wp('6%'),
-    color: '#fff',
-    fontFamily: 'SF-Pro-Display-Bold',
-    textAlign: "center",
-  },
-  clearanceStatus: {
-    marginTop: hp('2%'),
-    alignItems: 'center',
-    width: wp('100%'),
-    flexDirection: 'column',
-  },
-  statusRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    width: wp('100%'),
-    marginBottom: hp('2%'),
-  },
-  statusContainer: {
+  content: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: wp('1%'),
   },
-  statusBox: {
-    width: wp('40%'),
-    height: hp('12%'),
-    borderRadius: 20,
-    shadowColor: 'rgba(0, 0, 0, 0.25)',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 4,
-    opacity: 0.8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-  },
-  clearedBackground: {
-    marginRight: wp('45%'),
-    marginTop: hp('15%'),
-    backgroundColor: '#fff',
-  },
-  pendingBackground: {
-    marginLeft: wp('45%'),
-    marginTop: hp('15%'),
-    backgroundColor: '#fff',
-  },
-  remarksBackground: {
-    marginRight: wp('45%'),
-    marginTop: hp('45%'),
-    backgroundColor: '#fff',
-  },
-  statusLabel: {
-    marginTop: hp('0%'),
-    marginRight: wp('12%'),
-    fontSize: wp('6%'),
-    color: Color.colorGray_200,
-    fontWeight: "900",
-    textAlign: "center",
-  },
-  statusCount: {
-    marginTop: hp('0.5%'),
-    marginBottom: hp('1%'),
-    marginRight: wp('25%'),
-    fontSize: wp('10%'),
-    color: '#757575',
-  },
-  iconContainer: {
+  header: {
+    marginTop: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: wp('100%'),
-    paddingHorizontal: wp('9%'),
-    paddingVertical: hp('1%'),
+    padding: 16,
+  },
+  greeting: {
+    color: 'white',
+    fontSize: 14,
+  },
+  name: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 16,
+    margin: 16,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    color: '#757575',
+    marginTop: 4,
+  },
+  sectionTitle: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginLeft: 16,
+    marginBottom: 8,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 8,
+  },
+  statusCard: {
+    backgroundColor: '#E3F2FD',
+    borderRadius: 8,
+    padding: 16,
+    margin: 8,
+    width: '45%',
+    alignItems: 'center',
+  },
+  fullWidth: {
+    width: '94%',
+  },
+  statusLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1565C0',
+  },
+  statusValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1565C0',
+    marginTop: 8,
+  },
+  navbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    borderTopWidth: 1,
+    borderTopColor: '#1E88E5',
+    paddingVertical: 8,
     position: 'absolute',
-    bottom: hp('1%'),
-    zIndex: 3,
-  },
-  menuIcon: {
-    marginTop: hp('1%'),
-    width: wp('9%'),
-    height: hp('4%'),
-    resizeMode: 'contain',
-  },
-  request: {
-    marginTop: hp('1%'),
-    width: wp('9%'),
-    height: hp('4%'),
-    resizeMode: 'contain',
-  },
-  status: {
-    marginTop: hp('1%'),
-    width: wp('9%'),
-    height: hp('4%'),
-    resizeMode: 'contain',
-  },
-  account: {
-    marginTop: hp('1%'),
-    width: wp('8%'),
-    height: hp('4%'),
-    resizeMode: 'contain',
-  },
-  curvedHeader: {
-    position: "absolute",
-    bottom: hp('-2%'),
-    marginLeft: 0,
-    width: wp('100%'),
-    height: hp('10%'),
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: '#fff',
-    alignItems: "center",
-    justifyContent: 'center',
-    shadowColor: "rgba(0, 0, 0, 0.25)",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    zIndex: 1,
+  },
+  navItem: {
+    padding: 8,
+  },
+  navIcon: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
   },
 });
 

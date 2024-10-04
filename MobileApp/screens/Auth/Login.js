@@ -1,201 +1,178 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Animated, Image, TextInput, TouchableOpacity, StyleSheet, Text, View, Keyboard, Dimensions } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 
-const { width: screenWidth } = Dimensions.get('window');
-const isTablet = screenWidth >= 768;
-
 const Login = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const navigation = useNavigation();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  
+  const navigation = useNavigation(); // Initialize the navigation hook
 
-  const vectorPosition = useRef(new Animated.Value(hp('45%'))).current;
-
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', keyboardDidShow);
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', keyboardDidHide);
-
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
-    };
-  }, []);
-
-  const keyboardDidShow = () => {
-    Animated.timing(vectorPosition, {
-      toValue: hp('10%'),
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const keyboardDidHide = () => {
-    Animated.timing(vectorPosition, {
-      toValue: hp('45%'),
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
+  const handleLogin = () => {
+    console.log('Login pressed');
+    // Navigate to the main screen after successful login
+    navigation.navigate('Main', {
+      screen: 'Student',
+      params: { screen: 'StudentDashboard' }, // Adjust as per your screen structure
+    });
   };
 
   return (
     <LinearGradient
-      style={styles.studentLoginView}
-      locations={[0, 1]}
-      colors={["#266ca9", "#0042be"]}
+      colors={['#266ca9', '#0042be']}
+      style={styles.container}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
     >
-      <Animated.Image
-        style={[styles.vectorIcon, { top: vectorPosition }]}
-        source={require("../../assets/images/loginvector.png")}
-        resizeMode="cover"
-      />
-
-      <Image
-        style={styles.rcLogo1Icon}
-        source={require("../../assets/images/rc-logo-1.png")}
-        resizeMode="contain"
-      />
-
-      <Text style={styles.rccs}>ROGATIONIST COLLEGE{"\n"}CLEARANCE SYSTEM</Text>
-      <Text style={styles.signIn}>SIGN IN</Text>
-
-      <View style={styles.fields}>
-        <View style={[styles.fieldContainer, styles.fieldShadow]}>
-          <TextInput
-            style={styles.input}
-            placeholder="Username"
-            placeholderTextColor="#888"
-            value={username}
-            onChangeText={setUsername}
-          />
-        </View>
-        <View style={[styles.fieldContainer, styles.fieldShadow]}>
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#888"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-        </View>
-      </View>
-
-      <TouchableOpacity onPress={() => navigation.navigate('Forgot')}>
-        <Text style={styles.forgotPassword}>Forgot Password</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.signInButton}
-        onPress={() => navigation.navigate('Main', {
-          screen: 'Student',
-          params: { screen: 'StudentDashboard' },
-        })}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.content}
       >
-        <Text style={styles.buttonText}>Sign in</Text>
-      </TouchableOpacity>
+        <View style={styles.logoContainer}>
+          <Image source={require('../../assets/images/rc-logo-1.png')} style={styles.logoImage} />
+          <Text style={styles.logoText}>ROGATIONIST COLLEGE{"\n"}CLEARANCE SYSTEM</Text>
+        </View>
+        <View style={styles.inputContainer}>
+          <View style={styles.inputWrapper}>
+            <Image source={require('../../assets/images/email.png')} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor="rgba(255,255,255,0.7)"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+          <View style={styles.inputWrapper}>
+            <Image source={require('../../assets/images/lock.png')} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="rgba(255,255,255,0.7)"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+              <Image
+                source={showPassword ? require('../../assets/images/eye-on.png') : require('../../assets/images/eye-off.png')}
+                style={styles.eyeIconImage}
+              />
+            </TouchableOpacity>
+          </View>
 
-      <Text style={styles.dontHaveAn}>
-        Don’t have an Account?{" "}
-        <Text style={styles.clickHere} onPress={() => navigation.navigate('RegisterStudent')}>
-          Click here.
-        </Text>
-      </Text>
+          {/* Forgot Password aligned to the right below the password field */}
+          <TouchableOpacity style={styles.forgotPasswordButton} onPress={() => navigation.navigate('Forgot')}>
+            <Text style={styles.forgotPassword}>Forgot Password?</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <Text style={styles.loginButtonText}>Login</Text>
+        </TouchableOpacity>
+
+        {/* Don't have an Account? Click here. */}
+        <View style={styles.registerContainer}>
+          <Text style={styles.registerText}>Don't have an account? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('RegisterStudent')}>
+            <Text style={styles.clickHereText}>Click here.</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
-  studentLoginView: {
+  container: {
     flex: 1,
-    alignItems: 'center',
+  },
+  content: {
+    flex: 1,
     justifyContent: 'center',
-    backgroundColor: "transparent",
+    paddingHorizontal: 20,
   },
-  vectorIcon: {
-    position: 'absolute',
-    left: 0,
-    width: wp('100%'),
-    height: hp('100%'),
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 50,
   },
-  rcLogo1Icon: {
-    position: 'absolute',
-    top: hp('10%'),
-    width: wp('45%'),
-    height: wp('45%'),
+  logoImage: {
+    width: 140,
+    height: 140,
     resizeMode: 'contain',
   },
-  rccs: {
-    fontSize: wp('6%'),
-    color: "#e7e7e7",
+  logoText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: 'white',
+    marginTop: 20,
     textAlign: 'center',
-    lineHeight: wp('7%'),
-    marginTop: hp('22%'),
-    fontWeight: '900',
-    textShadowColor: 'rgba(0, 0, 0, 0.25)',
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 4,
   },
-  signIn: {
-    fontSize: wp('9%'),
-    color: "#000",
-    textAlign: "center",
-    marginTop: hp('8%'),
-    fontWeight: '600',
+  inputContainer: {
+    marginBottom: 20,
   },
-  fields: {
-    width: wp('80%'),
-    marginTop: hp('3%'),
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 10,
+    marginBottom: 15,
   },
-  fieldContainer: {
-    marginBottom: hp('2%'),
-    width: '100%',
+  inputIcon: {
+    width: 24,
+    height: 24,
+    margin: 10,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    backgroundColor: "#fff",
-    padding: wp('3%'),
-    fontSize: wp('4.5%'),
-    color: "#000",
+    flex: 1,
+    color: 'white',
+    fontSize: 16,
+    paddingVertical: 15,
   },
-  fieldShadow: {
-    shadowColor: "rgba(0, 0, 0, 0.25)",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 5,
-    elevation: 5,
+  eyeIcon: {
+    padding: 10,
   },
-  signInButton: {
-    marginTop: hp('3%'),
-    backgroundColor: "#266ca9",
-    paddingVertical: hp('2%'),
-    borderRadius: 10,
-    width: wp('50%'),
-    alignItems: 'center',
-    justifyContent: 'center',
+  eyeIconImage: {
+    width: 24,
+    height: 24,
   },
-  buttonText: {
-    color: "#fff",
-    fontSize: wp('5%'),
+  forgotPasswordButton: {
+    alignSelf: 'flex-end',  // Align to the right
+    marginBottom: 20,
   },
   forgotPassword: {
-    color: "#0174be",
-    fontSize: wp('4%'),
-    marginTop: hp('-1%'),
-    marginLeft: hp('24%'),
+    color: 'white',
+    fontSize: 16,
   },
-  dontHaveAn: {
-    color: "#0174be",
-    fontSize: wp('4.3%'),
-    marginTop: hp('2%'),
-    textAlign: 'center',
+  loginButton: {
+    backgroundColor: 'white',
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 15,
   },
-  clickHere: {
-  }
+  loginButtonText: {
+    color: '#0042be',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  registerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  registerText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  clickHereText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
 
 export default Login;

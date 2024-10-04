@@ -1,311 +1,198 @@
-import React, { useState } from "react";
-import { Text, Image, StyleSheet, View, TouchableOpacity, FlatList } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { Color, StyleVariable, FontFamily, FontSize } from "../../components/GlobalStyles";
-import { useNavigation } from '@react-navigation/native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native';  // Import useNavigation hook
 
 const StudentClearanceRequest = () => {
+  
+  const [semester, setSemester] = React.useState('');
+  const [schoolYear, setSchoolYear] = React.useState('');
+  const [graduating, setGraduating] = React.useState('');
+  
+  const navigation = useNavigation();  // Initialize navigation
 
-
-  const [isDropdownOpen, setIsDropdownOpen] = useState(null);
-  const [selectedOption, setSelectedOption] = useState({});
-  const navigation = useNavigation();
-
-  const handleDropdownToggle = (index) => {
-    setIsDropdownOpen(isDropdownOpen === index ? null : index);
-  };
-
-  const handleOptionSelect = (label, option) => {
-    setSelectedOption((prev) => ({ ...prev, [label]: option }));
-    setIsDropdownOpen(null);
-  };
-
+  // Navigation functions for the bottom navbar
   const handleMenuPress = () => {
-    navigation.navigate('StudentDashboard');
+    navigation.navigate('StudentDashboard');  // Navigate to Student Dashboard
   };
 
   const handleRequestPress = () => {
-    navigation.navigate('StudentClearanceRequest');
+    navigation.navigate('StudentClearanceRequest');  // Navigate to Clearance Request
   };
 
   const handleStatusPress = () => {
-    navigation.navigate('StudentClearanceStatus');
+    navigation.navigate('StudentClearanceStatus');  // Navigate to Clearance Status
   };
 
   const handleAccountPress = () => {
-    navigation.navigate('StudentProfile');
+    navigation.navigate('StudentProfile');  // Navigate to Profile
   };
-
-  const renderDropdown = (label, options, index) => (
-    <View style={styles.dropdownContainer} key={index}>
-      <TouchableOpacity 
-        style={styles.dropdown} 
-        onPress={() => handleDropdownToggle(index)}
-      >
-        <Text style={styles.dropdownText}>{selectedOption[label] || label}</Text>
-        <Image
-          style={styles.chevronDownIcon}
-          contentFit="cover"
-          source={require("../../assets/images/chevron-down.png")}
-        />
-      </TouchableOpacity>
-      {isDropdownOpen === index && (
-        <View style={styles.optionsContainer}>
-          <FlatList
-            data={options}
-            keyExtractor={(item) => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => handleOptionSelect(label, item)}>
-                <Text style={styles.option}>{item}</Text>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
-      )}
-    </View>
-  );
 
   return (
     <LinearGradient
+      colors={['#266ca9', '#0042be']}
       style={styles.container}
-      locations={[0, 1]}
-      colors={["#266ca9", "#0042be"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
     >
-
-    <Image
-        style={styles.vectorIcon}
-        contentFit="cover"
-        source={require("../../assets/images/vector.png")}
-    />
-
-    <Image
-      style={styles.avatarIcon}
-      contentFit="cover"
-      source={require("../../assets/images/avatar.png")}
-    />
-
-      <View style={styles.curvedHeader}></View>
-
-      <Text style={styles.greeting}>Hello</Text>
-      <Text style={styles.userName}>Aiah Nadine</Text>
-
-      <Text style={styles.title}>{`CLEARANCE\nREQUEST`}</Text>
-
-      <View style={styles.formContainer}>
-        {[{ label: "Semester", options: ["1st Semester", "2nd Semester"] },
-          { label: "School Year", options: ["2024 - 2025", "2025 - 2026", "2026 - 2027", "2027 - 2028"] },
-          { label: "Graduating?", options: ["Yes", "No"] }
-        ].map((field, index) => renderDropdown(field.label, field.options, index))}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>Hello</Text>
+          <Text style={styles.name}>Aiah Nadine</Text>
+        </View>
+        <Image source={require('../../assets/images/avatar.png')} style={styles.avatar} />
       </View>
 
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Submit</Text>
-      </TouchableOpacity>
+      <View style={styles.contentContainer}>
+        <View style={styles.formContainer}>
+          <Text style={styles.title}>CLEARANCE REQUEST</Text>
 
-      <View style={styles.iconContainer}>
-        <TouchableOpacity onPress={handleMenuPress}>
-          <Image
-            style={styles.menuIcon}
-            source={require("../../assets/images/home.png")}
-          />
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={semester}
+              onValueChange={(itemValue) => setSemester(itemValue)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Semester" value="" />
+              <Picker.Item label="First Semester" value="first" />
+              <Picker.Item label="Second Semester" value="second" />
+            </Picker>
+          </View>
+
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={schoolYear}
+              onValueChange={(itemValue) => setSchoolYear(itemValue)}
+              style={styles.picker}
+            >
+              <Picker.Item label="School Year" value="" />
+              <Picker.Item label="2023-2024" value="2023-2024" />
+              <Picker.Item label="2024-2025" value="2024-2025" />
+            </Picker>
+          </View>
+
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={graduating}
+              onValueChange={(itemValue) => setGraduating(itemValue)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Graduating?" value="" />
+              <Picker.Item label="Yes" value="yes" />
+              <Picker.Item label="No" value="no" />
+            </Picker>
+          </View>
+
+          <TouchableOpacity style={styles.submitButton}>
+            <Text style={styles.submitButtonText}>Submit</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Bottom Navigation */}
+      <View style={styles.navbar}>
+        <TouchableOpacity style={styles.navItem} onPress={handleMenuPress}>
+          <Image source={require('../../assets/images/blhome.png')} style={styles.navIcon} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleRequestPress}>
-          <Image
-            style={styles.request}
-            source={require("../../assets/images/request.png")}
-          />
+        <TouchableOpacity style={styles.navItem} onPress={handleRequestPress}>
+          <Image source={require('../../assets/images/blidcard.png')} style={styles.navIcon} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleStatusPress}>
-          <Image
-            style={styles.status}
-            source={require("../../assets/images/status.png")}
-          />
+        <TouchableOpacity style={styles.navItem} onPress={handleStatusPress}>
+          <Image source={require('../../assets/images/blnotes.png')} style={styles.navIcon} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleAccountPress}>
-          <Image
-            style={styles.account}
-            source={require("../../assets/images/user.png")}
-          />
+        <TouchableOpacity style={styles.navItem} onPress={handleAccountPress}>
+          <Image source={require('../../assets/images/bluser.png')} style={styles.navIcon} />
         </TouchableOpacity>
       </View>
     </LinearGradient>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: wp('100%'),
-    height: hp('100%'),
-    backgroundColor: "transparent",
-    overflow: "hidden",
   },
   header: {
-    padding: wp('4%'),
-    alignItems: "center",
-    position: "absolute",
-    marginTop: hp('2%'),
-    marginLeft: 0,
-    width: "100%",
-    zIndex: 10,
-  },
-  greeting: {
-    marginLeft: wp('12%'),
-    marginTop: hp('7%'),
-    fontSize: wp('5%'),
-    color: '#fff',
-    textShadowColor: "rgba(0, 0, 0, 0.25)",
-    shadowOpacity: 3,
-    textShadowOffset: { width: 1, height: 2 },
-    textShadowRadius: 3,
-  },
-  userName: {
-    marginLeft: wp('12%'),
-    marginTop: hp('0%'),
-    fontSize: wp('7%'),
-    fontWeight: "900",
-    color: '#fff',
-    textShadowColor: "rgba(0, 0, 0, 0.25)",
-    shadowOpacity: 5,
-    textShadowOffset: { width: 1, height: 3 },
-    textShadowRadius: 3,
-  },
-  title: {
-    fontSize: wp('10%'),
-    lineHeight: hp('5%'),
-    fontWeight: "800",
-    color: "#000",
-    textShadowColor: "rgba(0, 0, 0, 0.25)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 3,
-    textAlign: "center",
-    marginTop: hp('15%'),
-    },
-  button: {
-    width: wp('45%'),
-    marginLeft: wp('28%'),
-    marginTop: hp('0%'),
-    backgroundColor: '#266ca9',
-    paddingVertical: hp('2%'),
-    borderRadius: 8,
-    borderWidth: 0.5,
-    borderColor: '#266ca9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: "rgba(0, 0, 0, 0.25)",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: wp('4%'),
-  },
-  iconContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: wp('100%'),
-    paddingHorizontal: wp('9%'),
-    paddingVertical: hp('1%'),
-    position: 'absolute',
-    bottom: hp('1%'),
-    zIndex: 1,
+    padding: 16,
+    paddingTop: 40,
+    paddingBottom: 40,
   },
-  menuIcon: {
-    width: wp('9%'),
-    height: hp('4%'),
-    resizeMode: 'contain',
+  greeting: {
+    color: 'white',
+    fontSize: 14,
   },
-  request: {
-    width: wp('9%'),
-    height: hp('4%'),
-    resizeMode: 'contain',
+  name: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
-  status: {
-    width: wp('9%'),
-    height: hp('4%'),
-    resizeMode: 'contain',
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
-  account: {
-    width: wp('8%'),
-    height: hp('4%'),
-    resizeMode: 'contain',
-  },
-  curvedHeader: {
-    position: "absolute",
-    bottom: hp('-2%'),
-    marginLeft: 0,
-    width: wp('100%'),
-    height: hp('10%'),
+  contentContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    backgroundColor: '#fff',
-    alignItems: "center",
-    justifyContent: 'center',
-    shadowColor: "rgba(0, 0, 0, 0.25)",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    zIndex: 1,
-  },
-  vectorIcon: {
-    position: "absolute",
-    width: wp('100%'),
-    height: hp('100%'),
-    marginTop: hp('15%'),
+    paddingTop: 30,
   },
   formContainer: {
-    marginTop: hp('1%'),
-    padding: wp('6%'),
+    paddingHorizontal: 20,
   },
-  dropdownContainer: {
-    marginBottom: hp('2%')
-    
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 20,
+    textAlign: 'center',
   },
-  dropdown: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: wp('2%'),
-    borderColor: Color.borderDefaultTertiary,
-    borderWidth: 1,
-    borderRadius: StyleVariable.radius200,
-    backgroundColor: Color.backgroundDefaultDefault,
+  pickerContainer: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    marginBottom: 16,
   },
-  dropdownText: {
-    flex: 1,
-    fontSize: wp('4.5%'),
-    color: Color.textDefaultDefault,
+  picker: {
+    height: 50,
   },
-  chevronDownIcon: {
-    width: wp('4%'),
-    height: hp('2%'),
+  submitButton: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+    marginTop: 20,
+    width: '60%',
+    alignSelf: 'center',
   },
-  optionsContainer: {
-    borderColor: Color.borderDefaultDefault,
-    borderWidth: 1,
-    borderRadius: StyleVariable.radius200,
-    backgroundColor: Color.backgroundDefaultDefault,
-    position: "absolute",
-    width: wp('92%'),
-    marginTop: hp('6%'),
-    zIndex: 5,
+  submitButtonText: {
+    color: '#266ca9',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
-  option: {
-    fontSize: wp('4%'),
-    color: Color.textDefaultDefault,
-    paddingVertical: hp('2%'),
-    paddingHorizontal: wp('2%'),
-  },
-  avatarIcon: {
-    width: wp('13%'),
-    height: hp('6%'),
-    borderRadius: 50,
+  navbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    borderTopWidth: 1,
+    borderTopColor: '#1E88E5',
+    paddingVertical: 8,
     position: 'absolute',
-    marginLeft: wp('80%'),
-    marginTop: hp('7%'),
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+  },
+  navItem: {
+    padding: 8,
+  },
+  navIcon: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
   },
 });
 
