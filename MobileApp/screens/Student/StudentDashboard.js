@@ -1,27 +1,68 @@
-import React from 'react';
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import { useNavigation } from '@react-navigation/native';
 
 const StudentDashboard = () => {
-  const navigation = useNavigation(); // Initialize navigation
+  const navigation = useNavigation();
+  const [currentSemester, setCurrentSemester] = useState("Loading...");
+  const [currentAcademicYear, setCurrentAcademicYear] = useState("Loading...");
+  const [clearedCount, setClearedCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [remarkCount, setRemarkCount] = useState(0);
+  const [firstName, setFirstName] = useState("Loading...");
+  const [currentDateTime, setCurrentDateTime] = useState(new Date().toLocaleString());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Handlers for navigation
-  const handleHomePress = () => {
-    navigation.navigate('StudentDashboard'); // Replace with the actual route
+  const studentId = 1; // Replace with actual student ID
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const [semesterResponse, statusResponse, studentResponse] = await Promise.all([
+          fetch('http://192.168.1.6:8080/Admin/semester/current').then(res => res.ok ? res.json() : Promise.reject('Semester data failed')),
+          fetch(`http://192.168.1.6:8080/Status/student/${studentId}/status-counts`).then(res => res.ok ? res.json() : Promise.reject('Status counts failed')),
+          fetch(`http://192.168.1.6:8080/Student/students/${studentId}`).then(res => res.ok ? res.json() : Promise.reject('Student data failed'))
+        ]);
+
+        setCurrentSemester(semesterResponse.currentSemester);
+        setCurrentAcademicYear(semesterResponse.academicYear);
+        setClearedCount(statusResponse.cleared);
+        setPendingCount(statusResponse.pending);
+        setRemarkCount(statusResponse.remarks);
+        setFirstName(studentResponse.firstName);
+      } catch (error) {
+        setError("Failed to load data.");
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+
+    const intervalId = setInterval(() => {
+      setCurrentDateTime(new Date().toLocaleString());
+    }, 1000);
+
+    return () => clearInterval(intervalId); 
+  }, [studentId]);
+
+  const handleNavigation = (screen) => {
+    navigation.navigate(screen);
   };
 
-  const handleRequestPress = () => {
-    navigation.navigate('StudentClearanceRequest'); // Replace with the actual route
-  };
+  if (loading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
 
-  const handleStatusPress = () => {
-    navigation.navigate('StudentClearanceStatus'); // Replace with the actual route
-  };
-
-  const handleAccountPress = () => {
-    navigation.navigate('StudentProfile'); // Replace with the actual route
-  };
+  if (error) {
+    return <Text>Error: {error}</Text>;
+  }
 
   return (
     <LinearGradient
@@ -34,15 +75,14 @@ const StudentDashboard = () => {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Hello</Text>
-            <Text style={styles.name}>Aiah Nadine</Text>
+            <Text style={styles.name}>{firstName}</Text>
           </View>
-          {/* Replace avatar with an image */}
           <Image source={require('../../assets/images/avatar.png')} style={styles.avatar} />
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>A.Y. 2024 - 2025 - First Semester</Text>
-          <Text style={styles.cardSubtitle}>Saturday, July 13, 2024 17:40:44</Text>
+          <Text style={styles.cardTitle}>A.Y. {currentAcademicYear} - {currentSemester}</Text>
+          <Text style={styles.cardSubtitle}>{currentDateTime}</Text>
         </View>
 
         <Text style={styles.sectionTitle}>Clearance Status</Text>
@@ -50,36 +90,36 @@ const StudentDashboard = () => {
         <View style={styles.statusContainer}>
           <View style={styles.statusCard}>
             <Text style={styles.statusLabel}>Cleared</Text>
-            <Text style={styles.statusValue}>0</Text>
+            <Text style={styles.statusValue}>{clearedCount}</Text>
           </View>
           <View style={styles.statusCard}>
             <Text style={styles.statusLabel}>Pending</Text>
-            <Text style={styles.statusValue}>0</Text>
+            <Text style={styles.statusValue}>{pendingCount}</Text>
           </View>
           <View style={[styles.statusCard, styles.fullWidth]}>
             <Text style={styles.statusLabel}>Remarks</Text>
-            <Text style={styles.statusValue}>0</Text>
+            <Text style={styles.statusValue}>{remarkCount}</Text>
           </View>
         </View>
 
         <View style={styles.navbar}>
-          <TouchableOpacity style={styles.navItem} onPress={handleHomePress}>
+          <TouchableOpacity style={styles.navItem} onPress={() => handleNavigation('StudentDashboard')}>
             <Image source={require('../../assets/images/blhome.png')} style={styles.navIcon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={handleRequestPress}>
+          <TouchableOpacity style={styles.navItem} onPress={() => handleNavigation('StudentClearanceRequest')}>
             <Image source={require('../../assets/images/blidcard.png')} style={styles.navIcon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={handleStatusPress}>
+          <TouchableOpacity style={styles.navItem} onPress={() => handleNavigation('StudentClearanceStatus')}>
             <Image source={require('../../assets/images/blnotes.png')} style={styles.navIcon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={handleAccountPress}>
+          <TouchableOpacity style={styles.navItem} onPress={() => handleNavigation('StudentProfile')}>
             <Image source={require('../../assets/images/bluser.png')} style={styles.navIcon} />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     </LinearGradient>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {

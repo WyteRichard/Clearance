@@ -1,20 +1,15 @@
 package com.student.clearance.system.domain.clearanceRequest;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.student.clearance.system.domain.department.Department;
 import com.student.clearance.system.domain.student.Student;
-import com.student.clearance.system.domain.clearanceStatus.ClearanceStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.List;
+import java.io.Serializable;
 
 @Entity
 @Data
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class ClearanceRequest {
+public class ClearanceRequest implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,19 +19,16 @@ public class ClearanceRequest {
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
 
-    private String schoolYear;
-    private String semester;
-    private boolean graduating;
-
     @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
-    @OneToMany(mappedBy = "clearanceRequest")
-    @JsonManagedReference
-    private List<ClearanceStatus> clearanceStatuses;
+    @Column(nullable = false)
+    private String schoolYear;
 
-    public enum Semester {
-        FIRST, SECOND
-    }
+    @Column(nullable = false)
+    private String semester;
+
+    @Column(nullable = false)
+    private Boolean graduating;
 }

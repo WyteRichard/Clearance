@@ -4,9 +4,9 @@ import com.student.clearance.system.domain.studentDiscipline.StudentDiscipline;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface StudentDisciplineRepository extends JpaRepository<StudentDiscipline, Long> {
-    boolean existsByStudentDisciplineNumberAndEmail(String employeeNumber, String email);
-
-    StudentDiscipline findByStudentDisciplineNumber(String studentDisciplineNumber);
+    List<StudentDiscipline> findBySection_ClusterName(String clusterName);
 }

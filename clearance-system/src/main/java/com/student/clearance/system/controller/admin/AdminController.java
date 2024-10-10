@@ -1,7 +1,9 @@
 package com.student.clearance.system.controller.admin;
 
 import com.student.clearance.system.domain.admin.Admin;
+import com.student.clearance.system.domain.semesterControl.SemesterControl;
 import com.student.clearance.system.service.admin.AdminService;
+import com.student.clearance.system.service.semesterControl.SemesterControlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +17,12 @@ import java.util.Optional;
 public class AdminController {
 
     private final AdminService adminService;
+    private final SemesterControlService semesterControlService;
 
     @Autowired
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, SemesterControlService semesterControlService) {
         this.adminService = adminService;
+        this.semesterControlService = semesterControlService;
     }
 
     @GetMapping("/admins")
@@ -74,6 +78,28 @@ public class AdminController {
             }
         } catch (Exception e) {
             return new ResponseEntity<>("Admin cannot be deleted", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/semester/switch")
+    public ResponseEntity<SemesterControl> switchSemester(
+            @RequestParam SemesterControl.SemesterType semesterType,
+            @RequestParam String academicYear) {
+        try {
+            SemesterControl updatedSemester = semesterControlService.switchSemester(semesterType, academicYear);
+            return new ResponseEntity<>(updatedSemester, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/semester/current")
+    public ResponseEntity<SemesterControl> getCurrentSemester() {
+        try {
+            SemesterControl currentSemester = semesterControlService.getCurrentSemester();
+            return new ResponseEntity<>(currentSemester, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

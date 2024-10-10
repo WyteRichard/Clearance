@@ -6,7 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LaboratoryRepository extends JpaRepository<Laboratory, Long> {
-    boolean existsByLaboratoryNumberAndEmail(String employeeNumber, String email);
-
-    Laboratory findByLaboratoryNumber(String laboratoryNumber);
 }

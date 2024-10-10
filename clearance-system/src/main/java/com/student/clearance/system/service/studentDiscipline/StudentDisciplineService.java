@@ -8,5 +8,4 @@ public interface StudentDisciplineService {
     List<StudentDiscipline> getAllStudentDisciplines();
     int getStudentDisciplineCount();
     void deleteStudentDiscipline(Long id);
-    StudentDiscipline getPrefectByStudentDisciplineNumber(String studentDisciplineNumber);
 }

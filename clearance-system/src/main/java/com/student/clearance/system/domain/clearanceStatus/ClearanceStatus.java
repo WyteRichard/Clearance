@@ -16,12 +16,12 @@ public class ClearanceStatus implements Serializable {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "clearance_request_id", nullable = false)
-    private ClearanceRequest clearanceRequest;
-
-    @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
+
+    @ManyToOne
+    @JoinColumn(name = "clearance_request_id", nullable = false)
+    private ClearanceRequest clearanceRequest;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
@@ -30,6 +30,7 @@ public class ClearanceStatus implements Serializable {
     private String remarks;
 
     public enum Status {
-        PENDING, CLEARED
+        CLEARED,
+        PENDING
     }
 }

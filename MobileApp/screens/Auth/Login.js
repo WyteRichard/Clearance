@@ -66,7 +66,7 @@ const Login = () => {
           </View>
 
           {/* Forgot Password aligned to the right below the password field */}
-          <TouchableOpacity style={styles.forgotPasswordButton} onPress={() => navigation.navigate('Forgot')}>
+          <TouchableOpacity style={styles.forgotPasswordButton} onPress={() => navigation.navigate('VerifyOtp')}>
             <Text style={styles.forgotPassword}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>

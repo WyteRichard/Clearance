@@ -12,8 +12,8 @@ import java.io.Serializable;
 @Data
 public class SupremeStudentCouncil extends Person implements Serializable {
 
-    private Long supremeStudentCouncilId;
-    private String supremeStudentCouncilNumber;
+    private Long SupremeStudentCouncilId;
+    private String SupremeStudentCouncilNumber;
 
     @ManyToOne
     @JoinColumn(name = "department_id")

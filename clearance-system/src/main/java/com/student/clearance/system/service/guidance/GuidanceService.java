@@ -7,5 +7,4 @@ public interface GuidanceService {
     List<Guidance> getAllGuidances();
     int getGuidanceCount();
     void deleteGuidance(Long id);
-    Guidance getGuidanceByGuidanceNumber(String guidanceNumber);
 }

@@ -32,9 +32,4 @@ public class SupremeStudentCouncilServiceImpl implements SupremeStudentCouncilSe
     public void deleteSupremeStudentCouncil(Long id) {
         supremeStudentCouncilRepository.deleteById(id);
     }
-
-    @Override
-    public SupremeStudentCouncil getCouncilByNumber(String supremeStudentCouncilNumber) { // Add this method
-        return supremeStudentCouncilRepository.findBySupremeStudentCouncilNumber(supremeStudentCouncilNumber);
-    }
 }

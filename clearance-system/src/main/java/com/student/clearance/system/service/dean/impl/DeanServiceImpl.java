@@ -32,9 +32,4 @@ public class DeanServiceImpl implements DeanService {
     public void deleteDean(Long id) {
         deanRepository.deleteById(id);
     }
-
-    @Override
-    public Dean getDeanByDeanNumber(String deanNumber) {
-        return deanRepository.findByDeanNumber(deanNumber);
-    }
 }

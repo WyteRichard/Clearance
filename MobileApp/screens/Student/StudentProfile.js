@@ -1,18 +1,50 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';  // Import useNavigation
+import { useNavigation } from '@react-navigation/native';
 
 const StudentAccount = () => {
+  const navigation = useNavigation();
+  const [student, setStudent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const navigation = useNavigation();  // Initialize navigation
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('http://192.168.1.6:8080/Student/students/1'); // Replace with your API endpoint
+        if (!response.ok) {
+          throw new Error('Failed to fetch student data');
+        }
+        const data = await response.json();
+        setStudent(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStudentData();
+  }, []);
 
-  // Handle logout functionality
-  const handleLogout = () => {
-    // Add your logout logic here
-    // For example, clear any stored tokens or user data, then navigate to the login screen
-    navigation.navigate('Login');  // Assuming there's a 'Login' screen to navigate to
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const options = { year: 'numeric', month: 'long', day: '2-digit' };
+    return date.toLocaleDateString(undefined, options);
   };
+
+  const handleLogout = () => {
+    navigation.navigate('Login');
+  };
+
+  if (loading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
+
+  if (error) {
+    return <Text>Error: {error}</Text>;
+  }
 
   return (
     <LinearGradient
@@ -22,15 +54,10 @@ const StudentAccount = () => {
       end={{ x: 1, y: 1 }}
     >
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}> 
-          {/* Go back when the button is pressed */}
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Image source={require('../../assets/images/back.png')} style={styles.backIcon} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Profile</Text>
-      </View>
-
-      <View style={styles.avatarContainer}>
-        <Image source={require('../../assets/images/avatar.png')} style={styles.avatar} />
       </View>
 
       <ScrollView style={styles.contentContainer}>
@@ -39,52 +66,80 @@ const StudentAccount = () => {
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/buser.png')} style={styles.icon} />
-            <Text style={styles.infoText}>Aiah Nadine Quñones Delos Reyes</Text>
+            <Text style={styles.infoText}>{`${student.firstName} ${student.middleName} ${student.lastName}`}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/bphone.png')} style={styles.icon} />
-            <Text style={styles.infoText}>09923692695</Text>
+            <Text style={styles.infoText}>{student.contactNumber}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/bmail.png')} style={styles.icon} />
-            <Text style={styles.infoText}>aiahnadinedelosreyes@gmail.com</Text>
+            <Text style={styles.infoText}>{student.email}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/bsid.png')} style={styles.icon} />
-            <Text style={styles.infoText}>CT21-0099</Text>
+            <Text style={styles.infoText}>{student.studentNumber}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/bcourse.png')} style={styles.icon} />
-            <Text style={styles.infoText}>BS in Information Technology</Text>
+            <Text style={styles.infoText}>{student.course.courseName}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/bghat.png')} style={styles.icon} />
-            <Text style={styles.infoText}>Fourth Year</Text>
+            <Text style={styles.infoText}>{student.yearLevel.yearLevel}</Text>
           </View>
 
-          <TouchableOpacity style={styles.editButton}>
-            <Text style={styles.editButtonText}>Edit Profile</Text>
-          </TouchableOpacity>
+          <View style={styles.infoItem}>
+            <Image source={require('../../assets/images/address.png')} style={styles.icon} />
+            <Text style={styles.infoText}>{student.address}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <Image source={require('../../assets/images/religion.png')} style={styles.icon} />
+            <Text style={styles.infoText}>{student.religion}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <Image source={require('../../assets/images/bdate.png')} style={styles.icon} />
+            <Text style={styles.infoText}>{formatDate(student.birthdate)}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <Image source={require('../../assets/images/bplace.png')} style={styles.icon} />
+            <Text style={styles.infoText}>{student.birthplace}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <Image source={require('../../assets/images/citizen.png')} style={styles.icon} />
+            <Text style={styles.infoText}>{student.citizenship}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <Image source={require('../../assets/images/cvstat.png')} style={styles.icon} />
+            <Text style={styles.infoText}>{student.civilStatus}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <Image source={require('../../assets/images/sex.png')} style={styles.icon} />
+            <Text style={styles.infoText}>{student.sex}</Text>
+          </View>
         </View>
 
-        {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
     </LinearGradient>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -92,9 +147,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 20,
   },
-  backButton: {
-    marginRight: 16,
-  },
+  backButton: { marginRight: 16 },
   backIcon: {
     width: 24,
     height: 24,
@@ -104,20 +157,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: 'white',
-  },
-  avatarContainer: {
-    alignItems: 'center',
     marginBottom: 20,
   },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    resizeMode: 'contain',
-  },
-  contentContainer: {
-    flex: 1,
-  },
+  contentContainer: { flex: 1 },
   card: {
     backgroundColor: 'white',
     borderRadius: 8,
@@ -145,21 +187,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-  editButton: {
-    backgroundColor: '#266ca9',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  editButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  // Logout Button Styles
   logoutButton: {
-    backgroundColor: '#D4D4D4',  // You can adjust the color
+    backgroundColor: '#D4D4D4',
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',

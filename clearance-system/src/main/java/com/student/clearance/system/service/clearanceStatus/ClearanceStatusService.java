@@ -17,4 +17,6 @@ public interface ClearanceStatusService {
     long countByStatus(ClearanceStatus.Status status);
 
     List<ClearanceStatus> getClearanceStatusesByStudentId(Long studentId);
+
+    int countByDepartmentIdAndStatus(Long departmentId, ClearanceStatus.Status status);
 }

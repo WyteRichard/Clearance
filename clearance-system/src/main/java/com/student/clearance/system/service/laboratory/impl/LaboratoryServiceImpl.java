@@ -32,9 +32,4 @@ public class LaboratoryServiceImpl implements LaboratoryService {
     public void deleteLaboratory(Long id) {
         laboratoryRepository.deleteById(id);
     }
-
-    @Override
-    public Laboratory getLaboratoryByLaboratoryNumber(String laboratoryNumber) {
-        return laboratoryRepository.findByLaboratoryNumber(laboratoryNumber);
-    }
 }

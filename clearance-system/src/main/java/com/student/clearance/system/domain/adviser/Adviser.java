@@ -1,5 +1,6 @@
 package com.student.clearance.system.domain.adviser;
 
+import com.student.clearance.system.domain.course.Course;
 import com.student.clearance.system.domain.department.Department;
 import com.student.clearance.system.domain.person.Person;
 import com.student.clearance.system.domain.user.User;
@@ -13,12 +14,16 @@ import java.io.Serializable;
 @Data
 public class Adviser extends Person implements Serializable {
 
-    private Long adviserId;
-    private String adviserNumber;
+    private Long AdviserId;
+    private String EmployeeNumber;
 
     @ManyToOne
     @JoinColumn(name = "department_id")
     private Department department;
+
+    @ManyToOne
+    @JoinColumn(name = "course_id")
+    private Course course;
 
     @OneToOne
     @JoinColumn(name = "user_id")

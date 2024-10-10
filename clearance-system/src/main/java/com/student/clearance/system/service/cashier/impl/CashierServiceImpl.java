@@ -32,9 +32,4 @@ public class CashierServiceImpl implements CashierService {
     public void deleteCashier(Long id) {
         cashierRepository.deleteById(id);
     }
-
-    @Override
-    public Cashier getCashierByCashierNumber(String cashierNumber) {
-        return cashierRepository.findByCashierNumber(cashierNumber);
-    }
 }

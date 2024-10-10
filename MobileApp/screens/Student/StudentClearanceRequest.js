@@ -1,33 +1,138 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
-import { useNavigation } from '@react-navigation/native';  // Import useNavigation hook
+import { useNavigation } from '@react-navigation/native';
 
 const StudentClearanceRequest = () => {
-  
-  const [semester, setSemester] = React.useState('');
-  const [schoolYear, setSchoolYear] = React.useState('');
-  const [graduating, setGraduating] = React.useState('');
-  
-  const navigation = useNavigation();  // Initialize navigation
+  const [department, setDepartment] = useState('');
+  const [semester, setSemester] = useState('');
+  const [schoolYear, setSchoolYear] = useState('');
+  const [graduating, setGraduating] = useState('');
+  const [currentSemester, setCurrentSemester] = useState('Loading...');
+  const [currentAcademicYear, setCurrentAcademicYear] = useState('Loading...');
+  const [studentFirstName, setStudentFirstName] = useState('Loading...');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigation = useNavigation();
+  const studentId = 1; // Replace with the actual student ID
 
-  // Navigation functions for the bottom navbar
-  const handleMenuPress = () => {
-    navigation.navigate('StudentDashboard');  // Navigate to Student Dashboard
+  const firstSemesterDepartments = [
+    { id: '2', name: 'Cashier' },
+    { id: '5', name: 'Dean' },
+    { id: '6', name: 'Guidance' },
+    { id: '8', name: 'Library' },
+    { id: '9', name: 'Registrar' },
+    { id: '11', name: 'Student Affairs' },
+    { id: '12', name: 'Student Discipline' },
+  ];
+
+  const allDepartments = [
+    { id: '1', name: 'Adviser' },
+    { id: '2', name: 'Cashier' },
+    { id: '3', name: 'Clinic' },
+    { id: '4', name: 'Cluster Coordinator' },
+    { id: '5', name: 'Dean' },
+    { id: '6', name: 'Guidance' },
+    { id: '7', name: 'Laboratory' },
+    { id: '8', name: 'Library' },
+    { id: '9', name: 'Registrar' },
+    { id: '10', name: 'Spiritual Affairs' },
+    { id: '11', name: 'Student Affairs' },
+    { id: '12', name: 'Student Discipline' },
+    { id: '13', name: 'Supreme Student Council' },
+  ];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const [semesterResponse, studentResponse] = await Promise.all([
+          fetch('http://192.168.1.6:8080/Admin/semester/current'),
+          fetch(`http://192.168.1.6:8080/Student/students/${studentId}`)
+        ]);
+
+        if (!semesterResponse.ok) throw new Error('Failed to fetch semester data');
+        if (!studentResponse.ok) throw new Error('Failed to fetch student data');
+
+        const semesterData = await semesterResponse.json();
+        const studentData = await studentResponse.json();
+
+        setCurrentSemester(semesterData.currentSemester);
+        setCurrentAcademicYear(semesterData.academicYear);
+        setStudentFirstName(studentData.firstName);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setError('Failed to fetch data. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleSemesterChange = (selectedSemester) => {
+    const normalizedSelectedSemester = selectedSemester === 'first' ? 'first_semester' : 'second_semester';
+    const normalizedCurrentSemester = currentSemester.toLowerCase();
+
+    if (normalizedSelectedSemester !== normalizedCurrentSemester) {
+      Alert.alert(`You are only allowed to choose ${currentSemester.replace("_", " ")}.`);
+    } else {
+      setSemester(selectedSemester);
+    }
   };
 
-  const handleRequestPress = () => {
-    navigation.navigate('StudentClearanceRequest');  // Navigate to Clearance Request
+  const handleSchoolYearChange = (selectedYear) => {
+    if (selectedYear !== currentAcademicYear) {
+      Alert.alert(`You are only allowed to choose the current academic year: ${currentAcademicYear}.`);
+    } else {
+      setSchoolYear(selectedYear);
+    }
   };
 
-  const handleStatusPress = () => {
-    navigation.navigate('StudentClearanceStatus');  // Navigate to Clearance Status
+  const handleGraduatingChange = (selectedGraduating) => {
+    setGraduating(selectedGraduating);
   };
 
-  const handleAccountPress = () => {
-    navigation.navigate('StudentProfile');  // Navigate to Profile
+  const handleSubmit = async () => {
+    const clearanceRequest = {
+      student: { id: studentId },
+      department: { id: department },
+      semester,
+      schoolYear,
+      graduating: graduating === 'yes',
+    };
+
+    try {
+      const response = await fetch('http://192.168.1.6:8080/Requests/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clearanceRequest),
+      });
+
+      if (response.ok) {
+        Alert.alert('Clearance request successfully added');
+      } else {
+        Alert.alert(`Failed to add clearance request. Status code: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error submitting request:', error);
+      Alert.alert('Error', 'Failed to submit clearance request. Please try again.');
+    }
   };
+
+  const availableDepartments = semester === 'first' ? firstSemesterDepartments : allDepartments;
+
+  if (loading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
+
+  if (error) {
+    return <Text>Error: {error}</Text>;
+  }
 
   return (
     <LinearGradient
@@ -39,7 +144,7 @@ const StudentClearanceRequest = () => {
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>Hello</Text>
-          <Text style={styles.name}>Aiah Nadine</Text>
+          <Text style={styles.name}>{studentFirstName}</Text>
         </View>
         <Image source={require('../../assets/images/avatar.png')} style={styles.avatar} />
       </View>
@@ -48,43 +153,44 @@ const StudentClearanceRequest = () => {
         <View style={styles.formContainer}>
           <Text style={styles.title}>CLEARANCE REQUEST</Text>
 
+          {/* Department Dropdown */}
           <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={semester}
-              onValueChange={(itemValue) => setSemester(itemValue)}
-              style={styles.picker}
-            >
+            <Picker selectedValue={department} onValueChange={(itemValue) => setDepartment(itemValue)} style={styles.picker}>
+              <Picker.Item label="Select Department" value="" />
+              {availableDepartments.map(dept => (
+                <Picker.Item key={dept.id} label={dept.name} value={dept.id} />
+              ))}
+            </Picker>
+          </View>
+
+          {/* Semester Dropdown */}
+          <View style={styles.pickerContainer}>
+            <Picker selectedValue={semester} onValueChange={handleSemesterChange} style={styles.picker}>
               <Picker.Item label="Semester" value="" />
               <Picker.Item label="First Semester" value="first" />
               <Picker.Item label="Second Semester" value="second" />
             </Picker>
           </View>
 
+          {/* School Year Dropdown */}
           <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={schoolYear}
-              onValueChange={(itemValue) => setSchoolYear(itemValue)}
-              style={styles.picker}
-            >
+            <Picker selectedValue={schoolYear} onValueChange={handleSchoolYearChange} style={styles.picker}>
               <Picker.Item label="School Year" value="" />
               <Picker.Item label="2023-2024" value="2023-2024" />
               <Picker.Item label="2024-2025" value="2024-2025" />
             </Picker>
           </View>
 
+          {/* Graduating Dropdown */}
           <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={graduating}
-              onValueChange={(itemValue) => setGraduating(itemValue)}
-              style={styles.picker}
-            >
+            <Picker selectedValue={graduating} onValueChange={handleGraduatingChange} style={styles.picker}>
               <Picker.Item label="Graduating?" value="" />
               <Picker.Item label="Yes" value="yes" />
               <Picker.Item label="No" value="no" />
             </Picker>
           </View>
 
-          <TouchableOpacity style={styles.submitButton}>
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
             <Text style={styles.submitButtonText}>Submit</Text>
           </TouchableOpacity>
         </View>
@@ -92,22 +198,22 @@ const StudentClearanceRequest = () => {
 
       {/* Bottom Navigation */}
       <View style={styles.navbar}>
-        <TouchableOpacity style={styles.navItem} onPress={handleMenuPress}>
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentDashboard')}>
           <Image source={require('../../assets/images/blhome.png')} style={styles.navIcon} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={handleRequestPress}>
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentClearanceRequest')}>
           <Image source={require('../../assets/images/blidcard.png')} style={styles.navIcon} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={handleStatusPress}>
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentClearanceStatus')}>
           <Image source={require('../../assets/images/blnotes.png')} style={styles.navIcon} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={handleAccountPress}>
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentProfile')}>
           <Image source={require('../../assets/images/bluser.png')} style={styles.navIcon} />
         </TouchableOpacity>
       </View>
     </LinearGradient>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {

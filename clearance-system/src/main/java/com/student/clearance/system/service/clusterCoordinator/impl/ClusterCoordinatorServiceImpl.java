@@ -32,9 +32,4 @@ public class ClusterCoordinatorServiceImpl implements ClusterCoordinatorService 
     public void deleteClusterCoordinator(Long id) {
         clusterCoordinatorRepository.deleteById(id);
     }
-
-    @Override
-    public ClusterCoordinator getCoordinatorByClusterCoordinatorNumber(String clusterCoordinatorNumber) {
-        return clusterCoordinatorRepository.findByClusterCoordinatorNumber(clusterCoordinatorNumber);
-    }
 }

@@ -7,5 +7,4 @@ public interface LibraryService {
     List<Library> getAllLibraries();
     int getLibraryCount();
     void deleteLibrary(Long id);
-    Library getLibraryByLibraryNumber(String libraryNumber);
 }

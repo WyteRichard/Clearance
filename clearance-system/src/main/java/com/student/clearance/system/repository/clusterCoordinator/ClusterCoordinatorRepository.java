@@ -6,7 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ClusterCoordinatorRepository extends JpaRepository<ClusterCoordinator, Long> {
-    boolean existsByClusterCoordinatorNumberAndEmail(String employeeNumber, String email);
-
-    ClusterCoordinator findByClusterCoordinatorNumber(String clusterCoordinatorNumber);
 }

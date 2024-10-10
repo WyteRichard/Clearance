@@ -12,10 +12,10 @@ spring:
 server:
   port: 8080
 logging:
-  level:
-    org.springframework.security.web: info
-    root: info
-  file:
-    name: build/log/${spring.application.name}.log
-jwt:
-  secret: 'thebigbrownfoxjumpsoverthelazydog'
+#  level:
+#    org.springframework.security.web: info
+#    root: info
+#  file:
+#    name: build/log/${spring.application.name}.log
+#jwt:
+#  secret: 'thebigbrownfoxjumpsoverthelazydog'

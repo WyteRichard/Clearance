@@ -1,39 +1,140 @@
-import React from 'react';
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, Image, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
-
-const clearanceData = [
-  { department: 'Supreme Student Council', status: 'Cleared', remarks: 'None' },
-  { department: 'Student Affairs', status: 'Cleared', remarks: 'None' },
-  { department: 'Spiritual Affairs', status: 'Cleared', remarks: 'None' },
-  { department: 'Student Discipline', status: 'Pending', remarks: 'None' },
-  { department: 'Guidance', status: 'Pending', remarks: 'None' },
-  { department: 'Library', status: 'Cleared', remarks: 'None' },
-  { department: 'Laboratory', status: 'Cleared', remarks: 'None' },
-];
+import * as FileSystem from 'expo-file-system';
+import * as Print from 'expo-print';
+import { Asset } from 'expo-asset';
 
 const ClearanceStatus = () => {
-
-  const [selectedStatus, setSelectedStatus] = React.useState('Cleared');
+  const [clearanceStatuses, setClearanceStatuses] = useState([]);
+  const [filteredStatuses, setFilteredStatuses] = useState([]);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [currentSemester, setCurrentSemester] = useState('Loading...');
+  const [currentAcademicYear, setCurrentAcademicYear] = useState('Loading...');
+  const [studentFirstName, setStudentFirstName] = useState('');
+  const [studentMiddleName, setStudentMiddleName] = useState('');
+  const [studentLastName, setStudentLastName] = useState('');
+  const [studentNumber, setStudentNumber] = useState('');
+  const [sectionName, setSectionName] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigation = useNavigation();
+  const studentId = 1; // Replace with the actual student ID
 
-  const handleMenuPress = () => {
-    navigation.navigate('StudentDashboard');
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const [semesterResponse, statusResponse, studentResponse] = await Promise.all([
+          fetch('http://192.168.1.6:8080/Admin/semester/current'),
+          fetch(`http://192.168.1.6:8080/Status/student/${studentId}`),
+          fetch(`http://192.168.1.6:8080/Student/students/${studentId}`)
+        ]);
+
+        if (!semesterResponse.ok) throw new Error('Failed to fetch semester data');
+        if (!statusResponse.ok) throw new Error('Failed to fetch status data');
+        if (!studentResponse.ok) throw new Error('Failed to fetch student data');
+
+        const semesterData = await semesterResponse.json();
+        const statusData = await statusResponse.json();
+        const studentData = await studentResponse.json();
+
+        setCurrentSemester(semesterData.currentSemester);
+        setCurrentAcademicYear(semesterData.academicYear);
+        setClearanceStatuses(Array.isArray(statusData) ? statusData : Object.values(statusData));
+        setStudentFirstName(studentData.firstName);
+        setStudentMiddleName(studentData.middleName);
+        setStudentLastName(studentData.lastName);
+        setStudentNumber(studentData.studentNumber);
+        setSectionName(studentData.section.sectionName);
+      } catch (error) {
+        setError('Failed to fetch data. Please try again.');
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [studentId]);
+
+  useEffect(() => {
+    const filtered = statusFilter
+      ? clearanceStatuses.filter((status) => status.status.toLowerCase() === statusFilter)
+      : clearanceStatuses;
+    setFilteredStatuses(filtered);
+  }, [statusFilter, clearanceStatuses]);
+
+  const handleStatusFilterChange = (selectedFilter) => {
+    setStatusFilter(selectedFilter);
   };
 
-  const handleRequestPress = () => {
-    navigation.navigate('StudentClearanceRequest');
+  const handlePrint = async () => {
+    const logoAsset = Asset.fromModule(require('../../assets/images/logo.png'));
+    await logoAsset.downloadAsync();
+    const logoUri = logoAsset.localUri || logoAsset.uri;
+    const logoBase64 = await FileSystem.readAsStringAsync(logoUri, { encoding: FileSystem.EncodingType.Base64 });
+
+    const htmlContent = `
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; text-align: center; }
+          .logo { width: 250px; margin-bottom: 10px; }
+          .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          .table th { background-color: #f2f2f2; }
+        </style>
+      </head>
+      <body>
+        <img src="data:image/png;base64,${logoBase64}" class="logo" alt="Logo" />
+        <h1>Student Clearance</h1>
+        <p>Academic Year: ${currentAcademicYear}</p>
+        <p>Semester: ${currentSemester.replace('_', ' ')}</p>
+        <h2>${studentFirstName} ${studentMiddleName} ${studentLastName}</h2>
+        <p>Student No.: ${studentNumber}</p>
+        <p>Section: ${sectionName}</p>
+        
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Department</th>
+              <th>Status</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredStatuses.map(status => `
+              <tr>
+                <td>${status.department}</td>
+                <td>${status.status}</td>
+                <td>${status.remarks}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+
+    try {
+      await Print.printAsync({ html: htmlContent });
+    } catch (error) {
+      Alert.alert('Error', 'Could not print the document');
+    }
   };
 
-  const handleStatusPress = () => {
-    navigation.navigate('StudentClearanceStatus');
-  };
+  if (loading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
 
-  const handleAccountPress = () => {
-    navigation.navigate('StudentProfile');
-  };
+  if (error) {
+    return <Text>Error: {error}</Text>;
+  }
 
   return (
     <LinearGradient
@@ -46,70 +147,74 @@ const ClearanceStatus = () => {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Hello</Text>
-            <Text style={styles.name}>Aiah Nadine</Text>
+            <Text style={styles.name}>{studentFirstName}</Text>
           </View>
           <Image source={require('../../assets/images/avatar.png')} style={styles.avatar} />
         </View>
 
-        <View style={styles.statusSection}>
-          <Text style={styles.statusLabel}>Clearance Status</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={selectedStatus}
-              onValueChange={(itemValue) => setSelectedStatus(itemValue)}
-              style={styles.picker}
-              itemStyle={styles.pickerItem}
-            >
-              <Picker.Item label="Cleared" value="cleared" />
-              <Picker.Item label="Pending" value="pending" />
-            </Picker>
-          </View>
+        <View style={[styles.infoContainer, styles.invisible]}>
+          <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
+          <Text style={styles.infoText}>A.Y. {currentAcademicYear}</Text>
+          <Text style={styles.infoText}>Semester: {currentSemester.replace('_', ' ')}</Text>
+          <Text style={styles.infoText}>Name: {`${studentFirstName} ${studentMiddleName} ${studentLastName}`}</Text>
+          <Text style={styles.infoText}>Student No.: {studentNumber}</Text>
+          <Text style={styles.infoText}>Section: {sectionName}</Text>
         </View>
 
-        <View style={styles.tableContainer}>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.headerCell, styles.departmentCell]}>Department</Text>
-            <Text style={[styles.headerCell, styles.statusCell]}>Status</Text>
-            <Text style={[styles.headerCell, styles.remarksCell]}>Remarks</Text>
-          </View>
-          <ScrollView style={styles.tableContent}>
-            {clearanceData.map((item, index) => (
-              <View key={index} style={styles.tableRow}>
-                <Text style={[styles.cell, styles.departmentCell]}>{item.department}</Text>
-                <Text
-                  style={[
-                    styles.cell,
-                    styles.statusCell,
-                    item.status === 'Cleared' ? styles.cleared : styles.pending,
-                  ]}
-                >
-                  {item.status}
-                </Text>
-                <Text style={[styles.cell, styles.remarksCell]}>{item.remarks}</Text>
-              </View>
-            ))}
-          </ScrollView>
+        <View style={styles.filterContainer}>
+          <Picker
+            selectedValue={statusFilter}
+            onValueChange={handleStatusFilterChange}
+            style={styles.filterButton}
+          >
+            <Picker.Item label="All" value="" />
+            <Picker.Item label="Cleared" value="cleared" />
+            <Picker.Item label="Pending" value="pending" />
+          </Picker>
+          <TouchableOpacity style={styles.printButton} onPress={handlePrint}>
+            <Image source={require('../../assets/images/printIcon.png')} style={styles.printIcon} />
+            <Text style={{ color: 'white' }}>Print</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Navbar fixed at the bottom with navigation */}
+        <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
+          <View style={styles.tableContainer}>
+            <View style={styles.tableHeader}>
+              <Text style={[styles.headerCell, styles.departmentCell]}>Department</Text>
+              <Text style={[styles.headerCell, styles.statusCell]}>Status</Text>
+              <Text style={[styles.headerCell, styles.remarksCell]}>Remarks</Text>
+            </View>
+            
+            <ScrollView style={styles.tableContent} nestedScrollEnabled={true}>
+              {filteredStatuses.map((item, index) => (
+                <View key={index} style={styles.tableRow}>
+                  <Text style={[styles.cell, styles.departmentCell]}>{item.department}</Text>
+                  <Text style={[styles.cell, styles.statusCell, item.status === 'Cleared' ? styles.cleared : styles.pending]}>{item.status}</Text>
+                  <Text style={[styles.cell, styles.remarksCell]}>{item.remarks}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </ScrollView>
+
         <View style={styles.navbar}>
-          <TouchableOpacity style={styles.navItem} onPress={handleMenuPress}>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentDashboard')}>
             <Image source={require('../../assets/images/blhome.png')} style={styles.navIcon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={handleRequestPress}>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentClearanceRequest')}>
             <Image source={require('../../assets/images/blidcard.png')} style={styles.navIcon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={handleStatusPress}>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentClearanceStatus')}>
             <Image source={require('../../assets/images/blnotes.png')} style={styles.navIcon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={handleAccountPress}>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentProfile')}>
             <Image source={require('../../assets/images/bluser.png')} style={styles.navIcon} />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     </LinearGradient>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -118,8 +223,17 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  invisible: {
+    display: 'none', // Hides the component completely
+  },
+  logo: {
+    width: 100,  // Adjust as needed
+    height: 100, // Adjust as needed
+    marginBottom: 10, // Add spacing between the logo and the text below
+  },
   header: {
     marginTop: 20,
+    marginBottom: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -139,39 +253,59 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
   },
-  statusSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
+  infoContainer: {
+    padding: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
     marginBottom: 16,
-    marginTop: 50,
   },
-  statusLabel: {
+  infoText: {
     color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 14,
   },
-  pickerContainer: {
+  filterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    marginBottom: 20,
+    gap: 10,
+  },
+  filterButton: {
+    width: 150,
     backgroundColor: 'white',
     borderRadius: 4,
-    width: 150,
+    borderColor: '#ccc',
+    borderWidth: 2,
+    marginRight: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
-  picker: {
-    height: 40,
-    width: 150,
+  printButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#266ca9',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 4,
   },
-  pickerItem: {
-    fontSize: 16,
+  printIcon: {
+    width: 15,
+    height: 15,
+    marginRight: 5,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   tableContainer: {
-    flex: 1,
     backgroundColor: 'white',
     marginHorizontal: 16,
     borderRadius: 8,
     overflow: 'hidden',
-    marginTop: 10,
-    marginBottom: 100,
+    padding: 10,
   },
   tableHeader: {
     flexDirection: 'row',
@@ -182,11 +316,11 @@ const styles = StyleSheet.create({
   headerCell: {
     fontWeight: 'bold',
     fontSize: 14,
-    textAlign: 'left',
     paddingHorizontal: 8,
   },
   tableContent: {
     flexGrow: 1,
+    maxHeight: 500,
   },
   tableRow: {
     flexDirection: 'row',
@@ -206,13 +340,6 @@ const styles = StyleSheet.create({
   cell: {
     fontSize: 14,
     paddingVertical: 12,
-    paddingHorizontal: 8,
-  },
-  cleared: {
-    color: 'green',
-  },
-  pending: {
-    color: 'red',
   },
   navbar: {
     position: 'absolute',
@@ -232,7 +359,6 @@ const styles = StyleSheet.create({
   navIcon: {
     width: 24,
     height: 24,
-    resizeMode: 'contain',
   },
 });
 

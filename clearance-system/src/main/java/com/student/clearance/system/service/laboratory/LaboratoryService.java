@@ -7,5 +7,4 @@ public interface LaboratoryService {
     List<Laboratory> getAllLaboratories();
     int getLaboratoryCount();
     void deleteLaboratory(Long id);
-    Laboratory getLaboratoryByLaboratoryNumber(String laboratoryNumber);
 }

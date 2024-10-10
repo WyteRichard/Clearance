@@ -6,7 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RegistrarRepository extends JpaRepository<Registrar, Long> {
-    boolean existsByRegistrarNumberAndEmail(String employeeNumber, String email);
-
-    Registrar findByRegistrarNumber(String registrarNumber);
 }

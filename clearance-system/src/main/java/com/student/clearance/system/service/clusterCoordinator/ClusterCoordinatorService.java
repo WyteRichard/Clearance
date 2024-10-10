@@ -7,5 +7,4 @@ public interface ClusterCoordinatorService {
     List<ClusterCoordinator> getAllClusterCoordinators();
     int getClusterCoordinatorCount();
     void deleteClusterCoordinator(Long id);
-    ClusterCoordinator getCoordinatorByClusterCoordinatorNumber(String clusterCoordinatorNumber);
 }

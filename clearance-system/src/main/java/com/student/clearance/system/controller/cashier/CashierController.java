@@ -31,16 +31,6 @@ public class CashierController {
         return ResponseEntity.ok(count);
     }
 
-    @GetMapping("/cashiers/{cashierNumber}")
-    public ResponseEntity<Cashier> getCashierByCashierNumber(@PathVariable String cashierNumber) {
-        Cashier cashier = cashierService.getCashierByCashierNumber(cashierNumber);
-        if (cashier != null) {
-            return new ResponseEntity<>(cashier, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
     @DeleteMapping("/cashiers/{id}")
     public ResponseEntity<Void> deleteCashier(@PathVariable Long id) {
         cashierService.deleteCashier(id);

@@ -31,13 +31,6 @@ public class RegistrarController {
         return ResponseEntity.ok(count);
     }
 
-    @GetMapping("/registrars/{registrarNumber}")
-    public ResponseEntity<Registrar> getRegistrarByRegistrarNumber(@PathVariable String registrarNumber) {
-        Registrar registrar = registrarService.getRegistrarByRegistrarNumber(registrarNumber);
-        return registrar != null ? new ResponseEntity<>(registrar, HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
-    }
-
     @DeleteMapping("/registrars/{id}")
     public ResponseEntity<Void> deleteRegistrar(@PathVariable Long id) {
         registrarService.deleteRegistrar(id);

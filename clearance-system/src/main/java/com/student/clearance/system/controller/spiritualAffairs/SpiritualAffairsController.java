@@ -36,10 +36,4 @@ public class SpiritualAffairsController {
         spiritualAffairsService.deleteSpiritualAffairs(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
-
-    @GetMapping("/affairs/{spiritualAffairsNumber}")
-    public ResponseEntity<SpiritualAffairs> getAffairsBySpiritualAffairsNumber(@PathVariable String spiritualAffairsNumber) {
-        SpiritualAffairs affairs = spiritualAffairsService.getAffairsBySpiritualAffairsNumber(spiritualAffairsNumber);
-        return new ResponseEntity<>(affairs, HttpStatus.OK);
-    }
 }

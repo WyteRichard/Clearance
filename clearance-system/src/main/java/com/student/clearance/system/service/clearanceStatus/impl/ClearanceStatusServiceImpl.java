@@ -63,4 +63,9 @@ public class ClearanceStatusServiceImpl implements ClearanceStatusService {
     public List<ClearanceStatus> getClearanceStatusesByStudentId(Long studentId) {
         return clearanceStatusRepository.findByStudentId(studentId);
     }
+
+    @Override
+    public int countByDepartmentIdAndStatus(Long departmentId, ClearanceStatus.Status status) {
+        return clearanceStatusRepository.countByClearanceRequest_Department_IdAndStatus(departmentId, status);
+    }
 }

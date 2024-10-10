@@ -160,4 +160,17 @@ public class ClearanceStatusController {
             return new ResponseEntity<>(Map.of("error", "Clearance status cannot be updated"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/department/{departmentId}/status-counts")
+    public ResponseEntity<Map<String, Integer>> getStatusCountsByDepartmentId(@PathVariable Long departmentId) {
+        int clearedCount = clearanceStatusService.countByDepartmentIdAndStatus(departmentId, ClearanceStatus.Status.CLEARED);
+        int pendingCount = clearanceStatusService.countByDepartmentIdAndStatus(departmentId, ClearanceStatus.Status.PENDING);
+
+        Map<String, Integer> statusCounts = new HashMap<>();
+        statusCounts.put("cleared", clearedCount);
+        statusCounts.put("pending", pendingCount);
+
+        return new ResponseEntity<>(statusCounts, HttpStatus.OK);
+    }
+
 }

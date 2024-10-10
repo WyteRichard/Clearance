@@ -7,5 +7,4 @@ public interface StudentAffairsService {
     List<StudentAffairs> getAllStudentAffairs();
     int getStudentAffairsCount();
     void deleteStudentAffairs(Long id);
-    StudentAffairs getStudentAffairsByStudentAffairsNumber(String employeeNumber);
 }

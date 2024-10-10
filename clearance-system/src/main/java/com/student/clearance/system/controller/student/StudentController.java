@@ -6,8 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -31,11 +33,6 @@ public class StudentController {
         return new ResponseEntity<>(studentService.getStudentById(id), HttpStatus.OK);
     }
 
-    @GetMapping("/studentNumber/{studentNumber}")
-    public ResponseEntity<Student> getStudentByNumber(@PathVariable String studentNumber) {
-        return new ResponseEntity<>(this.studentService.getStudentByStudentNumber(studentNumber), HttpStatus.OK);
-    }
-
     @PostMapping("/student")
     public ResponseEntity<Student> addStudent(@RequestBody Student student) {
         Student createdStudent = studentService.addStudent(student);
@@ -43,41 +40,51 @@ public class StudentController {
     }
 
     @PutMapping("/student/{id}")
-    public ResponseEntity<Student> updateStudent(@PathVariable Long id, @RequestBody Student studentDetails) {
+    public ResponseEntity<Student> updateStudent(
+            @PathVariable Long id,
+            @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
+            @RequestParam("contactNumber") String contactNumber,
+            @RequestParam("email") String email,
+            @RequestParam("address") String address,
+            @RequestParam("religion") String religion,
+            @RequestParam("birthdate") String birthdate,
+            @RequestParam("birthplace") String birthplace,
+            @RequestParam("citizenship") String citizenship,
+            @RequestParam("civilStatus") String civilStatus,
+            @RequestParam("sex") String sex
+    ) {
         Optional<Student> studentOptional = studentService.getStudentById(id);
 
         if (studentOptional.isPresent()) {
             Student student = studentOptional.get();
 
-            // Log existing student details
-            System.out.println("Existing Student: " + student);
-
-            // Update fields only if they are present in the request
-            if (studentDetails.getFirstName() != null) {
-                student.setFirstName(studentDetails.getFirstName());
-            }
-            if (studentDetails.getLastName() != null) {
-                student.setLastName(studentDetails.getLastName());
-            }
-            if (studentDetails.getMiddleName() != null) {
-                student.setMiddleName(studentDetails.getMiddleName());
-            }
-            if (studentDetails.getEmail() != null) {
-                student.setEmail(studentDetails.getEmail());
-            }
-            if (studentDetails.getContactNumber() != null) {
-                student.setContactNumber(studentDetails.getContactNumber());
+            // Handle file upload
+            if (profileImage != null && !profileImage.isEmpty()) {
+                String profileImagePath = studentService.saveProfileImage(profileImage);
+                student.setProfileImage(profileImagePath);
             }
 
-            // Log updated student details
-            System.out.println("Updated Student: " + student);
+            // Update other fields
+            student.setContactNumber(contactNumber);
+            student.setEmail(email);
+            student.setAddress(address);
+            student.setReligion(religion);
+            student.setBirthdate(java.sql.Date.valueOf(birthdate)); // Convert birthdate from String to Date
+            student.setBirthplace(birthplace);
+            student.setCitizenship(citizenship);
+            student.setCivilStatus(civilStatus);
+            student.setSex(sex);
 
-            Student updatedStudent = studentService.updateStudent(student);
-            return new ResponseEntity<>(updatedStudent, HttpStatus.OK);
+            Student updatedStudent = studentService.updateStudent(id, student);
+            return ResponseEntity.ok(updatedStudent);
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
+
+
+
+
 
     @DeleteMapping("/student/{id}")
     public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {

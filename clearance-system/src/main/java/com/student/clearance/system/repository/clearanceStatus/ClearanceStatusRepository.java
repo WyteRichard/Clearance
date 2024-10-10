@@ -17,4 +17,5 @@ public interface ClearanceStatusRepository extends JpaRepository<ClearanceStatus
     @Query("SELECT cs FROM ClearanceStatus cs WHERE cs.student.id = :studentId")
     List<ClearanceStatus> findByStudentId(Long studentId);
 
+    int countByClearanceRequest_Department_IdAndStatus(Long departmentId, ClearanceStatus.Status status);
 }

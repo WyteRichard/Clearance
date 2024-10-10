@@ -1,6 +1,7 @@
 package com.student.clearance.system.service.studentDiscipline.impl;
 
 
+import com.student.clearance.system.domain.student.Student;
 import com.student.clearance.system.domain.studentDiscipline.StudentDiscipline;
 import com.student.clearance.system.repository.studentDiscipline.StudentDisciplineRepository;
 import com.student.clearance.system.service.studentDiscipline.StudentDisciplineService;
@@ -34,8 +35,8 @@ public class StudentDisciplineServiceImpl implements StudentDisciplineService {
         studentDisciplineRepository.deleteById(id);
     }
 
-    @Override
-    public StudentDiscipline getPrefectByStudentDisciplineNumber(String studentDisciplineNumber) {
-        return studentDisciplineRepository.findByStudentDisciplineNumber(studentDisciplineNumber);
+    public List<StudentDiscipline> getDisciplinesForStudent(Student student) {
+        String studentCluster = student.getSection().getClusterName();  // Get student's cluster
+        return studentDisciplineRepository.findBySection_ClusterName(studentCluster);  // Fetch disciplines for that cluster
     }
 }

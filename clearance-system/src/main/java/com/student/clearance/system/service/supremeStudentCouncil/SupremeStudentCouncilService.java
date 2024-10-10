@@ -7,5 +7,4 @@ public interface SupremeStudentCouncilService {
     List<SupremeStudentCouncil> getAllSupremeStudentCouncils();
     int getSupremeStudentCouncilCount();
     void deleteSupremeStudentCouncil(Long id);
-    SupremeStudentCouncil getCouncilByNumber(String supremeStudentCouncilNumber);
 }

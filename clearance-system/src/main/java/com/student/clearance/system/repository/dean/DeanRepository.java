@@ -6,7 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DeanRepository extends JpaRepository<Dean, Long> {
-    boolean existsByDeanNumberAndEmail(String employeeNumber, String email);
-
-    Dean findByDeanNumber(String deanNumber);
 }
