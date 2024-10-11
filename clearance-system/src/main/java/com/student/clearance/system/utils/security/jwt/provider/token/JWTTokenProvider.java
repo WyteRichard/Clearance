@@ -39,7 +39,7 @@ public class JWTTokenProvider {
         // get all the claims (authorities, permissions, etc)
         String[] claims = getClaimsFromUser(userPrincipal);
 
-        return JWT.create().withIssuer(ROCS).withAudience(ROCS_ADMINISTRATION)
+        return JWT.create().withIssuer(SCL).withAudience(SCL_ADMINISTRATION)
                 .withIssuedAt(new Date()).withSubject(userPrincipal.getUsername()).withArrayClaim(AUTHORITIES, claims)
                 .withExpiresAt(new Date(System.currentTimeMillis()+EXPIRATION_TIME))
                 .sign(Algorithm.HMAC512(secret.getBytes()));
@@ -107,7 +107,7 @@ public class JWTTokenProvider {
         JWTVerifier verifier;
         try {
             Algorithm algorithm = Algorithm.HMAC512(secret);
-            verifier = JWT.require(algorithm).withIssuer(ROCS).build();
+            verifier = JWT.require(algorithm).withIssuer(SCL).build();
         } catch (JWTVerificationException e) {
             throw new JWTVerificationException(TOKEN_CANNOT_BE_VERIFIED);
         }

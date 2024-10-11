@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-d
 import Login from "./pages/Login";
 import CreateAccount from "./pages/CreateAccount";
 import ForgotPassword from "./pages/ForgotPassword"
-import ForgotPass from "./pages/ForgotPass"
 import VerifyOTP from "./pages/VerifyOTP";
 import StudentDashboard from "./pages/StudentDashboard";
 import RequestClearance from "./pages/RequestClearance";
@@ -49,7 +48,6 @@ const App = () => {
               <Route path="/" element={<Login />} />
               <Route path="/create-account" element={<CreateAccount/>} />
               <Route path="/forgot-password" element={<ForgotPassword/>} />
-              <Route path="/forgot-pass" element={<ForgotPass/>} />
               <Route path="/verify-otp" element={<VerifyOTP/>} />
 
               <Route path="/student-dashboard" element={<StudentDashboard/>} />

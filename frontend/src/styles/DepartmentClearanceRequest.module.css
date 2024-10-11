@@ -21,12 +21,12 @@ body, html {
 /* Sidebar configurations */
 .sidebar {
     width: 250px;
-    background-color: #1C82FF;  /* Consistent blue background */
+    background-color: #266ca9;
     color: white;
     padding: 20px;
     display: flex;
     flex-direction: column;
-}
+  }
 
 .logoContainer {
     display: flex;
@@ -49,9 +49,9 @@ body, html {
     display: flex;
     flex-direction: column;
     gap: 10px;
-}
-
-.whiteButton, .ghostButton {
+  }
+  
+  .whiteButton, .ghostButton {
     width: 100%;
     padding: 12px;
     border: none;
@@ -62,17 +62,18 @@ body, html {
     cursor: pointer;
     display: flex;
     align-items: center;
-}
-
-.whiteButton {
+  }
+  
+  .whiteButton {
     background-color: white;
-    color: #1C82FF;
+    color: #266CA9;
     transition: background-color 0.3s;
-}
-
-.whiteButton:hover, .ghostButton:hover {
-    background-color: #3D97FF;
-}
+  }
+ 
+  .whiteButton:hover, .ghostButton:hover {
+    background-color: #46acf5;
+    color: #266CA9;
+  }
 
 .navIcon {
     width: 20px;
@@ -106,8 +107,6 @@ body, html {
 
 .academicYear, .semesterBadge {
     padding: 5px 10px;
-    background-color: #E6F2FF;
-    color: #1C82FF;
     border-radius: 5px;
 }
 
@@ -120,6 +119,8 @@ body, html {
     justify-content: center;
     border-radius: 50%;
     overflow: hidden;
+    margin-top: -5px;
+    cursor: pointer;
   }
 
   .avatar img {
@@ -131,16 +132,16 @@ body, html {
 /* Filter container styles */
 .filterContainer {
     display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
+    gap: 10px;
+    margin-bottom: 15px;
     align-items: center;
 }
 
 .filterContainer input, .filterContainer select {
-    padding: 10px;
+    padding: 8px;
     border-radius: 5px;
     border: 1px solid #ddd;
-    font-size: 16px;
+    font-size: 13px;
     background-color: #fff;
     color: #333;
 }
@@ -156,7 +157,6 @@ body, html {
 /* Table styles */
 .tableContainer {
     background-color: white;
-    padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
@@ -169,27 +169,21 @@ body, html {
 .table th, .table td {
     text-align: left;
     padding: 12px 15px;
-    border-bottom: 1px solid #ddd;
     color: #333; /* Ensures text is visible */
 }
 
 .table th {
-    background-color: #1C82FF;
-    color: white;
+    color: rgb(32, 32, 32);
 }
 
 .table tr:last-child td {
     border-bottom: none;
 }
 
-.table tr:hover {
-    background-color: #f0f0f0;
-}
-
 /* Edit button styles */
 .editButton {
     padding: 8px 12px;
-    background-color: #4CAF50;
+    background-color: #266ca9;
     color: white;
     border: none;
     border-radius: 5px;
@@ -198,7 +192,7 @@ body, html {
 }
 
 .editButton:hover {
-    background-color: #45a049;
+    background-color: #1a62a1;
 }
 
 /* Modal styles */
@@ -237,7 +231,7 @@ body, html {
 
 .saveButton {
     padding: 10px 20px;
-    background-color: #4CAF50;
+    background-color: #266ca9;
     color: white;
     border: none;
     border-radius: 5px;
@@ -246,12 +240,12 @@ body, html {
 }
 
 .saveButton:hover {
-    background-color: #45a049;
+    background-color: #1a62a1;
 }
 
 .cancelButton {
     padding: 10px 20px;
-    background-color: #f44336;
+    background-color: #444444;
     color: white;
     border: none;
     border-radius: 5px;
@@ -260,7 +254,7 @@ body, html {
 }
 
 .cancelButton:hover {
-    background-color: #d32f2f;
+    background-color: #5c5c5c;
 }
 
 /* Responsive adjustments */

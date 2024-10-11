@@ -5,7 +5,6 @@ import styles from '../styles/AdminStudentAccounts.module.css'; // Using CSS Mod
 import homeIcon from "../assets/home.png";
 import requestIcon from "../assets/dept.png";
 import userIcon from "../assets/buser.png";
-import rcLogo from "../assets/rc_logo.png";
 import deleteIcon from "../assets/delete.svg";
 import avatar from '../assets/avatar.png';
 
@@ -34,6 +33,8 @@ const AdminStudentAccounts = () => {
     const [courses, setCourses] = useState([]);
     const [yearLevels, setYearLevels] = useState([]);
     const [showModal, setShowModal] = useState(false);
+    const [currentSemester, setCurrentSemester] = useState("Loading...");
+    const [currentAcademicYear, setCurrentAcademicYear] = useState("Loading...");
     const navigate = useNavigate();
     
     // Modal state
@@ -87,6 +88,18 @@ const AdminStudentAccounts = () => {
         setSelectedStudentId(null);
     };
 
+    useEffect(() => {
+        // Fetch the current semester and academic year
+        axios.get('http://localhost:8080/Admin/semester/current')
+            .then(response => {
+                setCurrentSemester(response.data.currentSemester); // Update state with the current semester
+                setCurrentAcademicYear(response.data.academicYear); // Update state with the academic year
+            })
+            .catch(error => {
+                console.error("Error fetching the current semester and academic year", error);
+            });
+    }, []);
+
     const filteredStudents = students.filter(student => {
         const nameMatch = `${student.firstName} ${student.middleName} ${student.lastName}`.toLowerCase().includes(searchName.toLowerCase());
         const yearMatch = searchYearLevel === "" || student.yearLevel?.yearLevel === searchYearLevel;
@@ -107,8 +120,6 @@ const AdminStudentAccounts = () => {
         <div className={styles.flexContainer}>
             <div className={styles.sidebar}>
                 <div className={styles.logoContainer}>
-                    <img src={rcLogo} alt="RC LOGO" className={styles.logo} />
-                    <h1 className={styles.collegeName}>Rogationist College</h1>
                 </div>
                 <nav className={styles.nav}>
                     <button className={styles.ghostButton} onClick={() => navigate('/admin-dashboard')}>
@@ -130,8 +141,8 @@ const AdminStudentAccounts = () => {
                 <div className={styles.header}>
                     <h2 className={styles.dashboardTitle}>Student Accounts</h2>
                     <div className={styles.headerRight}>
-                        <span className={styles.academicYear}>A.Y. 2024 - 2025</span>
-                        <span className={styles.semesterBadge}>First Semester</span>
+                    <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span> {/* Display the fetched academic year */}
+                    <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
                         <div className={styles.avatar} onClick={toggleModal}>
                             <img src={avatar} alt="Avatar" />
                         </div>

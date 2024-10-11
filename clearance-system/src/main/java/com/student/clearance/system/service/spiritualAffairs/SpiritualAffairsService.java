@@ -7,4 +7,5 @@ public interface SpiritualAffairsService {
     List<SpiritualAffairs> getAllSpiritualAffairs();
     int getSpiritualAffairsCount();
     void deleteSpiritualAffairs(Long id);
+    SpiritualAffairs getAffairsBySpiritualAffairsNumber(String spiritualAffairsNumber);
 }

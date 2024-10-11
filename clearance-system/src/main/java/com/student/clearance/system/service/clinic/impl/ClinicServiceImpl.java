@@ -32,4 +32,9 @@ public class ClinicServiceImpl implements ClinicService {
     public void deleteClinic(Long id) {
         clinicRepository.deleteById(id);
     }
+
+    @Override
+    public Clinic getClinicByClinicNumber(String clinicNumber) {
+        return clinicRepository.findByClinicNumber(clinicNumber);
+    }
 }

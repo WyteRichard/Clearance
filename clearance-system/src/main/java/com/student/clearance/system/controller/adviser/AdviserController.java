@@ -36,4 +36,15 @@ public class AdviserController {
         adviserService.deleteAdviser(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @GetMapping("/advisers/{adviserNumber}")
+    public ResponseEntity<Adviser> getAdviserByAdviserNumber(@PathVariable String adviserNumber) {
+        Adviser adviser = adviserService.getAdviserByAdviserNumber(adviserNumber);
+        if (adviser != null) {
+            return ResponseEntity.ok(adviser);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
 }

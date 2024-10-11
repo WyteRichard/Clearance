@@ -7,4 +7,5 @@ public interface ClinicService {
     List<Clinic> getAllClinics();
     int getClinicCount();
     void deleteClinic(Long id);
+    Clinic getClinicByClinicNumber(String clinicNumber);
 }

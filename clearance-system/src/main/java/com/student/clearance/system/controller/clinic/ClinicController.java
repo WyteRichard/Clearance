@@ -36,4 +36,10 @@ public class ClinicController {
         clinicService.deleteClinic(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT); // Return 204 No Content status
     }
+
+    @GetMapping("/clinics/{clinicNumber}")
+    public ResponseEntity<Clinic> getClinicByClinicNumber(@PathVariable String clinicNumber) {
+        Clinic clinic = clinicService.getClinicByClinicNumber(clinicNumber);
+        return new ResponseEntity<>(clinic, HttpStatus.OK);
+    }
 }

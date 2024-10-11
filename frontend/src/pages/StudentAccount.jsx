@@ -1,166 +1,309 @@
-import React, { useEffect, useRef, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import rcLogo from '../assets/rc_logo.png';
+import styles from '../styles/StudentAccount.module.css';
 import dashIcon from '../assets/home.png';
 import requestIcon from '../assets/notes.png';
 import statusIcon from '../assets/idcard.png';
 import accountIcon from '../assets/buser.png';
-import avatar from '../assets/avatar.png';
-import contact from '../assets/phone.png';
-import yearLevel from '../assets/year.png';
-import mail from '../assets/mail.png';
-import course from '../assets/course.png';
-import styles from '../styles/StudentAccount.module.css';
 
 const StudentAccount = () => {
-    const [student, setStudent] = useState(null);
-    const [showModal, setShowModal] = useState(false); // State to manage modal visibility
-    const modalRef = useRef(null);
-    const navigate = useNavigate();
-    const studentId = 1; // Replace with the actual student ID you want to fetch
+  const [student, setStudent] = useState(null); // State for storing student data
+  const [isEditing, setIsEditing] = useState(false); // State to toggle edit mode
+  const [formData, setFormData] = useState({}); // State for holding form data
+  const [profileImage, setProfileImage] = useState(null); // State to hold the profile image file
+  const [profileImagePreview, setProfileImagePreview] = useState(null); // For image preview
+  const studentId = 1; // Replace this with the actual student ID to fetch
+  const navigate = useNavigate(); // Initialize navigate
 
-    
-
-    useEffect(() => {
-        const fetchStudent = async () => {
-            try {
-                const response = await axios.get(`http://localhost:8080/Student/students/${studentId}`);
-                setStudent(response.data);
-            } catch (error) {
-                console.error("Error fetching student data:", error);
-            }
-        };
-
-        fetchStudent();
-    }, [studentId]);
-
-    useEffect(() => {
-      const handleClickOutside = (event) => {
-          if (modalRef.current && !modalRef.current.contains(event.target)) {
-              setShowModal(false);
-          }
-      };
-
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-          document.removeEventListener("mousedown", handleClickOutside);
-      };
-  }, []);
-
-    const toggleModal = () => setShowModal(!showModal);
-    const handleLogout = () => {
-        // Implement logout logic here
-        console.log("Logged out");
+  useEffect(() => {
+    // Fetch student data from the API
+    const fetchStudent = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8080/Student/students/${studentId}`);
+        console.log("Fetched student data:", response.data);
+        setStudent(response.data);
+        setFormData(response.data); // Populate form data with fetched student data
+        if (response.data.profileImage) {
+          // If profile image is a relative path, you might need to prepend the base URL
+          const imageURL = `http://localhost:8080/${response.data.profileImage}`;
+          setProfileImagePreview(imageURL); // Load existing profile image
+        }
+      } catch (error) {
+        console.error("Error fetching student data:", error);
+      }
     };
-    const handleProfile = () => {
-        // Navigate to profile view or perform other actions
-        console.log("View Profile");
-    };
+    fetchStudent();
+  }, [studentId]);
 
-    if (!student) {
-        return <div>Loading...</div>; // Show loading state while fetching data
-    }
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
 
-    return (
-      <div className={styles.flexContainer}>
-        <div className={styles.sidebar}>
-          <div className={styles.logoContainer}>
-            <img src={rcLogo} alt="RC LOGO" className={styles.logo} />
-            <h1 className={styles.collegeName}>Rogationist College</h1>
-          </div>
-          <nav className={styles.nav}>
-            <button className={styles.ghostButton} onClick={() => navigate('/student-dashboard')}>
-              <img src={dashIcon} alt="Dashboard" className={styles.navIcon} />
-              Dashboard
-            </button>
-            <button className={styles.ghostButton} onClick={() => navigate('/request-clearance')}>
-              <img src={requestIcon} alt="Clearance Request" className={styles.navIcon} />
-              Clearance Request
-            </button>
-            <button className={styles.ghostButton} onClick={() => navigate('/student-clearance-status')}>
-              <img src={statusIcon} alt="Status Icon" className={styles.navIcon} />
-              Clearance Status
-            </button>
-            <button className={styles.whiteButton} onClick={() => navigate('/student-account')}>
-              <img src={accountIcon} alt="Account Icon" className={styles.navIcon} />
-              Account
-            </button>
-          </nav>
-        </div>
+  const handleCancel = () => {
+    setIsEditing(false);
+    setFormData(student); // Reset to the original data if cancelled
+    setProfileImage(null); // Clear any uploaded images on cancel
+    setProfileImagePreview(student.profileImage); // Reset image preview to original
+  };
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  // Handle profile image upload
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setProfileImage(file);
+    setProfileImagePreview(URL.createObjectURL(file)); // Create a preview URL for the selected image
+  };
+
+  const handleSave = async () => {
+    const formDataToSend = new FormData(); // Use FormData for file upload
   
-        <div className={styles.mainContent}>
-            
-                <div className={styles.header}>
-                    <h2 className={styles.dashboardTitle}>My Information</h2>
-                    <div className={styles.headerRight}>
-                        <span className={styles.academicYear}>A.Y. 2024 - 2025</span>
-                        <span className={styles.semesterBadge}>First Semester</span>
-                        <div className={styles.avatar} onClick={toggleModal}>AN</div>
-                        {showModal && (
-                            <div className={styles.modal} ref={modalRef}>
-                                <ul>
-                                    <li onClick={handleProfile}>See Profile</li>
-                                    <li onClick={handleLogout}>Log Out</li>
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-                </div>
+    // Append form fields
+    formDataToSend.append("contactNumber", formData.contactNumber);
+    formDataToSend.append("email", formData.email);
+    formDataToSend.append("address", formData.address ? formData.address : student.address);
+    formDataToSend.append("religion", formData.religion ? formData.religion : student.religion);
+    formDataToSend.append("birthdate", formData.birthdate ? new Date(formData.birthdate).toISOString().split('T')[0] : student.birthdate);
+    formDataToSend.append("birthplace", formData.birthplace ? formData.birthplace : student.birthplace);
+    formDataToSend.append("citizenship", formData.citizenship ? formData.citizenship : student.citizenship);
+    formDataToSend.append("civilStatus", formData.civilStatus ? formData.civilStatus : student.civilStatus);
+    formDataToSend.append("sex", formData.sex ? formData.sex : student.sex);
 
-          <div className={styles.header}>
-          </div>
-          <div className={styles.infoCard}>
-            <img src={avatar} alt="Profile" className={styles.profilePic} />
-            <div className={styles.info}>
-              <h3>{student.firstName} {student.middleName} {student.lastName}</h3>
-              <p className={styles.studentNumber}>{student.studentNumber}</p>
-              <div className={styles.detailRowSpace}></div>
+    // Append the profile image if it's selected
+    if (profileImage) {
+      formDataToSend.append("profileImage", profileImage);
+    }
+  
+    try {
+      const response = await axios.put(`http://localhost:8080/Student/student/${studentId}`, formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+  
+      console.log("Server response:", response.data);
+      setIsEditing(false); // Exit edit mode
+      setStudent(response.data); // Update the student state with the new values
+      // If profile image is a relative path, you might need to prepend the base URL
+      const imageURL = `http://localhost:8080/${response.data.profileImage}`;
+      setProfileImagePreview(imageURL); // Update the image preview after saving
+    } catch (error) {
+      if (error.response) {
+        console.error("Server responded with error:", error.response.data);
+        alert(`Update failed: ${error.response.data.message || 'Unknown error'}`);
+      } else {
+        console.error("Request error:", error.message);
+        alert(`Error: ${error.message}`);
+      }
+    }
+  };
 
-              <div className={styles.detailRow}>
-                <div className={styles.detail}>
-                  <img src={contact} alt="Contact" className={styles.smallIcon}/>
-                  <div>
-                    <strong>Contact Number</strong>
-                    <div className={styles.grayText}>{student.contactNumber}</div>
-                  </div>
-                </div>
-                <div className={styles.detail}>
-                  <img src={yearLevel} alt="Year Level" className={styles.smallIcon}/>
-                  <div>
-                    <strong>Year Level</strong>
-                    <div className={styles.grayText}>{student.yearLevel.yearLevel}</div>
-                  </div>
-                </div>
+  if (!student) {
+    return <div>Loading...</div>; // Show loading state while fetching data
+  }
+
+  return (
+    <div className={`${styles.flexContainer} ${styles.studentAccountContainer}`}>
+      <div className={styles.sidebar}>
+        <nav className={styles.nav}>
+          <button className={styles.ghostButton} onClick={() => navigate('/student-dashboard')}>
+            <img src={dashIcon} alt="Dashboard" className={styles.navIcon} />
+            Dashboard
+          </button>
+          <button className={styles.ghostButton} onClick={() => navigate('/request-clearance')}>
+            <img src={requestIcon} alt="Request Icon" className={styles.navIcon} />
+            Clearance Request
+          </button>
+          <button className={styles.ghostButton} onClick={() => navigate('/student-clearance-status')}>
+            <img src={statusIcon} alt="Clearance Status" className={styles.navIcon} />
+            Clearance Status
+          </button>
+          <button className={styles.whiteButton} onClick={() => navigate('/student-account')}>
+            <img src={accountIcon} alt="Account" className={styles.navIcon} />
+            Account
+          </button>
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div className={styles.mainContent}>
+        {/* Header */}
+        <div className={styles.header}>
+          <h2 className={styles.dashboardTitle}>Student Account</h2>
+        </div>
+
+        {/* Student Information Card */}
+        <div className={styles.cardGrid}>
+          {/* Student Details Card */}
+          <div className={styles.card}>
+            <div className={styles.studentInfo}>
+              <div className={styles.profilePic}>
+                {profileImagePreview ? (
+                  <img src={profileImagePreview} alt="Profile" className={styles.profileImage} />
+                ) : (
+                  <div className={styles.placeholder}>+</div>
+                )}
               </div>
-
-              <div className={styles.RowSpace}></div>
-
-              <div className={styles.detailRow}>
-                <div className={styles.detail}>
-                  <img src={mail} alt="Email" className={styles.smallIcon}/>
-                  <div>
-                    <strong>Email Address</strong>
-                    <div className={styles.grayText}>{student.email}</div>
-                  </div>
-                </div>
-                <div className={styles.detail}>
-                  <img src={course} alt="Course" className={styles.smallIcon}/>
-                  <div>
-                    <strong>Course</strong>
-                    <div className={styles.grayText}>{student.course?.courseName}</div>
-                  </div>
-                </div>
+              <div className={styles.studentDetails}>
+                <h2>{student.firstName} {student.middleName} {student.lastName}</h2>
+                <p>Student ID: {student.studentNumber}</p>
+                <p>Year Level: {student.yearLevel?.yearLevel}</p>
+                <p>Course: {student.course?.courseName}</p>
               </div>
             </div>
+            {isEditing && (
+              <div className={styles.generalInfoContent}>
+                <div className={styles.generalInfoLabel}>Change Profile Image:</div>
+                <input type="file" accept="image/*" onChange={handleImageChange} />
+              </div>
+            )}
           </div>
-          <div className={styles.buttons}>
-            <div></div>
-            <button className={styles.button}>Edit Information</button>
+
+          {/* General Info Card */}
+          <div className={styles.generalInfo}>
+            <h3>General Information</h3>
+            <br></br>
+            <div className={styles.generalInfoContent}>
+              <div className={styles.generalInfoLabel}>Contact Number:</div>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="contactNumber"
+                  value={formData.contactNumber || ''}
+                  onChange={handleChange}
+                />
+              ) : (
+                <div className={styles.generalInfoValue}>{student.contactNumber}</div>
+              )}
+            </div>
+            <div className={styles.generalInfoContent}>
+              <div className={styles.generalInfoLabel}>Email Address:</div>
+              {isEditing ? (
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email || ''}
+                  onChange={handleChange}
+                />
+              ) : (
+                <div className={styles.generalInfoValue}>{student.email}</div>
+              )}
+            </div>
+            <div className={styles.generalInfoContent}>
+              <div className={styles.generalInfoLabel}>Address:</div>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address || ''} 
+                  onChange={handleChange}
+                />
+              ) : (
+                <div className={styles.generalInfoValue}>{student.address}</div>
+              )}
+            </div>
+            <div className={styles.generalInfoContent}>
+              <div className={styles.generalInfoLabel}>Religion:</div>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="religion"
+                  value={formData.religion || ''}
+                  onChange={handleChange}
+                />
+              ) : (
+                <div className={styles.generalInfoValue}>{student.religion}</div>
+              )}
+            </div>
+            <div className={styles.generalInfoContent}>
+              <div className={styles.generalInfoLabel}>Birthday:</div>
+              {isEditing ? (
+                <input
+                  type="date"
+                  name="birthdate"
+                  value={formData.birthdate ? new Date(formData.birthdate).toISOString().split('T')[0] : ''}
+                  onChange={handleChange}
+                />
+              ) : (
+                <div className={styles.generalInfoValue}>
+                  {student.birthdate ? new Date(student.birthdate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
+                </div>
+              )}
+            </div>
+            <div className={styles.generalInfoContent}>
+              <div className={styles.generalInfoLabel}>Birthplace:</div>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="birthplace"
+                  value={formData.birthplace || ''}
+                  onChange={handleChange}
+                />
+              ) : (
+                <div className={styles.generalInfoValue}>{student.birthplace}</div>
+              )}
+            </div>
+            <div className={styles.generalInfoContent}>
+              <div className={styles.generalInfoLabel}>Citizenship:</div>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="citizenship"
+                  value={formData.citizenship || ''}
+                  onChange={handleChange}
+                />
+              ) : (
+                <div className={styles.generalInfoValue}>{student.citizenship}</div>
+              )}
+            </div>
+            <div className={styles.generalInfoContent}>
+              <div className={styles.generalInfoLabel}>Civil Status:</div>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="civilStatus"
+                  value={formData.civilStatus || ''}
+                  onChange={handleChange}
+                />
+              ) : (
+                <div className={styles.generalInfoValue}>{student.civilStatus}</div>
+              )}
+            </div>
+            <div className={styles.generalInfoContent}>
+              <div className={styles.generalInfoLabel}>Sex:</div>
+              {isEditing ? (
+                <select name="sex" value={formData.sex || ''} onChange={handleChange}>
+                  <option value="">Select Sex</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              ) : (
+                <div className={styles.generalInfoValue}>{student.sex}</div>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.buttonContainer}>
+            {isEditing ? (
+              <>
+                <button className={styles.saveButton} onClick={handleSave}>Save</button>
+                <button className={styles.cancelButton} onClick={handleCancel}>Cancel</button>
+              </>
+            ) : (
+              <button className={styles.editButton} onClick={handleEdit}>Edit</button>
+            )}
           </div>
         </div>
       </div>
-    );
+    </div>
+  );
 };
 
 export default StudentAccount;

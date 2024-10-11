@@ -2,12 +2,26 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import styles from '../../styles/DepartmentDashboard.module.css';
-import rcLogo from '../../assets/rc_logo.png';
 import dashIcon from '../../assets/bhome.png';
 import requestIcon from '../../assets/notes.png';
 import avatar from '../../assets/avatar.png';
 
 const AdviserDashboard = () => {
+
+    const [currentSemester, setCurrentSemester] = useState("Loading...");
+    const [currentAcademicYear, setCurrentAcademicYear] = useState("Loading...");
+
+    useEffect(() => {
+        // Fetch the current semester and academic year
+        axios.get('http://localhost:8080/Admin/semester/current')
+            .then(response => {
+                setCurrentSemester(response.data.currentSemester); // Update state with the current semester
+                setCurrentAcademicYear(response.data.academicYear); // Update state with the academic year
+            })
+            .catch(error => {
+                console.error("Error fetching the current semester and academic year", error);
+            });
+    }, []);
 
     const [showModal, setShowModal] = useState(false);
 
@@ -22,22 +36,23 @@ const AdviserDashboard = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const statusResponse = await axios.get(`http://localhost:8080/Status/status-counts`);
-                const clearanceResponse = await axios.get('http://localhost:8080/Requests/count');
-
+                const departmentId = 1; // The specific department ID for this adviser
+                const clearanceResponse = await axios.get(`http://localhost:8080/Requests/count?departmentId=${departmentId}`);
+                const statusCountsResponse = await axios.get(`http://localhost:8080/Status/department/${departmentId}/status-counts`);
+    
                 setCounts({
                     clearanceRequests: clearanceResponse.data,
-                    cleared: statusResponse.data.cleared,
-                    pending: statusResponse.data.pending,
-                    remarks: statusResponse.data.remarks
+                    cleared: statusCountsResponse.data.cleared,
+                    pending: statusCountsResponse.data.pending,
+                    remarks: counts.remarks // Ensure remarks is preserved
                 });
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
         };
-
+    
         fetchData();
-    }, []);
+    }, [counts.remarks]);
 
     const toggleModal = () => {
         setShowModal(!showModal); // Toggle modal visibility
@@ -52,8 +67,6 @@ const AdviserDashboard = () => {
         <div className={styles.flexContainer}>
             <div className={styles.sidebar}>
                 <div className={styles.logoContainer}>
-                    <img src={rcLogo} alt="College Logo" className={styles.logo} />
-                    <h1 className={styles.collegeName}>Rogationist College</h1>
                 </div>
                 <nav className={styles.nav}>
                     <button className={styles.whiteButton} onClick={() => navigate('/adviser-dashboard')}>
@@ -70,8 +83,8 @@ const AdviserDashboard = () => {
                 <header className={styles.header}>
                     <h2 className={styles.dashboardTitle}>Adviser Dashboard</h2>
                     <div className={styles.headerRight}>
-                        <span className={styles.academicYear}>A.Y. 2024 - 2025</span>
-                        <span className={styles.semesterBadge}>First Semester</span>
+                        <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span> {/* Display the fetched academic year */}
+                        <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
                         <div className={styles.avatar} onClick={toggleModal}>
                             <img src={avatar} alt="Avatar" />
                         </div>

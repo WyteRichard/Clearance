@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class GuidanceServiceImpl implements GuidanceService {
@@ -31,5 +32,10 @@ public class GuidanceServiceImpl implements GuidanceService {
     @Override
     public void deleteGuidance(Long id) {
         guidanceRepository.deleteById(id);
+    }
+
+    @Override
+    public Guidance getGuidanceByGuidanceNumber(String guidanceNumber) {
+        return guidanceRepository.findByGuidanceNumber(guidanceNumber);
     }
 }

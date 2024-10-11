@@ -35,6 +35,11 @@ public class StudentDisciplineServiceImpl implements StudentDisciplineService {
         studentDisciplineRepository.deleteById(id);
     }
 
+    @Override
+    public StudentDiscipline getPrefectByStudentDisciplineNumber(String studentDisciplineNumber) {
+        return studentDisciplineRepository.findByStudentDisciplineNumber(studentDisciplineNumber);
+    }
+
     public List<StudentDiscipline> getDisciplinesForStudent(Student student) {
         String studentCluster = student.getSection().getClusterName();  // Get student's cluster
         return studentDisciplineRepository.findBySection_ClusterName(studentCluster);  // Fetch disciplines for that cluster

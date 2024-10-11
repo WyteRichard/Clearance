@@ -32,4 +32,9 @@ public class StudentAffairsServiceImpl implements StudentAffairsService {
     public void deleteStudentAffairs(Long id) {
         studentAffairsRepository.deleteById(id);
     }
+
+    @Override
+    public StudentAffairs getStudentAffairsByStudentAffairsNumber(String employeeNumber) {
+        return studentAffairsRepository.findByStudentAffairsNumber(employeeNumber);
+    }
 }

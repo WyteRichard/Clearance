@@ -32,4 +32,9 @@ public class RegistrarServiceImpl implements RegistrarService {
     public void deleteRegistrar(Long id) {
         registrarRepository.deleteById(id);
     }
+
+    @Override
+    public Registrar getRegistrarByRegistrarNumber(String registrarNumber) {
+        return registrarRepository.findByRegistrarNumber(registrarNumber);
+    }
 }

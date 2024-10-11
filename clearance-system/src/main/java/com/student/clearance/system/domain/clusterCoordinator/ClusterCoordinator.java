@@ -12,8 +12,8 @@ import java.io.Serializable;
 @Data
 public class ClusterCoordinator extends Person implements Serializable {
 
-    private Long ClusterCoordinatorId;
-    private String EmployeeNumber;
+    private Long clusterCoordinatorId;
+    private String clusterCoordinatorNumber;
 
     @ManyToOne
     @JoinColumn(name = "department_id")

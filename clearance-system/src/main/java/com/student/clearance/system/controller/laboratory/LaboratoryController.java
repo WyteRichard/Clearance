@@ -36,4 +36,10 @@ public class LaboratoryController {
         laboratoryService.deleteLaboratory(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @GetMapping("/laboratories/{LaboratoryNumber}")
+    public ResponseEntity<Laboratory> getLaboratoryByLaboratoryNumber(@PathVariable String LaboratoryNumber) {
+        Laboratory laboratory = laboratoryService.getLaboratoryByLaboratoryNumber(LaboratoryNumber);
+            return new ResponseEntity<>(laboratory, HttpStatus.OK);
+    }
 }

@@ -13,8 +13,8 @@ import java.io.Serializable;
 @Data
 public class StudentDiscipline extends Person implements Serializable {
 
-    private Long StudentDisciplineId;
-    private String EmployeeNumber;
+    private Long studentDisciplineId;
+    private String studentDisciplineNumber;
 
     @ManyToOne
     @JoinColumn(name = "department_id")

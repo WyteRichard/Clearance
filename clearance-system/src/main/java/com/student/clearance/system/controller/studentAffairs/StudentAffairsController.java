@@ -31,6 +31,12 @@ public class StudentAffairsController {
         return ResponseEntity.ok(count);
     }
 
+    @GetMapping("/affairs/{studentAffairsNumber}")
+    public ResponseEntity<StudentAffairs> getStudentAffairsByStudentAffairsNumber(@PathVariable String studentAffairsNumber) {
+        StudentAffairs affairs = studentAffairsService.getStudentAffairsByStudentAffairsNumber(studentAffairsNumber);
+        return new ResponseEntity<>(affairs, HttpStatus.OK);
+    }
+
     @DeleteMapping("/affairs/{id}")
     public ResponseEntity<Void> deleteStudentAffairs(@PathVariable Long id) {
         studentAffairsService.deleteStudentAffairs(id);

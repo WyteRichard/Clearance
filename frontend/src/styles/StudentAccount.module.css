@@ -1,234 +1,128 @@
 .flexContainer {
-    display: flex;
-    height: 100vh;
-    background-color: #f0f0f0;
+  display: flex;
+  height: 100vh;
+  background-color: #f0f0f0;
 }
 
 .sidebar {
-    width: 250px;
-    background-color: #1C82FF;
-    color: white;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
+  width: 250px;
+  background-color: #266CA9;
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .logoContainer {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
 .logo {
-    width: 80px;
-    height: 80px;
-    margin-right: 10px;
+  width: 80px;
+  height: 80px;
+  margin-right: 10px;
 }
 
 .navIcon {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
 }
 
 .collegeName {
-    font-size: 22px;
-    font-weight: bold;
+  font-size: 22px;
+  font-weight: bold;
 }
 
 .nav {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .whiteButton, .ghostButton {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 4px;
-    background-color: transparent;
-    color: white;
-    text-align: left;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: transparent;
+  color: white;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
 }
 
 .whiteButton {
-    background-color: white;
-    color: #1C82FF;
-    transition: background-color 0.3s;
+  background-color: white;
+  color: #0042be;
+  transition: background-color 0.3s;
 }
 
 .whiteButton:hover, .ghostButton:hover {
-    background-color: #3D97FF;
+  background-color: #3D97FF;
 }
 
-  .smallIcon {
-    width: 24px;
-    height: 24px;
-    margin-right: 5px;
-  }
-  
-  .mainContent {
-    flex-grow: 1;
-    padding: 20px;
-    overflow-y: auto;
-  }
+.smallIcon {
+  width: 16px;
+  height: 16px;
+  margin-right: 5px;
+}
 
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 50px;
+.mainContent {
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
 .dashboardTitle {
-    font-size: 24px;
-    color: #333;
+  font-size: 24px;
+  color: #333;
 }
 
 .headerRight {
-    display: flex;
-    gap: 12px;
-}
-
-.academicYear, .semesterBadge {
-    padding: 5px 10px;
-    background-color: #E6F2FF;
-    color: #1C82FF;
-    border-radius: 5px;
+  display: flex;
+  gap: 12px;
 }
 
 .avatar {
-    width: 32px;
-    height: 32px;
-    background-color: #ccc;
-    display:flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    font-weight: bold;
-  }
-
-  .profilePic {
-    width: 80px;  /* Default size for larger screens */
-    height: 80px;
-    border-radius: 50%; /* Ensures it's a circle */
-    margin-right: 20px;
-    margin-left: 20px;
-    margin-bottom: 140px;
-    object-fit: cover;
-}
-  
-  .infoCard {
-    display: flex;
-    align-items: center; /* Ensures vertical alignment */
-    justify-content: start; /* Aligns items to the start of the card */
-    background-color: white;
-    padding: 16px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-    width: 50%; /* Adjust as needed */
-    margin-left: auto;
-    margin-right: auto;
-}
-  
-  .info {
-    flex: 1; /* Take remaining space after the profile pic */
-    margin-left: 20px;
-  }
-  
-  .detail {
-    display: flex;
-    align-items: center;
-    margin-bottom: 8px;
-    flex-basis: 45%; /* Allows it to take 45% of the width */
-    flex-wrap: wrap; /* Allows wrapping of content */
-    text-align: left;
-  }
-  
-  .button {
-    background-color: #1C82FF;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 5px;
-
-    margin-right: 380px;
-  }
-  
-  .buttons {
-    display: flex;
-    justify-content: flex-end; /* Aligns the button to the right */
-    margin-top: 10px; /* Adds some space between the info card and the button */
-    width: 100%;
-  }
-
-  .grayText {
-    color: #808080; /* Adjusted to gray */
-  }
-
-  @media (max-width: 768px) {
-    .detail {
-        flex-basis: 100%; /* Full width on smaller screens */
-        margin-bottom: 15px;
-    }
-
-    .infoCard {
-        width: 100%; /* Full width for the info card on smaller screens */
-    }
-
-    .buttons {
-        justify-content: center; /* Center the button */
-    }
-
-    .button {
-        width: 100%; /* Full-width button */
-        max-width: 300px;
-    }
+  width: 32px;
+  height: 32px;
+  background-color: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: bold;
 }
 
-  .detailRow {
-    display: flex;
-    flex-wrap: wrap; /* Allows wrapping of content on smaller screens */
-    justify-content: space-between;
-    width: 100%;
-    gap: 10px
-  }
-
-  .detailRowSpace {
-    height: 20px;
-    width: 100%;
+.academicYear, .semesterBadge {
+  padding: 5px 10px;
+  background-color: #E6F2FF;
+  color: #0042be;
+  border-radius: 5px;
 }
 
-.RowSpace {
-    height: 10px;
-    width: 100%;
-}
-
-.studentNumber {
-  color: #9a9a9a; /* Adjust color as needed */
-  font-size: 16px; /* Adjust font size */
-  font-weight: normal; /* You can make this bold or normal */
-  margin-top: 0px;
-margin-bottom: 30px;
-  text-align: left; /* Aligns the student number to the left */
-}
-
+/* Modal for profile actions */
 .modal {
   position: absolute;
   right: 0;
-  top: 60px; /* Adjusted to align under the avatar */
+  top: 60px;
   background-color: white;
-  border: 1px solid #e1e4e8; /* Light grey border */
+  border: 1px solid #e1e4e8;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 200px; /* Width of the modal */
+  width: 200px;
   z-index: 1000;
-  overflow: hidden; /* Ensures all content fits within the border radius */
 }
 
 .modal ul {
@@ -240,12 +134,12 @@ margin-bottom: 30px;
 .modal ul li {
   padding: 12px 16px;
   cursor: pointer;
-  color: #333; /* Dark grey text */
-  font-size: 14px; /* Adjusted font size for readability */
+  color: #333;
+  font-size: 14px;
   line-height: 1.5;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid #e1e4e8; /* Light grey border between items */
+  border-bottom: 1px solid #e1e4e8;
 }
 
 .modal ul li:last-child {
@@ -253,14 +147,285 @@ margin-bottom: 30px;
 }
 
 .modal ul li:hover {
-  background-color: #f6f8fa; /* Light grey background on hover */
+  background-color: #f6f8fa;
 }
 
-.modal ul li img { /* If you want icons next to the text */
-  margin-right: 8px;
-  width: 20px; /* Icon size */
-  height: 20px; /* Icon size */
+/* Card grid styles */
+.cardGrid {
+  display: flex;
+  justify-content: flex-start; /* Align student card and general info horizontally */
+  align-items: flex-start; /* Align both cards to the top */
+  gap: 30px;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
 }
 
+/* Student card styles */
+.card {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 250px;
+  min-height: 300px;
+  text-align: center;
+}
 
+.studentInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.studentDetails {
+  margin-top: 20px;
+  width: 90%;
+  text-align: center;
+}
+
+.studentDetails h2 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.studentDetails p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.profilePic {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.placeholder {
+  font-size: 40px;
+  color: #999;
+}
+
+/* General Info Card */
+.generalInfo {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 700px;
+  min-height: 300px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+
+.generalInfoContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.generalInfoLabel {
+  font-size: 16px;
+  color: #666;
+  flex: 1;
+  text-align: left;
+}
+
+.generalInfoValue {
+  font-size: 16px;
+  color: #333;
+  flex: 1;
+  text-align: right;
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.saveButton {
+  padding: 10px 20px;
+  background-color: #28a745; /* Green color for save */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 10px; /* Space between buttons */
+  transition: background-color 0.3s;
+}
+
+.saveButton:hover {
+  background-color: #218838; /* Darker green on hover */
+}
+
+/* Cancel Button */
+.cancelButton {
+  padding: 10px 20px;
+  background-color: #dc3545; /* Red color for cancel */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.cancelButton:hover {
+  background-color: #c82333; /* Darker red on hover */
+}
+
+/* Button Container for alignment */
+.buttonContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.editButton {
+  padding: 10px 20px;
+  background-color: #0042be;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.editButton:hover {
+  background-color: #3D97FF;
+}
+
+.studentAccountContainer {
+  display: flex;
+  height: 100vh;
+  background-color: #f0f0f0;
+}
+
+.studentAccountContainer .sidebar {
+  width: 250px;
+  background-color: #266CA9;
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Other specific styles for student account */
+.studentAccountContainer .cardGrid {
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+}
+
+.studentAccountContainer input[type="text"],
+.studentAccountContainer input[type="email"],
+.studentAccountContainer input[type="date"],
+.studentAccountContainer select {
+  width: 40%;
+  padding: 10px;
+  font-size: 14px;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.studentAccountContainer input[type="text"]:focus,
+.studentAccountContainer input[type="email"]:focus,
+.studentAccountContainer input[type="date"]:focus,
+.studentAccountContainer select:focus {
+  border-color: #0042be;
+  box-shadow: 0 0 5px rgba(0, 66, 190, 0.5);
+}
+
+.studentAccountContainer .buttonContainer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.studentAccountContainer .saveButton,
+.studentAccountContainer .cancelButton,
+.studentAccountContainer .editButton {
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  margin: 0 5px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .flexContainer {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    justify-content: space-around;
+  }
+
+  .cardGrid {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .generalInfo {
+    width: 100%;
+  }
+
+  .card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .flexContainer {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+  }
+
+  .mainContent {
+    padding: 10px;
+  }
+
+  .dashboardTitle {
+    font-size: 18px;
+  }
+
+  .profilePic {
+    width: 50px;
+    height: 50px;
+  }
+
+  .studentDetails {
+    font-size: 12px;
+  }
+
+  .generalInfoLabel, .generalInfoValue {
+    font-size: 12px;
+  }
+
+  .editButton {
+    padding: 8px 12px;
+  }
   
+}

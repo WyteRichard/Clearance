@@ -32,4 +32,9 @@ public class LibraryServiceImpl implements LibraryService {
     public void deleteLibrary(Long id) {
         libraryRepository.deleteById(id);
     }
+
+    @Override
+    public Library getLibraryByLibraryNumber(String libraryNumber) {
+        return libraryRepository.findByLibraryNumber(libraryNumber);
+    }
 }

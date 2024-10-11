@@ -35,6 +35,11 @@ public class AdviserServiceImpl implements AdviserService {
         adviserRepository.deleteById(id);
     }
 
+    @Override
+    public Adviser getAdviserByAdviserNumber(String adviserNumber) {
+        return adviserRepository.findByAdviserNumber(adviserNumber);
+    }
+
     public List<Adviser> getAdvisersForStudent(Student student) {
         Course studentCourse = student.getCourse();
         return adviserRepository.findByCourse(studentCourse);

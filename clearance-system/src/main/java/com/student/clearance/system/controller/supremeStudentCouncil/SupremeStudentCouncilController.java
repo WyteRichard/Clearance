@@ -25,6 +25,16 @@ public class SupremeStudentCouncilController {
         return new ResponseEntity<>(supremeStudentCouncilService.getAllSupremeStudentCouncils(), HttpStatus.OK);
     }
 
+    @GetMapping("/councils/{supremeStudentCouncilNumber}")
+    public ResponseEntity<SupremeStudentCouncil> getCouncilByNumber(@PathVariable String supremeStudentCouncilNumber) {
+        SupremeStudentCouncil council = supremeStudentCouncilService.getCouncilByNumber(supremeStudentCouncilNumber);
+        if (council != null) {
+            return ResponseEntity.ok(council);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
     @GetMapping("/councils/count")
     public ResponseEntity<Integer> getSupremeStudentCouncilCount() {
         int count = supremeStudentCouncilService.getSupremeStudentCouncilCount();

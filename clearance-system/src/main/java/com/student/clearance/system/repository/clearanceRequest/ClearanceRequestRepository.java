@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface ClearanceRequestRepository extends JpaRepository<ClearanceRequest, Long> {
+
     List<ClearanceRequest> findByStudent_FirstNameContainingIgnoreCaseOrStudent_MiddleNameContainingIgnoreCaseOrStudent_LastNameContainingIgnoreCase(
             String firstName, String middleName, String lastName);
 
@@ -15,4 +16,5 @@ public interface ClearanceRequestRepository extends JpaRepository<ClearanceReque
 
     List<ClearanceRequest> findByDepartment_Id(Long departmentId);
 
+    List<ClearanceRequest> findByStudentIdAndDepartmentId(Long studentId, Long departmentId);
 }

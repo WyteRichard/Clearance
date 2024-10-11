@@ -36,4 +36,14 @@ public class ClusterCoordinatorController {
         clusterCoordinatorService.deleteClusterCoordinator(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @GetMapping("/coordinators/{clusterCoordinatorNumber}")
+    public ResponseEntity<ClusterCoordinator> getCoordinatorByClusterCoordinatorNumber(@PathVariable String clusterCoordinatorNumber) {
+        ClusterCoordinator coordinator = clusterCoordinatorService.getCoordinatorByClusterCoordinatorNumber(clusterCoordinatorNumber);
+        if (coordinator != null) {
+            return new ResponseEntity<>(coordinator, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
 }

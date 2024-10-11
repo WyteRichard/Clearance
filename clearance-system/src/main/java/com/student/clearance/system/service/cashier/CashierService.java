@@ -7,4 +7,5 @@ public interface CashierService {
     List<Cashier> getAllCashiers();
     int getCashierCount();
     void deleteCashier(Long id);
+    Cashier getCashierByCashierNumber(String cashierNumber);
 }

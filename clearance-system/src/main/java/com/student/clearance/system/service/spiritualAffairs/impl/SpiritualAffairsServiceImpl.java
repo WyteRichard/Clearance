@@ -33,4 +33,9 @@ public class SpiritualAffairsServiceImpl implements SpiritualAffairsService {
     public void deleteSpiritualAffairs(Long id) {
         spiritualAffairsRepository.deleteById(id);
     }
+
+    @Override
+    public SpiritualAffairs getAffairsBySpiritualAffairsNumber(String spiritualAffairsNumber) {
+        return spiritualAffairsRepository.findBySpiritualAffairsNumber(spiritualAffairsNumber);
+    }
 }

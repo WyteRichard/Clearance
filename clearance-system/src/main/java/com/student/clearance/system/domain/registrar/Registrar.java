@@ -12,8 +12,8 @@ import java.io.Serializable;
 @Data
 public class Registrar extends Person implements Serializable {
 
-    private Long RegistrarId;
-    private String EmployeeNumber;
+    private Long registrarId;
+    private String registrarNumber;
 
     @ManyToOne
     @JoinColumn(name = "department_id")

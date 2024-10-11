@@ -6,4 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SupremeStudentCouncilRepository extends JpaRepository<SupremeStudentCouncil, Long> {
+    boolean existsBySupremeStudentCouncilNumberAndEmail(String supremeStudentCouncilNumber, String email);
+
+    SupremeStudentCouncil findBySupremeStudentCouncilNumber(String supremeStudentCouncilNumber);
 }

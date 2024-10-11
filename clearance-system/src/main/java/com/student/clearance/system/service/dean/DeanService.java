@@ -7,4 +7,5 @@ public interface DeanService {
     List<Dean> getAllDeans();
     int getDeanCount();
     void deleteDean(Long id);
+    Dean getDeanByDeanNumber(String deanNumber);
 }

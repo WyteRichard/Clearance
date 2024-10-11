@@ -31,6 +31,12 @@ public class LibraryController {
         return ResponseEntity.ok(count);
     }
 
+    @GetMapping("/employee/{libraryNumber}")
+    public ResponseEntity<Library> getLibraryByLibraryNumber(@PathVariable String libraryNumber) {
+        Library library = libraryService.getLibraryByLibraryNumber(libraryNumber);
+        return new ResponseEntity<>(library, HttpStatus.OK);
+    }
+
     @DeleteMapping("/libraries/{id}")
     public ResponseEntity<Void> deleteLibrary(@PathVariable Long id) {
         libraryService.deleteLibrary(id);

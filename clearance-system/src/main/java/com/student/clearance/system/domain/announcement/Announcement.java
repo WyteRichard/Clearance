@@ -16,7 +16,6 @@ public class Announcement {
 
     private String title;
 
-    // Renamed 'date' to 'announcementDate' to avoid conflicts
     private LocalDate announcementDate;
 
     @Column(length = 1000)

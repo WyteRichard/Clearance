@@ -21,7 +21,7 @@ body, html {
 /* Sidebar configurations */
 .sidebar {
     width: 250px;
-    background-color: #1C82FF;
+    background-color: #266ca9;
     color: white;
     padding: 20px;
     display: flex;
@@ -72,13 +72,14 @@ body, html {
 
 .whiteButton {
     background-color: white;
-    color: #1C82FF;
+    color: #266CA9;
     transition: background-color 0.3s;
-}
-
-.whiteButton:hover, .ghostButton:hover {
-    background-color: #3D97FF;
-}
+  }
+  
+  .whiteButton:hover, .ghostButton:hover {
+    background-color: #46acf5;
+    color: #266CA9;
+  }
 
 /* Main content styles */
 .mainContent {
@@ -99,8 +100,6 @@ body, html {
   
   .academicYear, .semesterBadge {
     padding: 5px 10px;
-    background-color: #E6F2FF;
-    color: #1C82FF;
     border-radius: 5px;
   }
 
@@ -113,6 +112,8 @@ body, html {
     justify-content: center;
     border-radius: 50%;
     overflow: hidden;
+    margin-top: -5px;
+    cursor: pointer;
   }
 
   .avatar img {
@@ -135,10 +136,10 @@ body, html {
 
 .filterContainer {
     display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
+    gap: 5px;
+    margin-bottom: 15px;
     width: 100%;
-    max-width: 800px;
+    max-width: 500px;
     justify-content: flex-end;
     margin-left: auto;
 }
@@ -177,12 +178,10 @@ body, html {
 .clearanceTable th, .clearanceTable td {
     padding: 12px 15px;
     text-align: left;
-    border-bottom: 1px solid #ddd;
 }
 
 .clearanceTable th {
-    background-color: #1C82FF;
-    color: white;
+    color: rgb(36, 36, 36);
 }
 
 .clearanceTable tr:hover {

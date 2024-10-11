@@ -1,6 +1,8 @@
 package com.student.clearance.system.service.laboratory.impl;
 
+import com.student.clearance.system.domain.course.Course;
 import com.student.clearance.system.domain.laboratory.Laboratory;
+import com.student.clearance.system.domain.student.Student;
 import com.student.clearance.system.repository.laboratory.LaboratoryRepository;
 import com.student.clearance.system.service.laboratory.LaboratoryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,5 +33,15 @@ public class LaboratoryServiceImpl implements LaboratoryService {
     @Override
     public void deleteLaboratory(Long id) {
         laboratoryRepository.deleteById(id);
+    }
+
+    @Override
+    public Laboratory getLaboratoryByLaboratoryNumber(String laboratoryNumber) {
+        return laboratoryRepository.findByLaboratoryNumber(laboratoryNumber);
+    }
+
+    public List<Laboratory> getLaboratoriesForStudent(Student student) {
+        Course studentCourse = student.getCourse();
+        return laboratoryRepository.findByCourse(studentCourse);
     }
 }

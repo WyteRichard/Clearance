@@ -36,4 +36,10 @@ public class StudentDisciplineController {
         studentDisciplineService.deleteStudentDiscipline(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @GetMapping("/prefects/{studentDisciplineNumber}")
+    public ResponseEntity<StudentDiscipline> getPrefectByStudentDisciplineNumber(@PathVariable String studentDisciplineNumber) {
+        StudentDiscipline prefect = studentDisciplineService.getPrefectByStudentDisciplineNumber(studentDisciplineNumber);
+        return prefect != null ? ResponseEntity.ok(prefect) : ResponseEntity.notFound().build();
+    }
 }

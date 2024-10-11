@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/Guidance")
@@ -29,6 +30,12 @@ public class GuidanceController {
     public ResponseEntity<Integer> getGuidanceCount() {
         int count = guidanceService.getGuidanceCount();
         return ResponseEntity.ok(count);
+    }
+
+    @GetMapping("/employee/{guidanceNumber}")
+    public ResponseEntity<Guidance> getGuidanceByGuidanceNumber(@PathVariable String guidanceNumber) {
+        Guidance guidance = guidanceService.getGuidanceByGuidanceNumber(guidanceNumber);
+        return new ResponseEntity<>(guidance, HttpStatus.OK);
     }
 
     @DeleteMapping("/guidances/{id}")

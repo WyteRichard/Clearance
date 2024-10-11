@@ -7,4 +7,5 @@ public interface AdviserService {
     List<Adviser> getAllAdvisers();
     int getAdviserCount();
     void deleteAdviser(Long id);
+    Adviser getAdviserByAdviserNumber(String adviserNumber);
 }

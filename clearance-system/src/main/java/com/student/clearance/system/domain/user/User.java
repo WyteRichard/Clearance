@@ -14,11 +14,14 @@ import com.student.clearance.system.domain.studentAffairs.StudentAffairs;
 import com.student.clearance.system.domain.studentDiscipline.StudentDiscipline;
 import com.student.clearance.system.domain.supremeStudentCouncil.SupremeStudentCouncil;
 import com.student.clearance.system.domain.dean.Dean;
+import com.student.clearance.system.utils.converter.StringListConverter;
 import jakarta.persistence.*;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity(name = "login")
 @Data
@@ -78,5 +81,12 @@ public class User implements Serializable {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Dean dean;
+
+    @Column(name = "authorities", nullable = false)
+    @Convert(converter = StringListConverter.class)
+    private List<String> authorities = new ArrayList<>();
+
+    private boolean isActive;
+    private boolean isLocked;
 
 }

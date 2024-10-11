@@ -7,4 +7,5 @@ public interface RegistrarService {
     List<Registrar> getAllRegistrars();
     int getRegistrarCount();
     void deleteRegistrar(Long id);
+    Registrar getRegistrarByRegistrarNumber(String registrarNumber);
 }

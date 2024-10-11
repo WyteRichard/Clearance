@@ -36,4 +36,14 @@ public class DeanController {
         deanService.deleteDean(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @GetMapping("/deans/{deanNumber}")
+    public ResponseEntity<Dean> getDeanByDeanNumber(@PathVariable String deanNumber) {
+        Dean dean = deanService.getDeanByDeanNumber(deanNumber);
+        if (dean != null) {
+            return new ResponseEntity<>(dean, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
 }

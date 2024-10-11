@@ -12,8 +12,8 @@ import java.io.Serializable;
 @Data
 public class Library extends Person implements Serializable {
 
-    private Long LibraryId;
-    private String EmployeeNumber;
+    private Long libraryId;
+    private String libraryNumber;
 
     @ManyToOne
     @JoinColumn(name = "department_id")

@@ -15,10 +15,9 @@ import java.io.Serializable;
 
 @Entity
 @Data
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Student extends Person implements Serializable {
 
-    @Column(length = 10, unique = true, nullable = false)
+    @Column(length = 10)
     private String studentNumber;
 
     @ManyToOne

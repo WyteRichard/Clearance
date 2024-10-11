@@ -8,5 +8,9 @@ import java.util.List;
 
 @Repository
 public interface StudentDisciplineRepository extends JpaRepository<StudentDiscipline, Long> {
+    boolean existsByStudentDisciplineNumberAndEmail(String employeeNumber, String email);
+
+    StudentDiscipline findByStudentDisciplineNumber(String studentDisciplineNumber);
+
     List<StudentDiscipline> findBySection_ClusterName(String clusterName);
 }
