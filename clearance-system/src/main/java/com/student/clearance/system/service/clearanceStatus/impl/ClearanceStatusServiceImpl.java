@@ -45,13 +45,13 @@ public class ClearanceStatusServiceImpl implements ClearanceStatusService {
     }
 
     @Override
-    public int countByStudentIdAndStatus(Long studentId, ClearanceStatus.Status status) {
-        return clearanceStatusRepository.countByStudent_IdAndStatus(studentId, status);
+    public int countByStudentNumberAndStatus(String studentNumber, ClearanceStatus.Status status) {
+        return clearanceStatusRepository.countByStudent_StudentNumberAndStatus(studentNumber, status);
     }
 
     @Override
-    public long countRemarksByStudentId(Long studentId) {
-        return clearanceStatusRepository.countByStudent_IdAndRemarksIsNotNull(studentId);
+    public long countRemarksByStudentNumber(String studentNumber) {
+        return clearanceStatusRepository.countByStudent_StudentNumberAndRemarksIsNotNull(studentNumber);
     }
 
     @Override
@@ -60,8 +60,8 @@ public class ClearanceStatusServiceImpl implements ClearanceStatusService {
     }
 
     @Override
-    public List<ClearanceStatus> getClearanceStatusesByStudentId(Long studentId) {
-        return clearanceStatusRepository.findByStudentId(studentId);
+    public List<ClearanceStatus> getClearanceStatusesByStudentNumber(String studentNumber) {
+        return clearanceStatusRepository.findByStudentNumber(studentNumber);
     }
 
     @Override

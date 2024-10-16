@@ -35,6 +35,16 @@ public class AdminController {
         return new ResponseEntity<>(adminService.getAdminById(id), HttpStatus.OK);
     }
 
+    @GetMapping("/admin/{adminNumber}")
+    public ResponseEntity<Admin> getAdminByAdminNumber(@PathVariable String adminNumber) {
+        Admin admin = adminService.getAdminByAdminNumber(adminNumber);
+        if (admin != null) {
+            return new ResponseEntity<>(admin, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
     @PostMapping
     public ResponseEntity<String> addAdmin(@RequestBody Admin admin) {
         try {

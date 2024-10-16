@@ -109,8 +109,8 @@
 
 .filterContainer {
     display: flex;
-    align-items: center; /* Ensures vertical alignment is centered */
-    justify-content: flex-end; /* Adjust this if you want them right-aligned */
+    align-items: center;
+    justify-content: flex-end;
     margin-bottom: 20px;
     gap: 10px;
 }
@@ -174,14 +174,14 @@
 .modal {
     position: absolute;
     right: 0;
-    top: 60px; /* Adjusted to align under the avatar */
+    top: 60px;
     background-color: white;
-    border: 1px solid #e1e4e8; /* Light grey border */
+    border: 1px solid #e1e4e8;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    width: 200px; /* Width of the modal */
+    width: 200px;
     z-index: 1000;
-    overflow: hidden; /* Ensures all content fits within the border radius */
+    overflow: hidden;
   }
   
   .modal ul {
@@ -193,12 +193,12 @@
   .modal ul li {
     padding: 12px 16px;
     cursor: pointer;
-    color: #333; /* Dark grey text */
-    font-size: 14px; /* Adjusted font size for readability */
+    color: #333;
+    font-size: 14px;
     line-height: 1.5;
     display: flex;
     align-items: center;
-    border-bottom: 1px solid #e1e4e8; /* Light grey border between items */
+    border-bottom: 1px solid #e1e4e8;
   }
   
   .modal ul li:last-child {
@@ -206,13 +206,13 @@
   }
   
   .modal ul li:hover {
-    background-color: #f6f8fa; /* Light grey background on hover */
+    background-color: #f6f8fa;
   }
   
-  .modal ul li img { /* If you want icons next to the text */
+  .modal ul li img {
     margin-right: 8px;
-    width: 20px; /* Icon size */
-    height: 20px; /* Icon size */
+    width: 20px;
+    height: 20px;
   }
 
   .logo {
@@ -220,11 +220,11 @@
 }
 
 .invisible {
-    display: none; /* Or use visibility: hidden; */
+    display: none;
 }
 
 .print-only {
-    display: none; /* Hide on screen */
+    display: none;
 }
 
 @media print {
@@ -247,7 +247,7 @@
     .clearanceTable {
         width: 80%;
         border-collapse: collapse;
-        margin: 20px auto; /* Center the table horizontally */
+        margin: 20px auto;
     }
 
     .clearanceTable th, .clearanceTable td {

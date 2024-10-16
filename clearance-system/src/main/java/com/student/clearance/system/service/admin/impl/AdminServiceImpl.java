@@ -30,6 +30,11 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    public Admin getAdminByAdminNumber(String adminNumber) {
+        return adminRepository.findByAdminNumber(adminNumber);
+    }
+
+    @Override
     public Admin addAdmin(Admin admin) {
         return adminRepository.save(admin);
     }

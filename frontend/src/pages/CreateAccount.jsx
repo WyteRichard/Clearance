@@ -11,6 +11,7 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const [passwordShown, setPasswordShown] = useState(false);
   const [userType, setUserType] = useState("");
+  const [officeRole, setOfficeRole] = useState("");
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -25,7 +26,8 @@ const RegisterPage = () => {
   };
 
   const getPlaceholderText = () => {
-    switch (userType) {
+    const type = userType === "Authorized Office" ? officeRole : userType;
+    switch (type) {
       case "Adviser": return "Adviser Number";
       case "Cashier": return "Cashier Number";
       case "Clinic": return "Clinic Number";
@@ -40,6 +42,7 @@ const RegisterPage = () => {
       case "Student Discipline": return "Student Discipline Number";
       case "Supreme Student Council": return "Supreme Student Council Number";
       case "Student": return "Student Number";
+      case "Admin": return "Admin Number";
       default: return "User Number";
     }
   };
@@ -53,7 +56,9 @@ const RegisterPage = () => {
     e.preventDefault();
     setErrorMessage('');
     setIsSubmitting(true);
-
+  
+    const selectedRole = userType === "Authorized Office" ? officeRole : userType;
+  
     if (formData.username === '' || !/^[a-zA-Z0-9]+$/.test(formData.username)) {
       setErrorMessage('Please enter a valid username (alphanumeric characters only).');
       setIsSubmitting(false);
@@ -74,31 +79,51 @@ const RegisterPage = () => {
       setIsSubmitting(false);
       return;
     }
-
+  
     try {
-      const roleField = userType === "Student" ? "studentNumber" : userType.toLowerCase().replace(/\s/g, '') + "Number";
+      const roleMap = {
+        Adviser: "adviser",
+        Cashier: "cashier",
+        Clinic: "clinic",
+        "Cluster Coordinator": "clusterCoordinator",
+        Dean: "dean",
+        Guidance: "guidance",
+        Laboratory: "laboratory",
+        Library: "library",
+        Registrar: "registrar",
+        "Spiritual Affairs": "spiritualAffairs",
+        "Student Affairs": "studentAffairs",
+        "Student Discipline": "studentDiscipline",
+        "Supreme Student Council": "supremeStudentCouncil",
+        Student: "student"
+      };
+  
+      const roleField = roleMap[selectedRole];
       const payload = {
         username: formData.username,
         password: formData.password,
-        [userType.toLowerCase()]: {
-          [roleField]: formData.memberNumber,
+        [roleField]: {
+          [`${roleField}Number`]: formData.memberNumber,
           email: formData.email
         }
       };
       
-      const response = await Axios.post('http://localhost:8080/user/register', payload);
+      const response = await Axios.post('http://localhost:8080/user/register', payload, {
+        headers: { 'Content-Type': 'application/json' }
+      });
       
       if (response.status === 200) {
-        navigate('/account/otp');
+        navigate('/verify-otp');
       } else if (response.data) {
         setErrorMessage(response.data.message || 'An error occurred.');
       }
     } catch (error) {
       setErrorMessage(error.response?.data?.message || 'An error occurred while processing your request.');
     }
-    
+  
     setIsSubmitting(false);
   };
+  
 
   return (
     <div className={styles.container} style={{ backgroundImage: `url(${rcBackground1})` }}>
@@ -118,21 +143,37 @@ const RegisterPage = () => {
               >
                 <option value="" disabled hidden>Select Role</option>
                 <option value="Student">Student</option>
-                <option value="Adviser">Adviser</option>
-                <option value="Cashier">Cashier</option>
-                <option value="Clinic">Clinic</option>
-                <option value="Cluster Coordinator">Cluster Coordinator</option>
-                <option value="Dean">Dean</option>
-                <option value="Guidance">Guidance</option>
-                <option value="Laboratory">Laboratory</option>
-                <option value="Library">Library</option>
-                <option value="Registrar">Registrar</option>
-                <option value="Spiritual Affairs">Spiritual Affairs</option>
-                <option value="Student Affairs">Student Affairs</option>
-                <option value="Student Discipline">Student Discipline</option>
-                <option value="Supreme Student Council">Supreme Student Council</option>
+                <option value="Authorized Office">Authorized Office</option>
+                <option value="Admin">Admin</option>
               </select>
             </div>
+
+            {userType === "Authorized Office" && (
+              <div className={styles.inputContainer}>
+                <select
+                  className={styles.selectField}
+                  id="officeRole"
+                  value={officeRole}
+                  onChange={(e) => setOfficeRole(e.target.value)}
+                  required
+                >
+                  <option value="" disabled hidden>Select Office Role</option>
+                  <option value="Adviser">Adviser</option>
+                  <option value="Cashier">Cashier</option>
+                  <option value="Clinic">Clinic</option>
+                  <option value="Cluster Coordinator">Cluster Coordinator</option>
+                  <option value="Dean">Dean</option>
+                  <option value="Guidance">Guidance</option>
+                  <option value="Laboratory">Laboratory</option>
+                  <option value="Library">Library</option>
+                  <option value="Registrar">Registrar</option>
+                  <option value="Spiritual Affairs">Spiritual Affairs</option>
+                  <option value="Student Affairs">Student Affairs</option>
+                  <option value="Student Discipline">Student Discipline</option>
+                  <option value="Supreme Student Council">Supreme Student Council</option>
+                </select>
+              </div>
+            )}
 
             <div className={styles.inputContainer}>
               <input

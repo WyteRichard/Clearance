@@ -10,5 +10,5 @@ import java.util.List;
 public interface StudentAffairsRepository extends JpaRepository<StudentAffairs, Long> {
     boolean existsByStudentAffairsNumberAndEmail(String employeeNumber, String email);
 
-    StudentAffairs findByStudentAffairsNumber(String employeeNumber);
+    StudentAffairs findByStudentAffairsNumber(String studentAffairsNumber);
 }

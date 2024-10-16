@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
-import styles from '../styles/AdminDeptAccounts.module.css'; // Using CSS Module for styling
+import styles from '../styles/AdminDeptAccounts.module.css';
 import homeIcon from '../assets/home.png';
 import requestIcon from '../assets/bdept.png';
 import userIcon from '../assets/user.png';
 import deleteIcon from '../assets/delete.svg';
+import announcementIcon from '../assets/announcement.png';
 import avatar from '../assets/avatar.png';
 
 const ConfirmationModal = ({ isOpen, message, onConfirm, onCancel }) => {
@@ -41,97 +42,86 @@ const AdminDeptAccounts = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [filterType, setFilterType] = useState("");
     const [showModal, setShowModal] = useState(false);
-    const [currentSemester, setCurrentSemester] = useState("Loading...");
-    const [currentAcademicYear, setCurrentAcademicYear] = useState("Loading...");
-
-    const navigate = useNavigate();
-
-    // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
     const [selectedType, setSelectedType] = useState("");
-
-    const apiUrl = "http://localhost:8080/Dashboard/accounts";
-
-    useEffect(() => {
-        axios.get(apiUrl)
-            .then(response => {
-                const {
-                    advisers,
-                    cashiers,
-                    clinics,
-                    clusterCoordinators,
-                    deans,
-                    guidances,
-                    laboratories,
-                    libraries,
-                    registrars,
-                    spiritualAffairs,
-                    studentAffairs,
-                    studentDisciplines,
-                    supremeStudentCouncils
-                } = response.data;
-
-                setAdvisers(advisers.map(item => ({ ...item, type: 'Adviser' })));
-                setCashiers(cashiers.map(item => ({ ...item, type: 'Cashier' })));
-                setClinics(clinics.map(item => ({ ...item, type: 'Clinic' })));
-                setClusterCoordinators(clusterCoordinators.map(item => ({ ...item, type: 'ClusterCoordinator' })));
-                setDeans(deans.map(item => ({ ...item, type: 'Dean' })));
-                setGuidances(guidances.map(item => ({ ...item, type: 'Guidance' })));
-                setLaboratories(laboratories.map(item => ({ ...item, type: 'Laboratory' })));
-                setLibraries(libraries.map(item => ({ ...item, type: 'Library' })));
-                setRegistrars(registrars.map(item => ({ ...item, type: 'Registrar' })));
-                setSpiritualAffairs(spiritualAffairs.map(item => ({ ...item, type: 'SpiritualAffairs' })));
-                setStudentAffairs(studentAffairs.map(item => ({ ...item, type: 'StudentAffairs' })));
-                setStudentDisciplines(studentDisciplines.map(item => ({ ...item, type: 'StudentDiscipline' })));
-                setSupremeStudentCouncils(supremeStudentCouncils.map(item => ({ ...item, type: 'SupremeStudentCouncil' })));
-            })
-            .catch(error => {
-                console.error("There was an error fetching the data!", error);
-            });
-    }, []);
+    const [currentSemester, setCurrentSemester] = useState("Loading...");
+    const [currentAcademicYear, setCurrentAcademicYear] = useState("Loading...");
+    const navigate = useNavigate();
 
     useEffect(() => {
-        // Fetch the current semester and academic year
-        axios.get('http://localhost:8080/Admin/semester/current')
-            .then(response => {
-                setCurrentSemester(response.data.currentSemester); // Update state with the current semester
-                setCurrentAcademicYear(response.data.academicYear); // Update state with the academic year
-            })
-            .catch(error => {
-                console.error("Error fetching the current semester and academic year", error);
-            });
+        const role = localStorage.getItem('role');
+        const exp = localStorage.getItem('exp');
+        const currentTime = new Date().getTime();
+
+        if (!role || !exp || exp * 1000 < currentTime) {
+            handleLogout();
+        } else if (role !== "ROLE_ROLE_ADMIN") {
+            navigate('/login');
+        } else {
+            fetchData();
+            fetchSemesterData();
+        }
     }, []);
+
+    const fetchData = () => {
+        const token = localStorage.getItem('token');
+        axios.get('http://localhost:8080/Dashboard/accounts', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            const {
+                advisers,
+                cashiers,
+                clinics,
+                clusterCoordinators,
+                deans,
+                guidances,
+                laboratories,
+                libraries,
+                registrars,
+                spiritualAffairs,
+                studentAffairs,
+                studentDisciplines,
+                supremeStudentCouncils
+            } = response.data;
+
+            setAdvisers(advisers.map(item => ({ ...item, type: 'Adviser' })));
+            setCashiers(cashiers.map(item => ({ ...item, type: 'Cashier' })));
+            setClinics(clinics.map(item => ({ ...item, type: 'Clinic' })));
+            setClusterCoordinators(clusterCoordinators.map(item => ({ ...item, type: 'ClusterCoordinator' })));
+            setDeans(deans.map(item => ({ ...item, type: 'Dean' })));
+            setGuidances(guidances.map(item => ({ ...item, type: 'Guidance' })));
+            setLaboratories(laboratories.map(item => ({ ...item, type: 'Laboratory' })));
+            setLibraries(libraries.map(item => ({ ...item, type: 'Library' })));
+            setRegistrars(registrars.map(item => ({ ...item, type: 'Registrar' })));
+            setSpiritualAffairs(spiritualAffairs.map(item => ({ ...item, type: 'SpiritualAffairs' })));
+            setStudentAffairs(studentAffairs.map(item => ({ ...item, type: 'StudentAffairs' })));
+            setStudentDisciplines(studentDisciplines.map(item => ({ ...item, type: 'StudentDiscipline' })));
+            setSupremeStudentCouncils(supremeStudentCouncils.map(item => ({ ...item, type: 'SupremeStudentCouncil' })));
+        })
+        .catch(error => {
+            console.error("Error fetching data", error);
+        });
+    };
+
+    const fetchSemesterData = () => {
+        const token = localStorage.getItem('token');
+        axios.get('http://localhost:8080/Admin/semester/current', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            setCurrentSemester(response.data.currentSemester);
+            setCurrentAcademicYear(response.data.academicYear);
+        })
+        .catch(error => {
+            console.error("Error fetching semester data", error);
+        });
+    };
 
     const getType = (entity) => {
         return entity.type || "Unknown";
     };
-
-    const allDepartments = [
-        ...advisers,
-        ...cashiers,
-        ...clinics,
-        ...clusterCoordinators,
-        ...deans,
-        ...guidances,
-        ...laboratories,
-        ...libraries,
-        ...registrars,
-        ...spiritualAffairs,
-        ...studentAffairs,
-        ...studentDisciplines,
-        ...supremeStudentCouncils
-    ];
-
-    // Filter by search term and department type
-    const filteredDepartments = allDepartments.filter(person => {
-        const fullName = `${person.firstName} ${person.middleName ? person.middleName + ' ' : ''}${person.lastName}`.toLowerCase();
-        
-        const matchesSearchTerm = fullName.includes(searchTerm.toLowerCase());
-        const matchesFilterType = filterType ? person.type.toLowerCase() === filterType.toLowerCase() : true;
-
-        return matchesSearchTerm && matchesFilterType;
-    });
 
     const handleDeleteClick = (id, type) => {
         setSelectedId(id);
@@ -156,23 +146,19 @@ const AdminDeptAccounts = () => {
             'SupremeStudentCouncil': `/Council/councils/${selectedId}`
         };
 
-        const endpoint = endpointMap[selectedType];
-
-        if (endpoint) {
-            axios.delete(`http://localhost:8080${endpoint}`)
-                .then(() => {
-                    alert('Item deleted successfully');
-                    setIsModalOpen(false);
-                    window.location.reload(); // Refresh the page after deletion
-                })
-                .catch(error => {
-                    console.error("There was an error deleting the item!", error);
-                    setIsModalOpen(false);
-                });
-        } else {
-            console.error("Unknown type:", selectedType);
+        const token = localStorage.getItem('token');
+        axios.delete(`http://localhost:8080${endpointMap[selectedType]}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(() => {
+            alert('Item deleted successfully');
             setIsModalOpen(false);
-        }
+            fetchData();
+        })
+        .catch(error => {
+            console.error("Error deleting item", error);
+            setIsModalOpen(false);
+        });
     };
 
     const handleDeleteCancel = () => {
@@ -182,13 +168,37 @@ const AdminDeptAccounts = () => {
     };
 
     const toggleModal = () => {
-        setShowModal(!showModal); // Toggle modal visibility
+        setShowModal(!showModal);
     };
 
     const handleLogout = () => {
-        console.log("Logged out");
-        // Implement logout logic here
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        localStorage.removeItem('exp');
+        navigate('/login');
     };
+
+    const filteredDepartments = [
+        ...advisers,
+        ...cashiers,
+        ...clinics,
+        ...clusterCoordinators,
+        ...deans,
+        ...guidances,
+        ...laboratories,
+        ...libraries,
+        ...registrars,
+        ...spiritualAffairs,
+        ...studentAffairs,
+        ...studentDisciplines,
+        ...supremeStudentCouncils
+    ].filter(person => {
+        const fullName = `${person.firstName} ${person.middleName ? person.middleName + ' ' : ''}${person.lastName}`.toLowerCase();
+        return (
+            fullName.includes(searchTerm.toLowerCase()) &&
+            (filterType ? person.type.toLowerCase() === filterType.toLowerCase() : true)
+        );
+    });
 
     return (
         <div className={styles.flexContainer}>
@@ -208,6 +218,10 @@ const AdminDeptAccounts = () => {
                         <img src={userIcon} alt="Students" className={styles.navIcon} />
                         Students
                     </button>
+                    <button className={styles.ghostButton} onClick={() => navigate('/admin-announcements')}>
+                        <img src={announcementIcon} alt="Announcements" className={styles.navIcon} />
+                        Announcements
+                    </button>
                 </nav>
             </div>
 
@@ -215,7 +229,7 @@ const AdminDeptAccounts = () => {
                 <div className={styles.header}>
                     <h2 className={styles.dashboardTitle}>Department Accounts</h2>
                     <div className={styles.headerRight}>
-                    <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span> {/* Display the fetched academic year */}
+                    <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
                     <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
                         <div className={styles.avatar} onClick={toggleModal}>
                             <img src={avatar} alt="Avatar" />
@@ -244,7 +258,7 @@ const AdminDeptAccounts = () => {
                     <div className={styles.inputBox}>
                         <select
                             className={styles.filterButton}
-                            value={filterType} // Ensuring filterType is used
+                            value={filterType}
                             onChange={e => setFilterType(e.target.value)}
                         >
                             <option value="">Filter Type</option>
@@ -286,7 +300,11 @@ const AdminDeptAccounts = () => {
                                 <td>{person.id}</td>
                                 <td>{getType(person)}</td>
                                 <td>{person.firstName} {person.middleName || ''} {person.lastName}</td>
-                                <td>{person.employeeNumber || ''} {person.deanNumber || ''} {person.supremeStudentCouncilNumber || ''}</td>
+                                <td>{person.employeeNumber || ''} {person.adviserNumber || ''} {person.cashierNumber || ''} {person.clinicNumber || ''}
+                                    {person.clusterCoordinatorNumber || ''} {person.deanNumber || ''} {person.guidanceNumber || ''} {person.laboratoryNumber || ''} 
+                                    {person.libraryNumber || ''} {person.registrarNumber || ''} {person.spiritualAffairsNumber || ''} {person.studentAffairsNumber || ''} 
+                                    {person.studentDisciplineNumber || ''} {person.supremeStudentCouncilNumber || ''}
+                                </td>
                                 <td>{person.address || "N/A"}</td>
                                 <td>{person.contactNumber || "N/A"}</td>
                                 <td>{person.email || "N/A"}</td>
@@ -306,7 +324,6 @@ const AdminDeptAccounts = () => {
                 </table>
             </div>
 
-            {/* Confirmation Modal */}
             <ConfirmationModal
                 isOpen={isModalOpen}
                 message="Are you sure you want to delete this account?"

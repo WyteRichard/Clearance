@@ -1,5 +1,6 @@
 package com.student.clearance.system.domain.user;
 
+import com.student.clearance.system.domain.admin.Admin;
 import com.student.clearance.system.domain.adviser.Adviser;
 import com.student.clearance.system.domain.cashier.Cashier;
 import com.student.clearance.system.domain.clinic.Clinic;
@@ -42,6 +43,9 @@ public class User implements Serializable {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Student student;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Admin admin;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private SupremeStudentCouncil supremeStudentCouncil;

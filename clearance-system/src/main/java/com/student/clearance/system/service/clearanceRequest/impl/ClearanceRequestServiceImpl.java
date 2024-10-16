@@ -5,6 +5,7 @@ import com.student.clearance.system.domain.clearanceStatus.ClearanceStatus;
 import com.student.clearance.system.repository.clearanceRequest.ClearanceRequestRepository;
 import com.student.clearance.system.repository.clearanceStatus.ClearanceStatusRepository;
 import com.student.clearance.system.service.clearanceRequest.ClearanceRequestService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -82,5 +83,19 @@ public class ClearanceRequestServiceImpl implements ClearanceRequestService {
     public void deleteClearanceRequest(Long id) {
         ClearanceRequest clearanceRequest = getClearanceRequestById(id);
         clearanceRequestRepository.delete(clearanceRequest);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllClearanceRequestsAndStatusesByStudentNumber(String studentNumber) {
+        List<ClearanceRequest> clearanceRequests = clearanceRequestRepository.findByStudent_StudentNumber(studentNumber);
+        if (clearanceRequests != null && !clearanceRequests.isEmpty()) {
+            for (ClearanceRequest request : clearanceRequests) {
+                clearanceStatusRepository.deleteByClearanceRequest(request);
+            }
+            clearanceRequestRepository.deleteAll(clearanceRequests);
+        } else {
+            throw new RuntimeException("No clearance requests found for student number: " + studentNumber);
+        }
     }
 }

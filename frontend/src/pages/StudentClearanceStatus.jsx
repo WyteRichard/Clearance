@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import styles from '../styles/StudentClearanceStatus.module.css';  
+import styles from '../styles/StudentClearanceStatus.module.css';
 import dashIcon from '../assets/home.png';
 import requestIcon from '../assets/notes.png';
 import statusIcon from '../assets/bidcard.png';
@@ -21,64 +21,74 @@ const StudentClearanceStatus = () => {
     const [studentNumber, setStudentNumber] = useState('');
     const [sectionName, setSectionName] = useState('');
     const [showModal, setShowModal] = useState(false);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
-    const studentId = 1; // Replace with the actual student ID
+    const studentId = localStorage.getItem('userId');
 
     useEffect(() => {
-        axios.get('http://localhost:8080/Admin/semester/current')
-            .then(response => {
-                const { currentSemester, academicYear } = response.data;
-                setCurrentSemester(currentSemester);
-                setCurrentAcademicYear(academicYear);
-            })
-            .catch(error => console.error("Error fetching semester and academic year:", error));
+        const role = localStorage.getItem('role');
+        const exp = localStorage.getItem('exp');
+        const currentTime = new Date().getTime();
+
+        if (!role || !exp || exp * 1000 < currentTime) {
+            handleLogout();
+        } else if (role !== "ROLE_ROLE_STUDENT") {
+        } else {
+            fetchSemesterData();
+            fetchStudentData();
+            fetchClearanceStatuses();
+        }
     }, []);
 
-    useEffect(() => {
-        axios.get(`http://localhost:8080/Status/student/${studentId}`)
-            .then(response => {
-                const statuses = Object.values(response.data);
-                setClearanceStatuses(statuses);
-                setFilteredStatuses(statuses);
-            })
-            .catch(error => console.error('Error fetching clearance statuses:', error));
-    }, [studentId]);
-
-    useEffect(() => {
-        axios.get(`http://localhost:8080/Student/students/${studentId}`)
-            .then(response => {
-                const { firstName, middleName, lastName, studentNumber, section } = response.data;
-                setStudentFirstName(firstName);
-                setStudentMiddleName(middleName);
-                setStudentLastName(lastName);
-                setStudentNumber(studentNumber);
-                setSectionName(section.sectionName);  // Access the sectionName here
-            })
-            .catch(error => console.error('Error fetching student information:', error));
-    }, [studentId]);
-
-    useEffect(() => {
-        if (statusFilter === '') {
-            setFilteredStatuses(clearanceStatuses);
-        } else {
-            setFilteredStatuses(clearanceStatuses.filter(status => status.status.toLowerCase() === statusFilter));
+    const fetchSemesterData = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/Admin/semester/current', {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const { currentSemester, academicYear } = response.data;
+            setCurrentSemester(currentSemester);
+            setCurrentAcademicYear(academicYear);
+        } catch (error) {
+            setError("Error fetching semester and academic year");
         }
-    }, [statusFilter, clearanceStatuses]);
+    };
+
+    const fetchStudentData = async () => {
+        try {
+            const response = await axios.get(`http://localhost:8080/Student/students/${studentId}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const { firstName, middleName, lastName, studentNumber, section } = response.data;
+            setStudentFirstName(firstName);
+            setStudentMiddleName(middleName);
+            setStudentLastName(lastName);
+            setStudentNumber(studentNumber);
+            setSectionName(section.sectionName);
+        } catch (error) {
+            setError("Error fetching student information");
+        }
+    };
+
+    const fetchClearanceStatuses = async () => {
+        try {
+            const response = await axios.get(`http://localhost:8080/Status/student/${studentId}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const statuses = Object.values(response.data);
+            setClearanceStatuses(statuses);
+            setFilteredStatuses(statuses);
+        } catch (error) {
+            setError("Error fetching clearance statuses");
+        }
+    };
 
     const handleFilterChange = (e) => {
         setStatusFilter(e.target.value);
-    };
-
-    const toggleModal = () => {
-        setShowModal(!showModal);
-    };
-
-    const handleProfile = () => {
-        navigate("/student-account");
-    };
-
-    const handleLogout = () => {
-        console.log("Logged out");
+        if (e.target.value === '') {
+            setFilteredStatuses(clearanceStatuses);
+        } else {
+            setFilteredStatuses(clearanceStatuses.filter(status => status.status.toLowerCase() === e.target.value));
+        }
     };
 
     const handlePrint = () => {
@@ -88,19 +98,19 @@ const StudentClearanceStatus = () => {
         printWindow.document.write(`
             <style>
                 @media print {
-                body { font-family: Arial, sans-serif; text-align: center; }
-                .logo { display: block !important; width: 100px; margin: 0 auto 10px; }
-                .invisible { display: block !important; margin-bottom: 20px; }
+                    body { font-family: Arial, sans-serif; text-align: center; }
+                    .logo { display: block !important; width: 100px; margin: 0 auto 10px; }
+                    .invisible { display: block !important; margin-bottom: 20px; }
                     table {
                         width: 80%;
-                        margin: 20px auto; /* Center the table on the page */
+                        margin: 20px auto;
                         border-collapse: collapse;
-                        border: 1px solid #ddd; /* Border around the table */
+                        border: 1px solid #ddd;
                     }
                     th, td {
                         padding: 8px;
                         text-align: left;
-                        border: 1px solid #ddd; /* Border around each cell */
+                        border: 1px solid #ddd;
                     }
                 }
             </style>
@@ -110,6 +120,16 @@ const StudentClearanceStatus = () => {
         printWindow.document.write('</body></html>');
         printWindow.document.close();
         printWindow.print();
+    };
+
+    const toggleModal = () => setShowModal(!showModal);
+    const handleProfile = () => navigate("/student-account");
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        localStorage.removeItem('exp');
+        navigate('/login');
     };
 
     return (
@@ -152,6 +172,8 @@ const StudentClearanceStatus = () => {
                         )}
                     </div>
                 </div>
+
+                {error && <div className={styles.errorMessage}>{error}</div>}
 
                 <div className={`${styles.studentInfo} ${styles.invisible}`}>
                     <h2>STUDENT CLEARANCE</h2>

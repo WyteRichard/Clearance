@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
@@ -18,8 +18,8 @@ const RegistrarClearanceRequest = () => {
     const [courseFilter, setCourseFilter] = useState("");
     const [yearLevels, setYearLevels] = useState([]);
     const [courses, setCourses] = useState([]);
-    const [isModalOpen, setIsModalOpen] = useState(false); // For modal
-    const [selectedRequest, setSelectedRequest] = useState(null); // Selected request for editing
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedRequest, setSelectedRequest] = useState(null);
     const [remarks, setRemarks] = useState("");
     const [currentSemester, setCurrentSemester] = useState("Loading...");
     const [currentAcademicYear, setCurrentAcademicYear] = useState("Loading...");
@@ -28,143 +28,136 @@ const RegistrarClearanceRequest = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Fetch the current semester and academic year
-        axios.get('http://localhost:8080/Admin/semester/current')
-            .then(response => {
-                setCurrentSemester(response.data.currentSemester); // Update state with the current semester
-                setCurrentAcademicYear(response.data.academicYear); // Update state with the academic year
-            })
-            .catch(error => {
-                console.error("Error fetching the current semester and academic year", error);
-            });
-    }, []);
-    useEffect(() => {
-        Modal.setAppElement('#root'); // Set app element for modal
-    }, []);
+        const role = localStorage.getItem('role');
+        const exp = localStorage.getItem('exp');
+        const currentTime = new Date().getTime();
 
-    // Fetch clearance requests, year levels, and courses
-    useEffect(() => {
-        const fetchClearanceRequests = async () => {
-            try {
-                const departmentId = 9; // Clinic department ID
-                const requestResponse = await axios.get(`http://localhost:8080/Requests/department/${departmentId}`);
-                const requestsData = Array.isArray(requestResponse.data) ? requestResponse.data : [];
-
-                // Fetch remarks for all requests
-                const requestsWithRemarks = await Promise.all(
-                    requestsData.map(async (request) => {
-                        try {
-                            const remarksResponse = await axios.get(`http://localhost:8080/Status/${request.id}`);
-                            return { ...request, remarks: remarksResponse.data?.remarks || '' };
-                        } catch (error) {
-                            console.error(`Error fetching remarks for request ${request.id}:`, error);
-                            return { ...request, remarks: 'Error fetching remarks' };
-                        }
-                    })
-                );
-
-                // Load saved statuses from local storage
-                const savedStatuses = JSON.parse(localStorage.getItem('clearanceStatuses')) || {};
-
-                // Merge the statuses from local storage with the fetched requests
-                const requestsWithStatuses = requestsWithRemarks.map(request => ({
-                    ...request,
-                    status: savedStatuses[request.id] || request.status
-                }));
-
-                setClearanceRequests(requestsWithStatuses);
-                setFilteredRequests(requestsWithStatuses); // Initially, all requests are displayed
-            } catch (error) {
-                console.error("Error fetching clinic clearance requests:", error);
-            }
-        };
-
-        fetchClearanceRequests();
-
-        axios.get("http://localhost:8080/Year/levels")
-            .then(response => {
-                setYearLevels(response.data);
-            })
-            .catch(error => {
-                console.error("Error fetching year levels:", error);
-            });
-
-        axios.get("http://localhost:8080/Course/courses")
-            .then(response => {
-                setCourses(response.data);
-            })
-            .catch(error => {
-                console.error("Error fetching courses:", error);
-            });
+        if (!role || role !== 'ROLE_ROLE_REGISTRAR' || !exp || exp * 1000 < currentTime) {
+            handleLogout();
+        } else {
+            fetchSemesterData();
+            fetchClearanceRequests();
+            fetchFilters();
+        }
     }, []);
 
-    // Handle filtering (search, status, year level, course)
-    useEffect(() => {
-        let filtered = Array.isArray(clearanceRequests) ? clearanceRequests : [];
-
-        if (searchTerm) {
-            const searchTerms = searchTerm.toLowerCase().split(/\s+/);
-            filtered = filtered.filter(request => {
-                const student = request.student || {};
-                const fullName = `${student.firstName || ''} ${student.middleName || ''} ${student.lastName || ''}`.toLowerCase();
-                return searchTerms.every(term => fullName.includes(term));
-            });
-        }
-
-        if (statusFilter) {
-            filtered = filtered.filter(request => request.status?.toLowerCase() === statusFilter.toLowerCase());
-        }
-
-        if (yearLevelFilter) {
-            filtered = filtered.filter(request => request.student?.yearLevel?.yearLevel === yearLevelFilter);
-        }
-
-        if (courseFilter) {
-            filtered = filtered.filter(request => request.student?.course?.courseName === courseFilter);
-        }
-
-        // Remove duplicates based on student ID
-        const seenStudentIds = new Set();
-        filtered = filtered.filter(request => {
-            const studentId = request.student?.studentNumber;
-            if (!studentId || seenStudentIds.has(studentId)) {
-                return false;
-            }
-            seenStudentIds.add(studentId);
-            return true;
-        });
-
-        setFilteredRequests(filtered);
-    }, [searchTerm, statusFilter, yearLevelFilter, courseFilter, clearanceRequests]);
-
-    // Toggle status function
-    const toggleStatus = async (id, currentStatus) => {
-        const normalizedStatus = currentStatus ? currentStatus.toLowerCase() : "pending"; // Default to "pending" if status is undefined
-        const newStatus = normalizedStatus === "cleared" ? "PENDING" : "CLEARED";
-        
+    const fetchSemesterData = async () => {
         try {
+            const response = await axios.get('http://localhost:8080/Admin/semester/current', {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            setCurrentSemester(response.data.currentSemester);
+            setCurrentAcademicYear(response.data.academicYear);
+        } catch (error) {
+            console.error("Error fetching semester data:", error);
+        }
+    };
+
+    const fetchClearanceRequests = async () => {
+        try {
+            const departmentId = 9;
+            const token = localStorage.getItem('token');
+            const requestResponse = await axios.get(`http://localhost:8080/Requests/department/${departmentId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+    
+            const requestsData = requestResponse.data || [];
+            const requestsWithRemarks = await Promise.all(
+                requestsData.map(async (request) => {
+                    try {
+                        const remarksResponse = await axios.get(`http://localhost:8080/Status/${request.id}`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+
+                        console.log(`Request ID ${request.id} status fetched:`, remarksResponse.data?.status);
+                        return { ...request, remarks: remarksResponse.data?.remarks || '', status: remarksResponse.data?.status };
+                    } catch (error) {
+                        console.error(`Error fetching remarks for request ${request.id}:`, error);
+                        return { ...request, remarks: 'Error fetching remarks', status: 'PENDING' };
+                    }
+                })
+            );
+    
+            setClearanceRequests(requestsWithRemarks);
+            setFilteredRequests(requestsWithRemarks);
+        } catch (error) {
+            console.error("Error fetching clearance requests:", error);
+        }
+    };
+
+    const fetchFilters = () => {
+        const token = localStorage.getItem('token');
+        
+        axios.get("http://localhost:8080/Year/levels", {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => setYearLevels(response.data))
+        .catch(error => console.error("Error fetching year levels:", error));
+
+        axios.get("http://localhost:8080/Course/courses", {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => setCourses(response.data))
+        .catch(error => console.error("Error fetching courses:", error));
+    };
+
+    const handleFilter = useCallback(() => {
+    let filtered = [...clearanceRequests];
+
+    if (searchTerm) {
+        const searchTerms = searchTerm.toLowerCase().split(/\s+/);
+        filtered = filtered.filter(request => {
+            const student = request.student || {};
+            const fullName = `${student.firstName || ''} ${student.middleName || ''} ${student.lastName || ''}`.toLowerCase();
+            return searchTerms.every(term => fullName.includes(term));
+        });
+    }
+
+    if (statusFilter) {
+        filtered = filtered.filter(request => request.status?.toLowerCase() === statusFilter.toLowerCase());
+    }
+
+    if (yearLevelFilter) {
+        filtered = filtered.filter(request => request.student?.yearLevel?.yearLevel === yearLevelFilter);
+    }
+
+    if (courseFilter) {
+        filtered = filtered.filter(request => request.student?.course?.courseName === courseFilter);
+    }
+
+    setFilteredRequests(filtered);
+}, [clearanceRequests, searchTerm, statusFilter, yearLevelFilter, courseFilter]);
+
+useEffect(() => {
+    handleFilter();
+}, [handleFilter]);
+
+    const toggleStatus = async (id, currentStatus) => {
+        const newStatus = currentStatus?.toLowerCase() === "cleared" ? "PENDING" : "CLEARED";
+        try {
+            const token = localStorage.getItem('token');
             const response = await axios.put(`http://localhost:8080/Status/update-status/${id}`, {
                 status: newStatus
+            }, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
-            const updatedStatus = response.data;
-
-            // Update status in local storage
-            const savedStatuses = JSON.parse(localStorage.getItem('clearanceStatuses')) || {};
-            savedStatuses[id] = updatedStatus.status;
-            localStorage.setItem('clearanceStatuses', JSON.stringify(savedStatuses));
-
-            // Update status in state
-            setClearanceRequests(prevRequests =>
-                prevRequests.map(request =>
-                    request.id === id ? { ...request, status: updatedStatus.status } : request
-                )
-            );
+    
+            console.log("Backend response:", response.data);
+            
+            if (response.status === 200) {
+                setClearanceRequests(prevRequests =>
+                    prevRequests.map(request =>
+                        request.id === id ? { ...request, status: newStatus } : request
+                    )
+                );
+            } else {
+                console.error("Failed to update status on the backend.");
+            }
         } catch (error) {
             console.error("Error updating status:", error);
         }
     };
 
-    // Open modal and set selected request
     const openModal = (request) => {
         setSelectedRequest(request);
         setRemarks(request.remarks || '');
@@ -174,24 +167,20 @@ const RegistrarClearanceRequest = () => {
     const handleSaveRemarks = async () => {
         if (selectedRequest) {
             try {
-                // Send both status and remarks fields in the PUT request
-                const response = await axios.put(`http://localhost:8080/Status/update-status/${selectedRequest.id}`, {
-                    status: selectedRequest.status,  // Use the current status
-                    remarks: remarks || ''  // Send empty string if remarks is null or empty
+                const token = localStorage.getItem('token');
+                await axios.put(`http://localhost:8080/Status/update-status/${selectedRequest.id}`, {
+                    status: selectedRequest.status,
+                    remarks: remarks || ''
+                }, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-    
-                const updatedRemarks = response.data.remarks;
-    
-                // Update the local state with the updated remarks
+
                 setClearanceRequests(prevRequests =>
                     prevRequests.map(request =>
-                        request.id === selectedRequest.id ? { ...request, remarks: updatedRemarks } : request
+                        request.id === selectedRequest.id ? { ...request, remarks } : request
                     )
                 );
-    
-                // Close the modal after saving
                 setIsModalOpen(false);
-    
             } catch (error) {
                 console.error("Error updating remarks:", error);
                 alert("Failed to update remarks. Please try again.");
@@ -206,12 +195,14 @@ const RegistrarClearanceRequest = () => {
     };
 
     const toggleModal = () => {
-        setShowModal(!showModal); // Toggle modal visibility
+        setShowModal(!showModal);
     };
 
     const handleLogout = () => {
-        console.log("Logged out");
-        // Implement logout logic here
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        localStorage.removeItem('exp');
+        navigate('/login');
     };
 
     return (
@@ -234,7 +225,7 @@ const RegistrarClearanceRequest = () => {
                 <header className={styles.header}>
                     <h2 className={styles.dashboardTitle}>Registrar Clearance Requests</h2>
                     <div className={styles.headerRight}>
-                    <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span> {/* Display the fetched academic year */}
+                    <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
                     <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
                         <div className={styles.avatar} onClick={toggleModal}>
                             <img src={avatar} alt="Avatar" />
@@ -304,7 +295,7 @@ const RegistrarClearanceRequest = () => {
                                             style={{ cursor: 'pointer' }}
                                         />
                                     </td>
-                                    <td>{request.remarks}</td> {/* No more "Loading remarks..." */}
+                                    <td>{request.remarks}</td>
                                     <td>
                                         <button className={styles.editButton} onClick={() => openModal(request)}>Edit</button>
                                     </td>
@@ -315,7 +306,6 @@ const RegistrarClearanceRequest = () => {
                 </div>
             </div>
 
-            {/* Modal for editing remarks */}
             {isModalOpen && (
                 <Modal isOpen={isModalOpen} onRequestClose={closeModal} className={styles.modal}>
                     <h2 className={styles.modalTitle}>Edit Remarks</h2>

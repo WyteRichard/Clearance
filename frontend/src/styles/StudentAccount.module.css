@@ -112,7 +112,6 @@
   border-radius: 5px;
 }
 
-/* Modal for profile actions */
 .modal {
   position: absolute;
   right: 0;
@@ -150,16 +149,14 @@
   background-color: #f6f8fa;
 }
 
-/* Card grid styles */
 .cardGrid {
   display: flex;
-  justify-content: flex-start; /* Align student card and general info horizontally */
-  align-items: flex-start; /* Align both cards to the top */
+  justify-content: flex-start;
+  align-items: flex-start;
   gap: 30px;
-  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  flex-wrap: wrap;
 }
 
-/* Student card styles */
 .card {
   background-color: white;
   padding: 20px;
@@ -196,21 +193,28 @@
 }
 
 .profilePic {
-  width: 100px;
-  height: 100px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
-  background-color: #e0e0e0;
+  overflow: hidden;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  background-color: #f0f0f0;
+}
+
+.profileImage {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
 }
 
 .placeholder {
-  font-size: 40px;
-  color: #999;
+  font-size: 4rem;
+  color: #888;
 }
 
-/* General Info Card */
 .generalInfo {
   background-color: white;
   border-radius: 8px;
@@ -254,24 +258,23 @@
 
 .saveButton {
   padding: 10px 20px;
-  background-color: #28a745; /* Green color for save */
+  background-color: #28a745;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
-  margin-right: 10px; /* Space between buttons */
+  margin-right: 10px;
   transition: background-color 0.3s;
 }
 
 .saveButton:hover {
-  background-color: #218838; /* Darker green on hover */
+  background-color: #218838;
 }
 
-/* Cancel Button */
 .cancelButton {
   padding: 10px 20px;
-  background-color: #dc3545; /* Red color for cancel */
+  background-color: #dc3545;
   color: white;
   border: none;
   border-radius: 5px;
@@ -281,10 +284,9 @@
 }
 
 .cancelButton:hover {
-  background-color: #c82333; /* Darker red on hover */
+  background-color: #c82333;
 }
 
-/* Button Container for alignment */
 .buttonContainer {
   display: flex;
   justify-content: flex-end;
@@ -321,7 +323,6 @@
   flex-direction: column;
 }
 
-/* Other specific styles for student account */
 .studentAccountContainer .cardGrid {
   display: flex;
   flex-direction: row;
@@ -365,7 +366,6 @@
   margin: 0 5px;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .flexContainer {
     flex-direction: column;

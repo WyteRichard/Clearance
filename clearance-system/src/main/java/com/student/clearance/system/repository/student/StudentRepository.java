@@ -4,10 +4,15 @@ import com.student.clearance.system.domain.student.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
     boolean existsByStudentNumberAndEmail(String studentNumber, String email);
 
     Student findByStudentNumber(String studentNumber);
+
+    List<Student> findAllByStudentNumber(String studentNumber);
+
 }

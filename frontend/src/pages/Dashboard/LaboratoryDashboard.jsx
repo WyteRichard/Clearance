@@ -7,25 +7,9 @@ import requestIcon from '../../assets/notes.png';
 import avatar from '../../assets/avatar.png';
 
 const LaboratoryDashboard = () => {
-
     const [currentSemester, setCurrentSemester] = useState("Loading...");
     const [currentAcademicYear, setCurrentAcademicYear] = useState("Loading...");
-
-    useEffect(() => {
-        // Fetch the current semester and academic year
-        axios.get('http://localhost:8080/Admin/semester/current')
-            .then(response => {
-                setCurrentSemester(response.data.currentSemester); // Update state with the current semester
-                setCurrentAcademicYear(response.data.academicYear); // Update state with the academic year
-            })
-            .catch(error => {
-                console.error("Error fetching the current semester and academic year", error);
-            });
-    }, []);
-
-
     const [showModal, setShowModal] = useState(false);
-
     const [counts, setCounts] = useState({
         clearanceRequests: 0,
         cleared: 0,
@@ -35,33 +19,63 @@ const LaboratoryDashboard = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const departmentId = 7; // The specific department ID for this adviser
-                const clearanceResponse = await axios.get(`http://localhost:8080/Requests/count?departmentId=${departmentId}`);
-                const statusCountsResponse = await axios.get(`http://localhost:8080/Status/department/${departmentId}/status-counts`);
-    
-                setCounts({
-                    clearanceRequests: clearanceResponse.data,
-                    cleared: statusCountsResponse.data.cleared,
-                    pending: statusCountsResponse.data.pending,
-                    remarks: counts.remarks
-                });
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        };
-    
-        fetchData();
-    }, [counts.remarks]);
+        const role = localStorage.getItem('role');
+        const exp = localStorage.getItem('exp');
+        const currentTime = new Date().getTime();
+
+        if (!role || role !== 'ROLE_ROLE_LABORATORY' || !exp || exp * 1000 < currentTime) {
+            handleLogout();
+        } else {
+            fetchSemesterData();
+            fetchCounts();
+        }
+    }, []);
+
+    const fetchSemesterData = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/Admin/semester/current', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            setCurrentSemester(response.data.currentSemester);
+            setCurrentAcademicYear(response.data.academicYear);
+        } catch (error) {
+            console.error("Error fetching semester data:", error);
+        }
+    };
+
+    const fetchCounts = async () => {
+        try {
+            const departmentId = 7;
+            const token = localStorage.getItem('token');
+            const clearanceResponse = await axios.get(`http://localhost:8080/Requests/count?departmentId=${departmentId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const statusCountsResponse = await axios.get(`http://localhost:8080/Status/department/${departmentId}/status-counts`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            setCounts({
+                clearanceRequests: clearanceResponse.data,
+                cleared: statusCountsResponse.data.cleared,
+                pending: statusCountsResponse.data.pending,
+                remarks: counts.remarks
+            });
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    };
 
     const toggleModal = () => {
-        setShowModal(!showModal); // Toggle modal visibility
+        setShowModal(!showModal);
     };
 
     const handleLogout = () => {
-        console.log("Logged out");
-        // Implement logout logic here
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        localStorage.removeItem('exp');
+        navigate('/login');
     };
 
     return (
@@ -84,7 +98,7 @@ const LaboratoryDashboard = () => {
                 <header className={styles.header}>
                     <h2 className={styles.dashboardTitle}>Laboratory Dashboard</h2>
                     <div className={styles.headerRight}>
-                        <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span> {/* Display the fetched academic year */}
+                        <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
                         <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
                         <div className={styles.avatar} onClick={toggleModal}>
                             <img src={avatar} alt="Avatar" />

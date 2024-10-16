@@ -11,4 +11,6 @@ public interface AdminService {
     Admin addAdmin(Admin admin);
     Admin updateAdmin(Admin admin);
     void deleteAdmin(Long id);
+
+    Admin getAdminByAdminNumber(String adminNumber);
 }

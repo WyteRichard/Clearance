@@ -66,4 +66,10 @@ public class ClearanceRequestController {
         clearanceRequestService.deleteClearanceRequest(id);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/student/{studentNumber}/all")
+    public ResponseEntity<Void> deleteAllClearanceRequestsAndStatusesByStudentNumber(@PathVariable String studentNumber) {
+        clearanceRequestService.deleteAllClearanceRequestsAndStatusesByStudentNumber(studentNumber);
+        return ResponseEntity.noContent().build();
+    }
 }

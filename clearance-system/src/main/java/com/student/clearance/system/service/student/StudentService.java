@@ -9,10 +9,11 @@ import java.util.Optional;
 public interface StudentService {
     List<Student> getAllStudents();
     Optional<Student> getStudentById(Long id);
+    Student getStudentByStudentNumber(String studentNumber);
+    Student updateStudentByStudentNumber(String studentNumber, Student updatedStudent);
     Student addStudent(Student student);
-    void deleteStudent(Long id);
+    void deleteStudentByStudentNumber(String studentNumber);
     int getStudentCount();
-    Student updateStudent(Long id, Student updatedStudent);
 
     String saveProfileImage(MultipartFile profileImage);
 }

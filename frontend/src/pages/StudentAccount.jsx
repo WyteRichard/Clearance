@@ -8,43 +8,58 @@ import statusIcon from '../assets/idcard.png';
 import accountIcon from '../assets/buser.png';
 
 const StudentAccount = () => {
-  const [student, setStudent] = useState(null); // State for storing student data
-  const [isEditing, setIsEditing] = useState(false); // State to toggle edit mode
-  const [formData, setFormData] = useState({}); // State for holding form data
-  const [profileImage, setProfileImage] = useState(null); // State to hold the profile image file
-  const [profileImagePreview, setProfileImagePreview] = useState(null); // For image preview
-  const studentId = 1; // Replace this with the actual student ID to fetch
-  const navigate = useNavigate(); // Initialize navigate
+  const [student, setStudent] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({});
+  const [profileImage, setProfileImage] = useState(null);
+  const [profileImagePreview, setProfileImagePreview] = useState(null);
+  const studentNumber = localStorage.getItem('userId');
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch student data from the API
-    const fetchStudent = async () => {
-      try {
-        const response = await axios.get(`http://localhost:8080/Student/students/${studentId}`);
-        console.log("Fetched student data:", response.data);
-        setStudent(response.data);
-        setFormData(response.data); // Populate form data with fetched student data
-        if (response.data.profileImage) {
-          // If profile image is a relative path, you might need to prepend the base URL
-          const imageURL = `http://localhost:8080/${response.data.profileImage}`;
-          setProfileImagePreview(imageURL); // Load existing profile image
-        }
-      } catch (error) {
-        console.error("Error fetching student data:", error);
-      }
-    };
-    fetchStudent();
-  }, [studentId]);
+    const role = localStorage.getItem('role');
+    const exp = localStorage.getItem('exp');
+    const currentTime = new Date().getTime();
 
-  const handleEdit = () => {
-    setIsEditing(true);
+    if (!role || !exp || exp * 1000 < currentTime) {
+      handleLogout();
+    } else if (role !== "ROLE_ROLE_STUDENT") {
+    } else {
+      fetchStudent();
+    }
+  }, []);
+
+  const fetchStudent = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8080/Student/students/${studentNumber}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      setStudent(response.data);
+      setFormData(response.data);
+      if (response.data.profileImage) {
+        const imageURL = `http://localhost:8080/Student/uploads/${response.data.profileImage}?${new Date().getTime()}`;
+        setProfileImagePreview(imageURL);
+        console.log("Updated Profile Image URL:", imageURL);
+      }
+      
+    } catch (error) {
+      console.error("Error fetching student data:", error);
+    }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('exp');
+    navigate('/login');
+  };
+
+  const handleEdit = () => setIsEditing(true);
   const handleCancel = () => {
     setIsEditing(false);
-    setFormData(student); // Reset to the original data if cancelled
-    setProfileImage(null); // Clear any uploaded images on cancel
-    setProfileImagePreview(student.profileImage); // Reset image preview to original
+    setFormData(student);
+    setProfileImage(null);
+    setProfileImagePreview(`http://localhost:8080/Student/uploads/${student.profileImage}`);
   };
 
   const handleChange = (e) => {
@@ -54,59 +69,53 @@ const StudentAccount = () => {
     });
   };
 
-  // Handle profile image upload
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     setProfileImage(file);
-    setProfileImagePreview(URL.createObjectURL(file)); // Create a preview URL for the selected image
+    const previewURL = URL.createObjectURL(file);
+    setProfileImagePreview(previewURL);
+    console.log("Image Preview URL:", previewURL);
   };
 
   const handleSave = async () => {
-    const formDataToSend = new FormData(); // Use FormData for file upload
-  
-    // Append form fields
+    const formDataToSend = new FormData();
     formDataToSend.append("contactNumber", formData.contactNumber);
     formDataToSend.append("email", formData.email);
-    formDataToSend.append("address", formData.address ? formData.address : student.address);
-    formDataToSend.append("religion", formData.religion ? formData.religion : student.religion);
+    formDataToSend.append("address", formData.address || student.address);
+    formDataToSend.append("religion", formData.religion || student.religion);
     formDataToSend.append("birthdate", formData.birthdate ? new Date(formData.birthdate).toISOString().split('T')[0] : student.birthdate);
-    formDataToSend.append("birthplace", formData.birthplace ? formData.birthplace : student.birthplace);
-    formDataToSend.append("citizenship", formData.citizenship ? formData.citizenship : student.citizenship);
-    formDataToSend.append("civilStatus", formData.civilStatus ? formData.civilStatus : student.civilStatus);
-    formDataToSend.append("sex", formData.sex ? formData.sex : student.sex);
-
-    // Append the profile image if it's selected
+    formDataToSend.append("birthplace", formData.birthplace || student.birthplace);
+    formDataToSend.append("citizenship", formData.citizenship || student.citizenship);
+    formDataToSend.append("civilStatus", formData.civilStatus || student.civilStatus);
+    formDataToSend.append("sex", formData.sex || student.sex);
+  
     if (profileImage) {
       formDataToSend.append("profileImage", profileImage);
     }
   
     try {
-      const response = await axios.put(`http://localhost:8080/Student/student/${studentId}`, formDataToSend, {
+      const response = await axios.put(`http://localhost:8080/Student/student/${studentNumber}`, formDataToSend, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
       });
+      setIsEditing(false);
+      setStudent(response.data);
   
-      console.log("Server response:", response.data);
-      setIsEditing(false); // Exit edit mode
-      setStudent(response.data); // Update the student state with the new values
-      // If profile image is a relative path, you might need to prepend the base URL
-      const imageURL = `http://localhost:8080/${response.data.profileImage}`;
-      setProfileImagePreview(imageURL); // Update the image preview after saving
-    } catch (error) {
-      if (error.response) {
-        console.error("Server responded with error:", error.response.data);
-        alert(`Update failed: ${error.response.data.message || 'Unknown error'}`);
+      if (response.data.profileImage) {
+        const imageURL = `http://localhost:8080/Student/uploads/${response.data.profileImage}?${new Date().getTime()}`;
+        setProfileImagePreview(imageURL);
+        console.log("Updated Profile Image URL:", imageURL);
       } else {
-        console.error("Request error:", error.message);
-        alert(`Error: ${error.message}`);
+        console.warn("Profile image path was not returned by the server.");
       }
+    } catch (error) {
+      alert(`Update failed: ${error.response?.data?.message || 'Unknown error'}`);
     }
   };
 
-  if (!student) {
-    return <div>Loading...</div>; // Show loading state while fetching data
-  }
+  if (!student) return <div>Loading...</div>;
 
   return (
     <div className={`${styles.flexContainer} ${styles.studentAccountContainer}`}>
@@ -131,24 +140,21 @@ const StudentAccount = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
       <div className={styles.mainContent}>
-        {/* Header */}
         <div className={styles.header}>
           <h2 className={styles.dashboardTitle}>Student Account</h2>
         </div>
 
-        {/* Student Information Card */}
         <div className={styles.cardGrid}>
-          {/* Student Details Card */}
           <div className={styles.card}>
             <div className={styles.studentInfo}>
-              <div className={styles.profilePic}>
-                {profileImagePreview ? (
-                  <img src={profileImagePreview} alt="Profile" className={styles.profileImage} />
-                ) : (
-                  <div className={styles.placeholder}>+</div>
-                )}
+            <div className={styles.profilePic}>
+                <img
+                  src={profileImagePreview}
+                  alt=""
+                  className={styles.profileImage}
+                  style={{ width: '150px', height: '150px', borderRadius: '50%' }}
+                />
               </div>
               <div className={styles.studentDetails}>
                 <h2>{student.firstName} {student.middleName} {student.lastName}</h2>

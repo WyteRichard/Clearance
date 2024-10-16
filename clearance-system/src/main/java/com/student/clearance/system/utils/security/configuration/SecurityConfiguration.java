@@ -24,7 +24,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -68,10 +67,10 @@ public class SecurityConfiguration {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:3000"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(List.of("Access-Control-Allow-Headers", "Authorization, x-xsrf-token, Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, " +
-                "Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Jwt-Token, Uid"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT"));
+        configuration.setAllowedHeaders(List.of("*")); // Allows all headers
+        configuration.setExposedHeaders(List.of("Authorization", "x-xsrf-token", "Jwt-Token", "Uid", "Access-Control-Allow-Headers"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Include DELETE and OPTIONS
+        configuration.setAllowCredentials(true); // Necessary for authorization headers
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -79,14 +78,19 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable).cors(cors -> corsConfigurationSource())
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.requestMatchers(SecurityConstant.PUBLIC_URLS).permitAll().anyRequest().authenticated())
-                .exceptionHandling((e) -> {
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(SecurityConstant.PUBLIC_URLS).permitAll()
+                        .anyRequest().authenticated())
+                .exceptionHandling(e -> {
                     e.authenticationEntryPoint(authenticationEntryPoint);
-                    e.accessDeniedHandler(jwtAccessDeniedHandler);})
+                    e.accessDeniedHandler(jwtAccessDeniedHandler);
+                })
                 .addFilterBefore(jwtAuthorizationFilter, BasicAuthenticationFilter.class);
+
         return http.build();
     }
-
 }

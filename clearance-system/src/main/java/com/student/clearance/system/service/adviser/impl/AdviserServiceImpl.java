@@ -45,4 +45,8 @@ public class AdviserServiceImpl implements AdviserService {
         return adviserRepository.findByCourse(studentCourse);
     }
 
+    public Adviser getAdviserById(Long adviserId) {
+        return adviserRepository.findById(adviserId).orElse(null);
+    }
+
 }

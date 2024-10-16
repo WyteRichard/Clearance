@@ -19,22 +19,24 @@ public class SemesterControlServiceImpl implements SemesterControlService {
 
     @Override
     public SemesterControl getCurrentSemester() {
-        // Assuming there's only one semester control record
-        return semesterControlRepository.findById(1L)
+        // Ensures there is only one record
+        return semesterControlRepository.findAll().stream()
+                .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Semester control record not found"));
     }
 
     @Override
     public SemesterControl switchSemester(SemesterControl.SemesterType semesterType, String academicYear) {
-        // Get or create the semester control record
-        SemesterControl semesterControl = semesterControlRepository.findById(1L)
+        // Find the existing record or create a new one if it doesn't exist
+        SemesterControl semesterControl = semesterControlRepository.findAll().stream()
+                .findFirst()
                 .orElse(new SemesterControl());
 
-        // Set the new semester and academic year
+        // Update the semester and academic year
         semesterControl.setCurrentSemester(semesterType);
         semesterControl.setAcademicYear(academicYear);
 
-        // Save the updated record to the database
+        // Save the changes
         return semesterControlRepository.save(semesterControl);
     }
 }

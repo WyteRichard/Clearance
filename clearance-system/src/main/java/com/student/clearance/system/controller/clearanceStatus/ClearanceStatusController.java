@@ -96,11 +96,11 @@ public class ClearanceStatusController {
     }
 
     // Status counts for a specific student
-    @GetMapping("/student/{studentId}/status-counts")
-    public ResponseEntity<Map<String, Integer>> getStatusCountsByStudentId(@PathVariable Long studentId) {
-        int clearedCount = clearanceStatusService.countByStudentIdAndStatus(studentId, ClearanceStatus.Status.CLEARED);
-        int pendingCount = clearanceStatusService.countByStudentIdAndStatus(studentId, ClearanceStatus.Status.PENDING);
-        long remarkCount = clearanceStatusService.countRemarksByStudentId(studentId);
+    @GetMapping("/student/{studentNumber}/status-counts")
+    public ResponseEntity<Map<String, Integer>> getStatusCountsByStudentNumber(@PathVariable String studentNumber) {
+        int clearedCount = clearanceStatusService.countByStudentNumberAndStatus(studentNumber, ClearanceStatus.Status.CLEARED);
+        int pendingCount = clearanceStatusService.countByStudentNumberAndStatus(studentNumber, ClearanceStatus.Status.PENDING);
+        long remarkCount = clearanceStatusService.countRemarksByStudentNumber(studentNumber);
 
         Map<String, Integer> statusCounts = new HashMap<>();
         statusCounts.put("cleared", clearedCount);
@@ -110,9 +110,9 @@ public class ClearanceStatusController {
         return new ResponseEntity<>(statusCounts, HttpStatus.OK);
     }
 
-    @GetMapping("/student/{studentId}")
-    public ResponseEntity<Map<String, Object>> getClearanceStatusByStudentId(@PathVariable Long studentId) {
-        List<ClearanceStatus> statuses = clearanceStatusService.getClearanceStatusesByStudentId(studentId);
+    @GetMapping("/student/{studentNumber}")
+    public ResponseEntity<Map<String, Object>> getClearanceStatusByStudentNumber(@PathVariable String studentNumber) {
+        List<ClearanceStatus> statuses = clearanceStatusService.getClearanceStatusesByStudentNumber(studentNumber);
         Map<String, Object> response = new HashMap<>();
 
         if (statuses.isEmpty()) {
@@ -129,6 +129,7 @@ public class ClearanceStatusController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     @PutMapping("/update-status/{id}")
     public ResponseEntity<Map<String, Object>> updateClearanceStatus(@PathVariable Long id, @RequestBody Map<String, String> statusUpdate) {

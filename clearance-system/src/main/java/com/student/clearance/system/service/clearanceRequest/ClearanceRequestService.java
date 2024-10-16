@@ -25,5 +25,7 @@ public interface ClearanceRequestService {
 
     long getClearanceRequestCount();
 
+    void deleteAllClearanceRequestsAndStatusesByStudentNumber(String studentNumber);
+
 
 }

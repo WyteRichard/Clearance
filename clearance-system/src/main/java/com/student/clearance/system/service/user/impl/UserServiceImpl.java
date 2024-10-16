@@ -1,5 +1,6 @@
 package com.student.clearance.system.service.user.impl;
 
+import com.student.clearance.system.domain.admin.Admin;
 import com.student.clearance.system.domain.adviser.Adviser;
 import com.student.clearance.system.domain.cashier.Cashier;
 import com.student.clearance.system.domain.clinic.Clinic;
@@ -20,6 +21,7 @@ import com.student.clearance.system.exception.domain.OtpExistsException;
 import com.student.clearance.system.exception.domain.PersonExistsException;
 import com.student.clearance.system.exception.domain.UserNotFoundException;
 import com.student.clearance.system.exception.domain.UsernameExistsException;
+import com.student.clearance.system.repository.admin.AdminRepository;
 import com.student.clearance.system.repository.adviser.AdviserRepository;
 import com.student.clearance.system.repository.cashier.CashierRepository;
 import com.student.clearance.system.repository.clinic.ClinicRepository;
@@ -67,6 +69,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
     private UserRepository userRepository;
     private StudentRepository studentRepository;
+    private AdminRepository adminRepository;
     private AdviserRepository adviserRepository;
     private CashierRepository cashierRepository;
     private ClinicRepository clinicRepository;
@@ -88,6 +91,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Autowired
     public UserServiceImpl(UserRepository userRepository,
                            StudentRepository studentRepository,
+                           AdminRepository adminRepository,
                            AdviserRepository adviserRepository,
                            CashierRepository cashierRepository,
                            ClinicRepository clinicRepository,
@@ -105,6 +109,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                            LoginAttemptService loginAttemptService,
                            EmailService emailService) {
         this.studentRepository = studentRepository;
+        this.adminRepository = adminRepository;
         this.adviserRepository = adviserRepository;
         this.cashierRepository = cashierRepository;
         this.clinicRepository = clinicRepository;
@@ -190,8 +195,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             user.setUserId(newUser.getSupremeStudentCouncil().getSupremeStudentCouncilNumber());
             user.setOtp(otp);
             user.setLocked(true);
-            user.setRole(ROLE_STUDENT_COUNCIL.name());
-            user.setAuthorities(Arrays.stream(ROLE_STUDENT_COUNCIL.getAuthorities()).toList());
+            user.setRole(ROLE_COUNCIL.name());
+            List<String> authorities = Arrays.stream(ROLE_COUNCIL.getAuthorities()).toList();
+            if (authorities == null || authorities.isEmpty()) {
+                throw new IllegalArgumentException("Authorities for Supreme Student Council cannot be null or empty");
+            }
+            user.setAuthorities(authorities);
         } else if (newUser.getStudentAffairs() != null && newUser.getStudentAffairs().getStudentAffairsNumber() != null) {
             String studentAffairsNumber = newUser.getStudentAffairs().getStudentAffairsNumber();
             String email = newUser.getStudentAffairs().getEmail();
@@ -207,8 +216,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             user.setUserId(newUser.getStudentAffairs().getStudentAffairsNumber());
             user.setOtp(otp);
             user.setLocked(true);
-            user.setRole(ROLE_STUDENT_AFFAIRS.name());
-            user.setAuthorities(Arrays.stream(ROLE_STUDENT_AFFAIRS.getAuthorities()).toList());
+            user.setRole(ROLE_AFFAIRS.name());
+            user.setAuthorities(Arrays.stream(ROLE_AFFAIRS.getAuthorities()).toList());
         } else if (newUser.getSpiritualAffairs() != null && newUser.getSpiritualAffairs().getSpiritualAffairsNumber() != null) {
             String spiritualAffairsNumber = newUser.getSpiritualAffairs().getSpiritualAffairsNumber();
             String email = newUser.getSpiritualAffairs().getEmail();
@@ -224,8 +233,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             user.setUserId(newUser.getSpiritualAffairs().getSpiritualAffairsNumber());
             user.setOtp(otp);
             user.setLocked(true);
-            user.setRole(ROLE_SPIRITUAL_AFFAIRS.name());
-            user.setAuthorities(Arrays.stream(ROLE_SPIRITUAL_AFFAIRS.getAuthorities()).toList());
+            user.setRole(ROLE_SPIRITUAL.name());
+            user.setAuthorities(Arrays.stream(ROLE_SPIRITUAL.getAuthorities()).toList());
         } else if (newUser.getStudentDiscipline() != null && newUser.getStudentDiscipline().getStudentDisciplineNumber() != null) {
             String studentDisciplineNumber = newUser.getStudentDiscipline().getStudentDisciplineNumber();
             String email = newUser.getStudentDiscipline().getEmail();
@@ -241,8 +250,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             user.setUserId(newUser.getStudentDiscipline().getStudentDisciplineNumber());
             user.setOtp(otp);
             user.setLocked(true);
-            user.setRole(ROLE_STUDENT_DISCIPLINE.name());
-            user.setAuthorities(Arrays.stream(ROLE_STUDENT_DISCIPLINE.getAuthorities()).toList());
+            user.setRole(ROLE_DISCIPLINE.name());
+            user.setAuthorities(Arrays.stream(ROLE_DISCIPLINE.getAuthorities()).toList());
         } else if (newUser.getGuidance() != null && newUser.getGuidance().getGuidanceNumber() != null) {
             String guidanceNumber = newUser.getGuidance().getGuidanceNumber();
             String email = newUser.getGuidance().getEmail();
@@ -360,8 +369,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             user.setUserId(newUser.getClusterCoordinator().getClusterCoordinatorNumber());
             user.setOtp(otp);
             user.setLocked(true);
-            user.setRole(ROLE_CLUSTER_COORDINATOR.name());
-            user.setAuthorities(Arrays.stream(ROLE_CLUSTER_COORDINATOR.getAuthorities()).toList());
+            user.setRole(ROLE_COORDINATOR.name());
+            user.setAuthorities(Arrays.stream(ROLE_COORDINATOR.getAuthorities()).toList());
         } else if (newUser.getRegistrar() != null && newUser.getRegistrar().getRegistrarNumber() != null) {
             String registrarNumber = newUser.getRegistrar().getRegistrarNumber();
             String email = newUser.getRegistrar().getEmail();
@@ -395,6 +404,22 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             user.setLocked(true);
             user.setRole(ROLE_DEAN.name());
             user.setAuthorities(Arrays.stream(ROLE_DEAN.getAuthorities()).toList());
+        } else if (newUser.getAdmin() != null && newUser.getAdmin().getAdminNumber() != null) {
+            String adminNumber = newUser.getAdmin().getAdminNumber();
+            String email = newUser.getAdmin().getEmail();
+            boolean isAdminExists = adminRepository.existsByAdminNumberAndEmail(adminNumber, email);
+            boolean isUserIdExists = userRepository.existsByUserId(newUser.getAdmin().getAdminNumber());
+            if (!isAdminExists) {
+                throw new PersonExistsException("Admin Number Does Not Exist!!");
+            } else if (isUserIdExists) {
+                throw new PersonExistsException("Admin Already Exists!");
+            }
+            emailService.sendNewPasswordEmail(email, otp);
+            user.setUserId(newUser.getAdmin().getAdminNumber());
+            user.setOtp(otp);
+            user.setLocked(true);
+            user.setRole(ROLE_ADMIN.name());
+            user.setAuthorities(Arrays.stream(ROLE_ADMIN.getAuthorities()).toList());
         }
 
             userRepository.save(user);
@@ -426,6 +451,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             ClusterCoordinator clusterCoordinatorNumber = clusterCoordinatorRepository.findByClusterCoordinatorNumber(userNumber);
             Registrar registrarNumber = registrarRepository.findByRegistrarNumber(userNumber);
             Dean deanNumber = deanRepository.findByDeanNumber(userNumber);
+            Admin adminNumber = adminRepository.findByAdminNumber(userNumber);
 
             if (studentNumber != null) {
                 emailService.sendNewPasswordEmail(studentNumber.getEmail(), otp);
@@ -455,6 +481,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 emailService.sendNewPasswordEmail(registrarNumber.getEmail(), otp);
             } else if (deanNumber != null) {
                 emailService.sendNewPasswordEmail(deanNumber.getEmail(), otp);
+            } else if (adminNumber != null) {
+                emailService.sendNewPasswordEmail(adminNumber.getEmail(), otp);
             }
             userRepository.save(user);
             LOGGER.info("Username Found!");

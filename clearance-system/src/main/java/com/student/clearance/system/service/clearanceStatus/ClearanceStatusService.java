@@ -12,11 +12,11 @@ public interface ClearanceStatusService {
     ClearanceStatus updateClearanceStatus(ClearanceStatus clearanceStatus);
     void deleteClearanceStatus(Long id);
 
-    int countByStudentIdAndStatus(Long studentId, ClearanceStatus.Status status);
-    long countRemarksByStudentId(Long studentId);
+    int countByStudentNumberAndStatus(String studentNumber, ClearanceStatus.Status status);
+    long countRemarksByStudentNumber(String studentNumber);
     long countByStatus(ClearanceStatus.Status status);
 
-    List<ClearanceStatus> getClearanceStatusesByStudentId(Long studentId);
+    List<ClearanceStatus> getClearanceStatusesByStudentNumber(String studentNumber);
 
     int countByDepartmentIdAndStatus(Long departmentId, ClearanceStatus.Status status);
 }

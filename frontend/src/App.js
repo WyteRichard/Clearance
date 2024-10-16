@@ -12,6 +12,7 @@ import DepartmentClearanceRequest from "./pages/Department/SSCClearanceRequest";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminDeptAccounts from "./pages/AdminDeptAccounts";
 import AdminStudentAccounts from "./pages/AdminStudentAccounts";
+import AdminAnnouncement from "./pages/AdminAnnouncement";
 
 import AdviserClearanceRequest from "./pages/Department/AdviserClearanceRequest";
 import CashierClearanceRequest from "./pages/Department/CashierClearanceRequest";
@@ -89,6 +90,9 @@ const App = () => {
               <Route path="/admin-dashboard" element={<AdminDashboard/>} />
               <Route path="/admin-dept-accounts" element={<AdminDeptAccounts/>} />
               <Route path="/admin-student-accounts" element={<AdminStudentAccounts/>} />
+              <Route path="/admin-announcements" element={<AdminAnnouncement/>} />
+
+              <Route path="*" element={<Navigate to="/" />} />
           </Routes>
       </Router>
   );

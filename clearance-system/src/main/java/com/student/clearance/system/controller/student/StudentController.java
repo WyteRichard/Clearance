@@ -3,14 +3,18 @@ package com.student.clearance.system.controller.student;
 import com.student.clearance.system.domain.student.Student;
 import com.student.clearance.system.service.student.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/Student")
@@ -28,9 +32,10 @@ public class StudentController {
         return new ResponseEntity<>(studentService.getAllStudents(), HttpStatus.OK);
     }
 
-    @GetMapping("/students/{id}")
-    public ResponseEntity<Optional<Student>> getStudentById(@PathVariable Long id) {
-        return new ResponseEntity<>(studentService.getStudentById(id), HttpStatus.OK);
+    @GetMapping("/students/{studentNumber}")
+    public ResponseEntity<Student> getStudentByStudentNumber(@PathVariable String studentNumber) {
+        Student student = studentService.getStudentByStudentNumber(studentNumber);
+        return new ResponseEntity<>(student, HttpStatus.OK);
     }
 
     @PostMapping("/student")
@@ -39,9 +44,9 @@ public class StudentController {
         return new ResponseEntity<>(createdStudent, HttpStatus.CREATED);
     }
 
-    @PutMapping("/student/{id}")
+    @PutMapping("/student/{studentNumber}")
     public ResponseEntity<Student> updateStudent(
-            @PathVariable Long id,
+            @PathVariable String studentNumber,
             @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
             @RequestParam("contactNumber") String contactNumber,
             @RequestParam("email") String email,
@@ -53,15 +58,22 @@ public class StudentController {
             @RequestParam("civilStatus") String civilStatus,
             @RequestParam("sex") String sex
     ) {
-        Optional<Student> studentOptional = studentService.getStudentById(id);
+        try {
+            Student student = studentService.getStudentByStudentNumber(studentNumber);
+            if (student == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(null); // or alternatively, return ResponseEntity.badRequest().body(null);
+            }
 
-        if (studentOptional.isPresent()) {
-            Student student = studentOptional.get();
-
-            // Handle file upload
+            // Handle profile image upload
             if (profileImage != null && !profileImage.isEmpty()) {
-                String profileImagePath = studentService.saveProfileImage(profileImage);
-                student.setProfileImage(profileImagePath);
+                try {
+                    String profileImagePath = studentService.saveProfileImage(profileImage);
+                    student.setProfileImage(profileImagePath);
+                } catch (Exception e) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(null); // Or use a more informative error message
+                }
             }
 
             // Update other fields
@@ -69,31 +81,50 @@ public class StudentController {
             student.setEmail(email);
             student.setAddress(address);
             student.setReligion(religion);
-            student.setBirthdate(java.sql.Date.valueOf(birthdate)); // Convert birthdate from String to Date
+            try {
+                student.setBirthdate(java.sql.Date.valueOf(birthdate));
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(null); // Provide specific feedback for invalid date format
+            }
             student.setBirthplace(birthplace);
             student.setCitizenship(citizenship);
             student.setCivilStatus(civilStatus);
             student.setSex(sex);
 
-            Student updatedStudent = studentService.updateStudent(id, student);
+            Student updatedStudent = studentService.updateStudentByStudentNumber(studentNumber, student);
             return ResponseEntity.ok(updatedStudent);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+    @GetMapping("/uploads/{fileName:.+}")
+    public ResponseEntity<Resource> serveFile(@PathVariable String fileName) {
+        try {
+            Path filePath = Paths.get("src/main/resources/static/uploads").resolve(fileName).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+            if (resource.exists() && resource.isReadable()) {
+                return ResponseEntity.ok()
+                        .contentType(MediaType.IMAGE_JPEG) // Adjust to determine file type dynamically if needed
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"")
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
         }
     }
 
-
-
-
-
-    @DeleteMapping("/student/{id}")
-    public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
-        Optional<Student> studentOptional = studentService.getStudentById(id);
-
-        if (studentOptional.isPresent()) {
-            studentService.deleteStudent(id);
+    @DeleteMapping("/student/{studentNumber}")
+    public ResponseEntity<Void> deleteStudent(@PathVariable String studentNumber) {
+        System.out.println("Delete request received for student number: " + studentNumber);
+        try {
+            studentService.deleteStudentByStudentNumber(studentNumber);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
+        } catch (RuntimeException e) {
+            System.out.println("Student not found: " + studentNumber);
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }

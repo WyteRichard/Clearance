@@ -17,4 +17,6 @@ public interface ClearanceRequestRepository extends JpaRepository<ClearanceReque
     List<ClearanceRequest> findByDepartment_Id(Long departmentId);
 
     List<ClearanceRequest> findByStudentIdAndDepartmentId(Long studentId, Long departmentId);
+
+    List<ClearanceRequest> findByStudent_StudentNumber(String studentNumber);
 }

@@ -18,7 +18,7 @@ public class SupremeStudentCouncil extends Person implements Serializable {
     @ManyToOne
     @JoinColumn(name = "department_id")
     private Department department;
-    
+
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;

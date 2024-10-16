@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import styles from "../styles/RequestClearance.module.css";
 import { useNavigate } from 'react-router-dom';
+import styles from "../styles/RequestClearance.module.css";
 import dashIcon from '../assets/home.png';
 import requestIcon from '../assets/bnotes.png';
 import statusIcon from '../assets/idcard.png';
 import accountIcon from '../assets/user.png';
 
 const RequestClearance = () => {
-    const [semester, setSemester] = useState(""); // Default to empty string
-    const [schoolYear, setSchoolYear] = useState(""); // Default to empty string
-    const [graduating, setGraduating] = useState(""); // Default to empty string
+    const [semester, setSemester] = useState("");
+    const [schoolYear, setSchoolYear] = useState("");
+    const [graduating, setGraduating] = useState("");
     const [showModal, setShowModal] = useState(false);
-    const [departmentId, setDepartmentId] = useState(""); // Default to empty string
+    const [departmentId, setDepartmentId] = useState("");
     const [currentSemester, setCurrentSemester] = useState("Loading...");
     const [currentAcademicYear, setCurrentAcademicYear] = useState("Loading...");
+    const [studentId, setStudentId] = useState(null);
     const navigate = useNavigate();
 
     const firstSemesterDepartments = [
@@ -43,43 +44,68 @@ const RequestClearance = () => {
         { id: 13, name: 'Supreme Student Council' },
     ];
 
-    // Fetch the current semester from the backend
     useEffect(() => {
-        axios.get('http://localhost:8080/Admin/semester/current')
-            .then(response => {
-                const fetchedSemester = response.data.currentSemester;
-                const fetchedAcademicYear = response.data.academicYear;
-                setCurrentSemester(fetchedSemester); // Example: "FIRST_SEMESTER" or "SECOND_SEMESTER"
-                setCurrentAcademicYear(fetchedAcademicYear); // Example: "2024-2025"
-            })
-            .catch(error => {
-                console.error("Error fetching the current semester and academic year", error);
+        const role = localStorage.getItem('role');
+        const token = localStorage.getItem('token');
+        const exp = localStorage.getItem('exp');
+        const currentTime = new Date().getTime();
+
+        if (!role || !exp || exp * 1000 < currentTime) {
+            handleLogout();
+        } else if (role !== "ROLE_ROLE_STUDENT") {
+        } else {
+            const studentNumber = localStorage.getItem('userId');
+            if (studentNumber && token) {
+                fetchStudentId(studentNumber, token);
+                fetchSemesterData(token);
+            } else {
+                handleLogout();
+            }
+        }
+    }, [navigate]);
+
+    const fetchStudentId = async (studentNumber, token) => {
+        try {
+            const response = await axios.get(`http://localhost:8080/Student/students/${studentNumber}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
-    }, []);
+            setStudentId(response.data.id);
+        } catch (error) {
+            console.error("Error fetching student ID:", error);
+            handleLogout();
+        }
+    };
+
+    const fetchSemesterData = async (token) => {
+        try {
+            const response = await axios.get('http://localhost:8080/Admin/semester/current', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const { currentSemester, academicYear } = response.data;
+            setCurrentSemester(currentSemester);
+            setCurrentAcademicYear(academicYear);
+        } catch (error) {
+            console.error("Error fetching the current semester and academic year", error);
+        }
+    };
 
     const handleSemesterChange = (e) => {
-        const selectedSemester = e.target.value;
-
-        // Normalize both values to lowercase for consistent comparison
-        const normalizedSelectedSemester = selectedSemester.toLowerCase().replace(" ", "_");
-        const normalizedCurrentSemester = currentSemester.toLowerCase();
-
-        // Check if the selected semester matches the current semester
-        if (normalizedSelectedSemester !== normalizedCurrentSemester) {
-            alert(`You are only allowed to choose ${currentSemester.replace("_", " ")}.`);
+        const selectedSemester = e.target.value.toUpperCase().replace(" ", "_");
+        const normalizedCurrentSemester = currentSemester.toUpperCase().replace(" ", "_");
+    
+        if (selectedSemester !== normalizedCurrentSemester) {
+            alert(`You are only allowed to choose ${currentSemester}.`);
         } else {
-            setSemester(selectedSemester); // Update the selected semester if valid
+            setSemester(e.target.value);
         }
     };
 
     const handleSchoolYearChange = (e) => {
         const selectedSchoolYear = e.target.value;
-
-        // Check if the selected school year matches the current academic year
         if (selectedSchoolYear !== currentAcademicYear) {
             alert(`You are only allowed to choose the current academic year: ${currentAcademicYear}.`);
         } else {
-            setSchoolYear(selectedSchoolYear); // Update the selected school year if valid
+            setSchoolYear(selectedSchoolYear);
         }
     };
 
@@ -89,32 +115,45 @@ const RequestClearance = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        const token = localStorage.getItem('token');
+        
+        if (!studentId || isNaN(departmentId)) {
+            alert("Invalid student ID or department ID.");
+            return;
+        }
+        
         const clearanceRequest = {
-            student: {
-                id: 1 // Replace with the actual student ID
-            },
-            department: {
-                id: departmentId
-            },
-            semester: semester,
-            schoolYear: schoolYear,
-            graduating: graduating,
+            student: { id: studentId },
+            department: { id: parseInt(departmentId, 10) },
+            semester,
+            schoolYear,
+            graduating,
         };
-
+        console.log("Clearance Request Payload:", clearanceRequest);
+    
         try {
             const response = await axios.post("http://localhost:8080/Requests/add", clearanceRequest, {
-                headers: { "Content-Type": "application/json" }
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                }
             });
-
+    
             if (response.status === 201 || response.status === 200) {
                 alert("Clearance request successfully added");
             } else {
                 alert(`Failed to add clearance request. Status code: ${response.status}`);
             }
         } catch (error) {
-            console.error("Error sending the request:", error.response ? error.response.data : error.message);
-            alert("Error adding clearance request. Please check the console for more details.");
+            console.error("Error adding clearance request:", error);
+            if (error.response) {
+                console.error("Error Response Data:", error.response.data);
+                alert(`Error: ${error.response.data.message || "An error occurred. Please check the console for more details."}`);
+            } else if (error.request) {
+                alert("No response received from the server. Please check the console for more details.");
+            } else {
+                alert(`Request failed with error: ${error.message}`);
+            }
         }
     };
 
@@ -128,11 +167,12 @@ const RequestClearance = () => {
     };
 
     const handleLogout = () => {
-        console.log("Logged out");
-        // Implement logout logic here
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        localStorage.removeItem('exp');
+        navigate('/login');
     };
 
-    // Determine which departments to display based on semester
     const availableDepartments = semester === "First Semester" ? firstSemesterDepartments : allDepartments;
 
     return (
@@ -162,7 +202,7 @@ const RequestClearance = () => {
                 <div className={styles.header}>
                     <h2 className={styles.dashboardTitle}>Clearance Request</h2>
                     <div className={styles.headerRight}>
-                    <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span> {/* Dynamically show academic year */}
+                    <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
                     <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
                         <div className={styles.avatar} onClick={toggleModal}>AN</div>
                         {showModal && (
@@ -180,7 +220,6 @@ const RequestClearance = () => {
                     <div className={styles.card}>
                         <h3 className={styles.cardTitle}>Clearance Request</h3>
                         <form onSubmit={handleSubmit}>
-                            {/* Department Dropdown */}
                             <div className={styles.inputBox}>
                                 <label htmlFor="department">Department</label>
                                 <select
@@ -188,7 +227,6 @@ const RequestClearance = () => {
                                     value={departmentId}
                                     onChange={(e) => setDepartmentId(e.target.value)}
                                 >
-                                    {/* Placeholder */}
                                     <option value="" disabled>Choose Department</option>
                                     {availableDepartments.map(department => (
                                         <option key={department.id} value={department.id}>
@@ -198,7 +236,6 @@ const RequestClearance = () => {
                                 </select>
                             </div>
 
-                            {/* Semester Dropdown */}
                             <div className={styles.inputBox}>
                                 <label htmlFor="semester">Semester</label>
                                 <select
@@ -206,16 +243,13 @@ const RequestClearance = () => {
                                     value={semester}
                                     onChange={handleSemesterChange}
                                 >
-                                    {/* Placeholder */}
                                     <option value="" disabled>Choose Semester</option>
 
-                                    {/* Both options are shown */}
                                     <option value="First Semester">First Semester</option>
                                     <option value="Second Semester">Second Semester</option>
                                 </select>
                             </div>
 
-                            {/* School Year Dropdown */}
                             <div className={styles.inputBox}>
                                 <label htmlFor="schoolYear">School Year</label>
                                 <select
@@ -223,7 +257,6 @@ const RequestClearance = () => {
                                     value={schoolYear}
                                     onChange={handleSchoolYearChange}
                                 >
-                                    {/* Placeholder */}
                                     <option value="" disabled>Choose School Year</option>
                                     <option value="2023-2024">2023-2024</option>
                                     <option value="2024-2025">2024-2025</option>
@@ -232,7 +265,6 @@ const RequestClearance = () => {
                                 </select>
                             </div>
 
-                            {/* Graduating Dropdown */}
                             <div className={styles.inputBox}>
                                 <label htmlFor="graduating">Graduating</label>
                                 <select

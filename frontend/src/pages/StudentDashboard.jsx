@@ -17,72 +17,92 @@ const StudentDashboard = () => {
     const [progress, setProgress] = useState(0);
     const [showModal, setShowModal] = useState(false);
     const [importantDates, setImportantDates] = useState([]);
-    const [error, setError] = useState(null); // Error state for better error handling
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
-    const studentId = 1; // Replace with the actual student ID
 
     useEffect(() => {
-        // Fetch the current semester and academic year
-        axios.get('http://localhost:8080/Admin/semester/current')
-            .then(response => {
-                const { currentSemester, academicYear } = response.data;
-                if (currentSemester && academicYear) {
-                    setCurrentSemester(currentSemester);
-                    setCurrentAcademicYear(academicYear);
-                } else {
-                    console.error("Incomplete data from semester API", response.data);
-                    setError("Failed to fetch academic year and semester.");
+        const id = localStorage.getItem('userId');
+        fetchStatusCounts(id);
+        fetchSemesterData();
+        fetchImportantDates();
+    
+        const role = localStorage.getItem('role');
+        const exp = localStorage.getItem('exp');
+        const currentTime = new Date().getTime();
+    
+        if (!role || !exp || exp * 1000 < currentTime) {
+            handleLogout();
+        } else if (role !== "ROLE_ROLE_STUDENT") {
+            alert("Unauthorized access. Redirecting to login.");
+            handleLogout();
+        }
+    }, []);
+
+    const fetchSemesterData = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/Admin/semester/current', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
-            })
-            .catch(error => {
-                console.error("Error fetching the current semester and academic year", error);
-                setError("Error fetching the current semester and academic year");
             });
+            const { currentSemester, academicYear } = response.data;
+            if (currentSemester && academicYear) {
+                setCurrentSemester(currentSemester);
+                setCurrentAcademicYear(academicYear);
+            } else {
+                setError("Failed to fetch academic year and semester.");
+            }
+        } catch (error) {
+            setError("Error fetching the current semester and academic year");
+        }
+    };
 
-        // Fetch clearance status counts
-        axios.get(`http://localhost:8080/Status/student/${studentId}/status-counts`)
-            .then(response => {
-                const { cleared, pending, remarks } = response.data;
-                if (cleared !== undefined && pending !== undefined && remarks !== undefined) {
-                    setClearedCount(cleared);
-                    setPendingCount(pending);
-                    setRemarkCount(remarks);
-
-                    const totalSteps = cleared + pending;
-                    const progressPercentage = totalSteps > 0 ? (cleared / totalSteps) * 100 : 0;
-                    setProgress(progressPercentage);
-                } else {
-                    console.error("Incomplete data from status counts API", response.data);
-                    setError("Failed to fetch clearance status counts.");
+    const fetchStatusCounts = async (userId) => {
+        try {
+            const response = await axios.get(`http://localhost:8080/Status/student/${userId}/status-counts`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 }
-            })
-            .catch(error => {
-                console.error("There was an error fetching the clearance status counts!", error);
-                setError("Error fetching clearance status counts");
             });
+            const { cleared, pending, remarks } = response.data;
+            setClearedCount(cleared);
+            setPendingCount(pending);
+            setRemarkCount(remarks);
+            const totalSteps = cleared + pending;
+            setProgress(totalSteps > 0 ? (cleared / totalSteps) * 100 : 0);
+        } catch (error) {
+            setError("Error fetching clearance status counts");
+        }
+    };
 
-        // Fetch important dates (announcements)
-        axios.get('http://localhost:8080/announcements/all')
-        .then(response => {
-            if (response.data && Array.isArray(response.data)) {
+    const fetchImportantDates = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/announcements/all', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            if (Array.isArray(response.data)) {
                 const dates = response.data.map(announcement => ({
                     title: announcement.title,
-                    announcementDate: announcement.announcementDate
+                    content: announcement.content,
+                    announcementDate: new Date(announcement.announcementDate).toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'long', day: 'numeric'
+                    })
                 }));
                 setImportantDates(dates);
             } else {
-                console.error("Invalid data format from announcements API", response.data);
                 setError("Failed to fetch announcements.");
             }
-        })
-        .catch(error => {
-            console.error("Error fetching announcements", error);
+        } catch (error) {
             setError("Error fetching announcements");
-        });
-    }, [studentId]);
+        }
+    };
 
     const toggleModal = () => {
-        setShowModal(!showModal); // Toggle modal visibility
+        setShowModal(!showModal);
     };
 
     const handleProfile = () => {
@@ -91,9 +111,12 @@ const StudentDashboard = () => {
     };
 
     const handleLogout = () => {
-        console.log("Logged out");
-        // Implement logout logic here
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        localStorage.removeItem('exp');
+        navigate('/login');
     };
+
 
     return (
         <div className={styles.flexContainer}>
@@ -122,7 +145,7 @@ const StudentDashboard = () => {
                 <div className={styles.header}>
                     <h2 className={styles.dashboardTitle}>Student Dashboard</h2>
                     <div className={styles.headerRight}>
-                        <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span> {/* Display the dynamic academic year */}
+                        <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
                         <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
 
                         <div className={styles.avatar} onClick={toggleModal}>AN</div>
@@ -137,10 +160,9 @@ const StudentDashboard = () => {
                     </div>
                 </div>
 
-                {error && <div className={styles.errorMessage}>{error}</div>} {/* Display error messages if any */}
+                {error && <div className={styles.errorMessage}>{error}</div>}
 
                 <div className={styles.cardGrid}>
-                    {/* Cleared */}
                     <div className={styles.card}>
                         <div className={styles.cardHeader}>
                             <span className={styles.cardTitle}>Cleared</span>
@@ -152,7 +174,6 @@ const StudentDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Pending */}
                     <div className={styles.card}>
                         <div className={styles.cardHeader}>
                             <span className={styles.cardTitle}>Pending</span>
@@ -164,7 +185,6 @@ const StudentDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Remarks */}
                     <div className={styles.card}>
                         <div className={styles.cardHeader}>
                             <span className={styles.cardTitle}>Remarks</span>
@@ -178,7 +198,6 @@ const StudentDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Clearance Progress */}
                     <div className={styles.card}>
                         <div className={styles.cardHeader}>
                             <span className={styles.cardTitle}>Clearance Progress</span>
@@ -191,7 +210,6 @@ const StudentDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Important Dates */}
                     <div className={styles.card}>
                         <div className={styles.cardHeader}>
                             <span className={styles.cardTitle}>Important Dates</span>
