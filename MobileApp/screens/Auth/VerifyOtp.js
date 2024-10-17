@@ -1,45 +1,85 @@
-import React from "react";
-import { StyleSheet, TouchableOpacity, Text, View, TextInput } from "react-native";
+import React, { useState } from "react";
+import { StyleSheet, TouchableOpacity, Text, View, TextInput, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
 
 const VerifyOtp = () => {
   const navigation = useNavigation();
+  const [username, setUsername] = useState('');
+  const [otp, setOtp] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const handleVerifyOtp = async () => {
+    setIsSubmitting(true);
+    setMessage('');
+
+    try {
+      const payload = {
+        username,
+        otp,
+      };
+
+      const response = await axios.post('http://192.168.1.6:8080/user/verify-otp', payload, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      if (response.status === 200) {
+        setMessage('OTP Verified Successfully!');
+        setTimeout(() => {
+          navigation.navigate('Login');
+        }, 2000);
+      } else {
+        setMessage('Failed to verify OTP. Please try again.');
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || 'An error occurred while verifying OTP.';
+      setMessage(errorMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <LinearGradient
-      style={styles.container}
-      colors={["#266ca9", "#0042be"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
+    <LinearGradient style={styles.container} colors={["#266ca9", "#0042be"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
       <View style={styles.content}>
         <Text style={styles.headerText}>VERIFY OTP</Text>
         
-        {/* Username Input */}
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
             placeholder="Username"
             placeholderTextColor="rgba(255,255,255,0.7)"
+            value={username}
+            onChangeText={setUsername}
+            editable={!isSubmitting}
           />
         </View>
 
-        {/* OTP Input */}
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
             placeholder="OTP"
             placeholderTextColor="rgba(255,255,255,0.7)"
+            value={otp}
+            onChangeText={setOtp}
+            editable={!isSubmitting}
             keyboardType="numeric"
           />
         </View>
 
+        {message ? <Text style={styles.messageText}>{message}</Text> : null}
+
         <TouchableOpacity
-          onPress={() => navigation.navigate('')} // Adjust the destination as needed
+          onPress={handleVerifyOtp}
           style={styles.submitButton}
+          disabled={isSubmitting || !username || !otp}
         >
-          <Text style={styles.submitButtonText}>Verify</Text>
+          <Text style={styles.submitButtonText}>{isSubmitting ? 'Verifying...' : 'Verify'}</Text>
         </TouchableOpacity>
       </View>
     </LinearGradient>

@@ -1,22 +1,69 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Image, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState(''); // Changed to username
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  
-  const navigation = useNavigation(); // Initialize the navigation hook
+  const [errorMessage, setErrorMessage] = useState('');
+  const navigation = useNavigation();
 
-  const handleLogin = () => {
-    console.log('Login pressed');
-    // Navigate to the main screen after successful login
-    navigation.navigate('Main', {
-      screen: 'Student',
-      params: { screen: 'StudentDashboard' }, // Adjust as per your screen structure
-    });
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleLogin = async () => {
+    setErrorMessage('');
+    const payload = { username, password };
+  
+    try {
+      const response = await axios.post('http://192.168.1.6:8080/user/login', payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+  
+      if (response.status === 200) {
+        const token = response.headers['jwt-token'];
+        if (!token) {
+          setErrorMessage('Token not received from server.');
+          return;
+        }
+  
+        const decodedToken = jwtDecode(token);
+        console.log('Decoded Token:', decodedToken);
+        const roles = decodedToken.authorities || [];
+        console.log('Roles:', roles);
+  
+        await AsyncStorage.setItem('token', token);
+        await AsyncStorage.setItem('exp', decodedToken.exp.toString());
+  
+        // Updated role check to match "ROLE_ROLE_STUDENT"
+        if (roles.includes('ROLE_ROLE_STUDENT')) {
+          await AsyncStorage.setItem('role', 'ROLE_ROLE_STUDENT');
+          navigation.replace('Main', { screen: 'StudentDashboard' });
+        } else {
+          setErrorMessage('Unauthorized role. Access restricted to students only.');
+          Alert.alert('Error', 'Unauthorized role. Please try again.');
+        }
+      } else {
+        setErrorMessage('Login failed. Please check your credentials.');
+      }
+    } catch (error) {
+      console.error('Error details:', error);
+  
+      if (error.response) {
+        const message = error.response.data?.message || 'An error occurred during login.';
+        setErrorMessage(message);
+      } else if (error.request) {
+        setErrorMessage('No response from server. Check your network connection.');
+      } else {
+        setErrorMessage('An error occurred while sending the request.');
+      }
+    }
   };
 
   return (
@@ -34,19 +81,21 @@ const Login = () => {
           <Image source={require('../../assets/images/rc-logo-1.png')} style={styles.logoImage} />
           <Text style={styles.logoText}>ROGATIONIST COLLEGE{"\n"}CLEARANCE SYSTEM</Text>
         </View>
+
         <View style={styles.inputContainer}>
           <View style={styles.inputWrapper}>
             <Image source={require('../../assets/images/email.png')} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Email"
+              placeholder="Username"
               placeholderTextColor="rgba(255,255,255,0.7)"
-              value={email}
-              onChangeText={setEmail}
+              value={username}
+              onChangeText={setUsername}
               keyboardType="email-address"
               autoCapitalize="none"
             />
           </View>
+
           <View style={styles.inputWrapper}>
             <Image source={require('../../assets/images/lock.png')} style={styles.inputIcon} />
             <TextInput
@@ -57,7 +106,7 @@ const Login = () => {
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
             />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+            <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
               <Image
                 source={showPassword ? require('../../assets/images/eye-on.png') : require('../../assets/images/eye-off.png')}
                 style={styles.eyeIconImage}
@@ -65,17 +114,17 @@ const Login = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Forgot Password aligned to the right below the password field */}
           <TouchableOpacity style={styles.forgotPasswordButton} onPress={() => navigation.navigate('VerifyOtp')}>
             <Text style={styles.forgotPassword}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>
 
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
         <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
           <Text style={styles.loginButtonText}>Login</Text>
         </TouchableOpacity>
 
-        {/* Don't have an Account? Click here. */}
         <View style={styles.registerContainer}>
           <Text style={styles.registerText}>Don't have an account? </Text>
           <TouchableOpacity onPress={() => navigation.navigate('RegisterStudent')}>
@@ -86,6 +135,7 @@ const Login = () => {
     </LinearGradient>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
