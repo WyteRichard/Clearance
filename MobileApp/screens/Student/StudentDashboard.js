@@ -1,118 +1,169 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Image, Alert, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const StudentDashboard = () => {
   const navigation = useNavigation();
+  const [firstName, setFirstName] = useState("Loading...");
   const [currentSemester, setCurrentSemester] = useState("Loading...");
   const [currentAcademicYear, setCurrentAcademicYear] = useState("Loading...");
   const [clearedCount, setClearedCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
   const [remarkCount, setRemarkCount] = useState(0);
-  const [firstName, setFirstName] = useState("Loading...");
-  const [currentDateTime, setCurrentDateTime] = useState(new Date().toLocaleString());
-  const [loading, setLoading] = useState(true);
+  const [importantDates, setImportantDates] = useState([]);
   const [error, setError] = useState(null);
 
-  const studentId = 1; // Replace with actual student ID
-
   useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      setError(null);
+    (async () => {
+      const userId = await AsyncStorage.getItem('userId');
+      const role = await AsyncStorage.getItem('role');
+      const exp = await AsyncStorage.getItem('exp');
+      const token = await AsyncStorage.getItem('token');
+      const currentTime = new Date().getTime();
 
-      try {
-        const [semesterResponse, statusResponse, studentResponse] = await Promise.all([
-          fetch('http://192.168.1.6:8080/Admin/semester/current').then(res => res.ok ? res.json() : Promise.reject('Semester data failed')),
-          fetch(`http://192.168.1.6:8080/Status/student/${studentId}/status-counts`).then(res => res.ok ? res.json() : Promise.reject('Status counts failed')),
-          fetch(`http://192.168.1.6:8080/Student/students/${studentId}`).then(res => res.ok ? res.json() : Promise.reject('Student data failed'))
-        ]);
-
-        setCurrentSemester(semesterResponse.currentSemester);
-        setCurrentAcademicYear(semesterResponse.academicYear);
-        setClearedCount(statusResponse.cleared);
-        setPendingCount(statusResponse.pending);
-        setRemarkCount(statusResponse.remarks);
-        setFirstName(studentResponse.firstName);
-      } catch (error) {
-        setError("Failed to load data.");
-        console.error(error);
-      } finally {
-        setLoading(false);
+      if (!role || !exp || exp * 1000 < currentTime) {
+        handleLogout();
+      } else if (role !== "ROLE_ROLE_STUDENT") {
+        Alert.alert("Unauthorized access", "You will be redirected to login.");
+        handleLogout();
+      } else {
+        fetchFirstName(userId, token);
+        fetchSemesterData(token);
+        fetchStatusCounts(userId, token);
+        fetchImportantDates(token);
       }
-    };
+    })();
+  }, []);
 
-    fetchAllData();
-
-    const intervalId = setInterval(() => {
-      setCurrentDateTime(new Date().toLocaleString());
-    }, 1000);
-
-    return () => clearInterval(intervalId); 
-  }, [studentId]);
-
-  const handleNavigation = (screen) => {
-    navigation.navigate(screen);
+  const fetchFirstName = async (userId, token) => {
+    try {
+      const response = await axios.get(`http://192.168.1.19:8080/Student/students/${userId}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      setFirstName(response.data.firstName);
+    } catch (error) {
+      console.error("Error fetching first name:", error);
+      setError("Error fetching first name");
+    }
   };
 
-  if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
-  }
+  const fetchSemesterData = async (token) => {
+    try {
+      const response = await axios.get('http://192.168.1.19:8080/Admin/semester/current', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const { currentSemester, academicYear } = response.data;
+      setCurrentSemester(currentSemester);
+      setCurrentAcademicYear(academicYear);
+    } catch (error) {
+      console.error("Error fetching semester data:", error);
+      setError("Error fetching semester and academic year data");
+    }
+  };
 
-  if (error) {
-    return <Text>Error: {error}</Text>;
-  }
+  const fetchStatusCounts = async (userId, token) => {
+    try {
+      const response = await axios.get(`http://192.168.1.19:8080/Status/student/${userId}/status-counts`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const { cleared, pending, remarks } = response.data;
+      setClearedCount(cleared);
+      setPendingCount(pending);
+      setRemarkCount(remarks);
+    } catch (error) {
+      console.error("Error fetching status counts:", error);
+      setError("Error fetching clearance status counts");
+    }
+  };
+
+  const fetchImportantDates = async (token) => {
+    try {
+      const response = await axios.get('http://192.168.1.19:8080/announcements/all', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (Array.isArray(response.data)) {
+        const dates = response.data.map(announcement => ({
+          title: announcement.title,
+          date: new Date(announcement.announcementDate).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'long', day: 'numeric'
+          })
+        }));
+        setImportantDates(dates);
+      } else {
+        setError("Failed to fetch important dates.");
+      }
+    } catch (error) {
+      console.error("Error fetching important dates:", error);
+      setError("Error fetching important dates");
+    }
+  };
+
+  const handleLogout = async () => {
+    await AsyncStorage.clear();
+    navigation.navigate('Login');
+  };
 
   return (
-    <LinearGradient
-      style={styles.container}
-      colors={['#266ca9', '#0042be']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
+    <LinearGradient style={styles.container} colors={['#266ca9', '#0042be']}>
       <SafeAreaView style={styles.content}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Hello</Text>
-            <Text style={styles.name}>{firstName}</Text>
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.greeting}>Hello</Text>
+              <Text style={styles.name}>{firstName}</Text>
+            </View>
+            <Image source={require('../../assets/images/avatar.png')} style={styles.avatar} />
           </View>
-          <Image source={require('../../assets/images/avatar.png')} style={styles.avatar} />
-        </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>A.Y. {currentAcademicYear} - {currentSemester}</Text>
-          <Text style={styles.cardSubtitle}>{currentDateTime}</Text>
-        </View>
-
-        <Text style={styles.sectionTitle}>Clearance Status</Text>
-
-        <View style={styles.statusContainer}>
-          <View style={styles.statusCard}>
-            <Text style={styles.statusLabel}>Cleared</Text>
-            <Text style={styles.statusValue}>{clearedCount}</Text>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>A.Y. {currentAcademicYear} - {currentSemester}</Text>
           </View>
-          <View style={styles.statusCard}>
-            <Text style={styles.statusLabel}>Pending</Text>
-            <Text style={styles.statusValue}>{pendingCount}</Text>
-          </View>
-          <View style={[styles.statusCard, styles.fullWidth]}>
-            <Text style={styles.statusLabel}>Remarks</Text>
-            <Text style={styles.statusValue}>{remarkCount}</Text>
-          </View>
-        </View>
 
+          <Text style={styles.sectionTitle}>Clearance Status</Text>
+
+          <View style={styles.statusContainer}>
+            <View style={styles.statusCard}>
+              <Text style={styles.statusLabel}>Cleared</Text>
+              <Text style={styles.statusValue}>{clearedCount}</Text>
+            </View>
+            <View style={styles.statusCard}>
+              <Text style={styles.statusLabel}>Pending</Text>
+              <Text style={styles.statusValue}>{pendingCount}</Text>
+            </View>
+            <View style={[styles.statusCard, styles.fullWidth]}>
+              <Text style={styles.statusLabel}>Remarks</Text>
+              <Text style={styles.statusValue}>{remarkCount}</Text>
+            </View>
+          </View>
+
+          <View style={styles.importantDatesCard}>
+            <Text style={styles.AnnouncementTitle}>Important Dates</Text>
+            {importantDates.map((date, index) => (
+              <View key={index} style={styles.dateItem}>
+                <Image source={require('../../assets/images/calendar.png')} style={styles.dateIcon} />
+                <Text style={styles.dateText}>{date.title} - {date.date}</Text>
+              </View>
+            ))}
+          </View>
+
+          {error && <Text style={styles.errorText}>{error}</Text>}
+        </ScrollView>
+
+        {/* Fixed Navbar at the Bottom */}
         <View style={styles.navbar}>
-          <TouchableOpacity style={styles.navItem} onPress={() => handleNavigation('StudentDashboard')}>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentDashboard')}>
             <Image source={require('../../assets/images/blhome.png')} style={styles.navIcon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => handleNavigation('StudentClearanceRequest')}>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentClearanceRequest')}>
             <Image source={require('../../assets/images/blidcard.png')} style={styles.navIcon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => handleNavigation('StudentClearanceStatus')}>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentClearanceStatus')}>
             <Image source={require('../../assets/images/blnotes.png')} style={styles.navIcon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => handleNavigation('StudentProfile')}>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentProfile')}>
             <Image source={require('../../assets/images/bluser.png')} style={styles.navIcon} />
           </TouchableOpacity>
         </View>
@@ -159,13 +210,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  cardSubtitle: {
-    fontSize: 14,
-    color: '#757575',
-    marginTop: 4,
-  },
   sectionTitle: {
     color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginLeft: 16,
+    marginBottom: 8,
+  },
+  AnnouncementTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     marginLeft: 16,
@@ -198,6 +250,26 @@ const styles = StyleSheet.create({
     color: '#1565C0',
     marginTop: 8,
   },
+  importantDatesCard: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 16,
+    margin: 16,
+  },
+  dateItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  dateIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#000',
+  },
   navbar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -217,6 +289,11 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     resizeMode: 'contain',
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 

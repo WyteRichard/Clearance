@@ -6,7 +6,7 @@ public class EmailConstant {
     public static final String USERNAME = "rogationist.computing.society@gmail.com";
     public static final String PASSWORD = "mpeo apom ojqd nqwr";
     public static final String FROM_EMAIL = "rogationist.computing.society@gmail.com";
-    public static final String EMAIL_SUBJECT = "Welcome to Video Rental System: Your New Password";
+    public static final String EMAIL_SUBJECT = "Welcome to Rogationist Clearance System: Your New Password";
     public static final String GMAIL_SMTP_SERVER = "smtp.gmail.com";
     public static final String SMTP_HOST = "mail.smtp.host";
     public static final String SMTP_AUTH = "mail.smtp.auth";

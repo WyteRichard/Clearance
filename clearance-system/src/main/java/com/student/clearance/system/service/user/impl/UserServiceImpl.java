@@ -521,7 +521,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         }
     }
     private String generateOTP() {
-        return RandomStringUtils.randomAlphanumeric(10);
+        int otp = 100000 + (int) (Math.random() * 900000); // Generates a 6-digit number
+        return String.valueOf(otp);
     }
     private String generateUserId() {
         return RandomStringUtils.randomNumeric(10);

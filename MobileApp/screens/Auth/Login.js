@@ -7,7 +7,7 @@ import { jwtDecode } from 'jwt-decode';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = () => {
-  const [username, setUsername] = useState(''); // Changed to username
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -22,7 +22,7 @@ const Login = () => {
     const payload = { username, password };
   
     try {
-      const response = await axios.post('http://192.168.1.6:8080/user/login', payload, {
+      const response = await axios.post('http://192.168.1.19:8080/user/login', payload, {
         headers: { 'Content-Type': 'application/json' },
       });
   
@@ -34,27 +34,27 @@ const Login = () => {
         }
   
         const decodedToken = jwtDecode(token);
-        console.log('Decoded Token:', decodedToken);
-        const roles = decodedToken.authorities || [];
-        console.log('Roles:', roles);
+        const authorities = decodedToken.authorities || [];
   
         await AsyncStorage.setItem('token', token);
         await AsyncStorage.setItem('exp', decodedToken.exp.toString());
+        await AsyncStorage.setItem('userId', response.data.userId.toString());
   
-        // Updated role check to match "ROLE_ROLE_STUDENT"
-        if (roles.includes('ROLE_ROLE_STUDENT')) {
-          await AsyncStorage.setItem('role', 'ROLE_ROLE_STUDENT');
+        if (authorities.includes("ROLE_ROLE_STUDENT")) {
+          await AsyncStorage.setItem('role', "ROLE_ROLE_STUDENT");
           navigation.replace('Main', { screen: 'StudentDashboard' });
-        } else {
-          setErrorMessage('Unauthorized role. Access restricted to students only.');
+        } else if (authorities.includes("ROLE_ROLE_ADVISER")) {
+          await AsyncStorage.setItem('role', "ROLE_ROLE_ADVISER");
+          navigation.replace('Main', { screen: 'AdviserDashboard' });
+        } 
+        else {
+          setErrorMessage("Unauthorized role");
           Alert.alert('Error', 'Unauthorized role. Please try again.');
         }
       } else {
         setErrorMessage('Login failed. Please check your credentials.');
       }
     } catch (error) {
-      console.error('Error details:', error);
-  
       if (error.response) {
         const message = error.response.data?.message || 'An error occurred during login.';
         setErrorMessage(message);
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     height: 24,
   },
   forgotPasswordButton: {
-    alignSelf: 'flex-end',  // Align to the right
+    alignSelf: 'flex-end',
     marginBottom: 20,
   },
   forgotPassword: {

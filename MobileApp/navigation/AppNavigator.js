@@ -4,7 +4,6 @@ import { NavigationContainer } from '@react-navigation/native';
 
 // Import Screens
 import Login from '../screens/Auth/Login';
-import Forgot from '../screens/Auth/Forgot';
 import ForgotPassword from '../screens/Auth/ForgotPassword';
 import RegisterStudent from '../screens/Auth/RegisterStudent';
 import VerifyOtp from '../screens/Auth/VerifyOtp';
@@ -19,7 +18,6 @@ function AuthNavigator() {
     return (
       <AuthStack.Navigator screenOptions={{ headerShown: false }}>
         <AuthStack.Screen name="Login" component={Login} />
-        <AuthStack.Screen name="Forgot" component={Forgot} />
         <AuthStack.Screen name="ForgotPassword" component={ForgotPassword} />
         <AuthStack.Screen name="RegisterStudent" component={RegisterStudent} />
         <AuthStack.Screen name="VerifyOtp" component={VerifyOtp} />

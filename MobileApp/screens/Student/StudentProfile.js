@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const StudentAccount = () => {
   const navigation = useNavigation();
@@ -10,23 +12,38 @@ const StudentAccount = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchStudentData = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch('http://192.168.1.6:8080/Student/students/1'); // Replace with your API endpoint
-        if (!response.ok) {
-          throw new Error('Failed to fetch student data');
-        }
-        const data = await response.json();
-        setStudent(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+    (async () => {
+      const userId = await AsyncStorage.getItem('userId');
+      const role = await AsyncStorage.getItem('role');
+      const exp = await AsyncStorage.getItem('exp');
+      const token = await AsyncStorage.getItem('token');
+      const currentTime = new Date().getTime();
+
+      if (!role || !exp || exp * 1000 < currentTime) {
+        handleLogout();
+      } else if (role !== "ROLE_ROLE_STUDENT") {
+        Alert.alert("Unauthorized access", "You will be redirected to login.");
+        handleLogout();
+      } else {
+        fetchStudentData(userId, token);
       }
-    };
-    fetchStudentData();
+    })();
   }, []);
+
+  const fetchStudentData = async (userId, token) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`http://192.168.1.19:8080/Student/students/${userId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setStudent(response.data);
+    } catch (err) {
+      console.error("Error fetching student data:", err);
+      setError("Failed to fetch student data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -34,17 +51,10 @@ const StudentAccount = () => {
     return date.toLocaleDateString(undefined, options);
   };
 
-  const handleLogout = () => {
-    navigation.navigate('Login');
+  const handleLogout = async () => {
+    await AsyncStorage.clear();
+    navigation.navigate('Auth', { screen: 'Login' });
   };
-
-  if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
-  }
-
-  if (error) {
-    return <Text>Error: {error}</Text>;
-  }
 
   return (
     <LinearGradient
@@ -66,67 +76,69 @@ const StudentAccount = () => {
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/buser.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{`${student.firstName} ${student.middleName} ${student.lastName}`}</Text>
+            <Text style={styles.infoText}>
+              {student ? `${student.firstName} ${student.middleName} ${student.lastName}` : "Loading..."}
+            </Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/bphone.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{student.contactNumber}</Text>
+            <Text style={styles.infoText}>{student ? student.contactNumber : "N/A"}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/bmail.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{student.email}</Text>
+            <Text style={styles.infoText}>{student ? student.email : "N/A"}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/bsid.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{student.studentNumber}</Text>
+            <Text style={styles.infoText}>{student ? student.studentNumber : "N/A"}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/bcourse.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{student.course.courseName}</Text>
+            <Text style={styles.infoText}>{student ? student.course?.courseName : "N/A"}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/bghat.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{student.yearLevel.yearLevel}</Text>
+            <Text style={styles.infoText}>{student ? student.yearLevel?.yearLevel : "N/A"}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/address.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{student.address}</Text>
+            <Text style={styles.infoText}>{student ? student.address : "N/A"}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/religion.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{student.religion}</Text>
+            <Text style={styles.infoText}>{student ? student.religion : "N/A"}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/bdate.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{formatDate(student.birthdate)}</Text>
+            <Text style={styles.infoText}>{student ? formatDate(student.birthdate) : "N/A"}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/bplace.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{student.birthplace}</Text>
+            <Text style={styles.infoText}>{student ? student.birthplace : "N/A"}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/citizen.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{student.citizenship}</Text>
+            <Text style={styles.infoText}>{student ? student.citizenship : "N/A"}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/cvstat.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{student.civilStatus}</Text>
+            <Text style={styles.infoText}>{student ? student.civilStatus : "N/A"}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Image source={require('../../assets/images/sex.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{student.sex}</Text>
+            <Text style={styles.infoText}>{student ? student.sex : "N/A"}</Text>
           </View>
         </View>
 

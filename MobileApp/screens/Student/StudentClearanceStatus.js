@@ -3,6 +3,8 @@ import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, Image, Alert, A
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import * as FileSystem from 'expo-file-system';
 import * as Print from 'expo-print';
 import { Asset } from 'expo-asset';
@@ -13,54 +15,75 @@ const ClearanceStatus = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [currentSemester, setCurrentSemester] = useState('Loading...');
   const [currentAcademicYear, setCurrentAcademicYear] = useState('Loading...');
-  const [studentFirstName, setStudentFirstName] = useState('');
-  const [studentMiddleName, setStudentMiddleName] = useState('');
-  const [studentLastName, setStudentLastName] = useState('');
-  const [studentNumber, setStudentNumber] = useState('');
-  const [sectionName, setSectionName] = useState('');
+  const [studentFirstName, setStudentFirstName] = useState('Loading...');
+  const [studentMiddleName, setStudentMiddleName] = useState('Loading...');
+  const [studentLastName, setStudentLastName] = useState('Loading...');
+  const [studentNumber, setStudentNumber] = useState('Loading...');
+  const [sectionName, setSectionName] = useState('Loading...');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigation = useNavigation();
-  const studentId = 1; // Replace with the actual student ID
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
-      setError(null);
+      const userId = await AsyncStorage.getItem('userId');
+      const role = await AsyncStorage.getItem('role');
+      const exp = await AsyncStorage.getItem('exp');
+      const token = await AsyncStorage.getItem('token');
+      const currentTime = new Date().getTime();
 
-      try {
-        const [semesterResponse, statusResponse, studentResponse] = await Promise.all([
-          fetch('http://192.168.1.6:8080/Admin/semester/current'),
-          fetch(`http://192.168.1.6:8080/Status/student/${studentId}`),
-          fetch(`http://192.168.1.6:8080/Student/students/${studentId}`)
-        ]);
-
-        if (!semesterResponse.ok) throw new Error('Failed to fetch semester data');
-        if (!statusResponse.ok) throw new Error('Failed to fetch status data');
-        if (!studentResponse.ok) throw new Error('Failed to fetch student data');
-
-        const semesterData = await semesterResponse.json();
-        const statusData = await statusResponse.json();
-        const studentData = await studentResponse.json();
-
-        setCurrentSemester(semesterData.currentSemester);
-        setCurrentAcademicYear(semesterData.academicYear);
-        setClearanceStatuses(Array.isArray(statusData) ? statusData : Object.values(statusData));
-        setStudentFirstName(studentData.firstName);
-        setStudentMiddleName(studentData.middleName);
-        setStudentLastName(studentData.lastName);
-        setStudentNumber(studentData.studentNumber);
-        setSectionName(studentData.section.sectionName);
-      } catch (error) {
-        setError('Failed to fetch data. Please try again.');
-        console.error(error);
-      } finally {
-        setLoading(false);
+      if (!role || !exp || exp * 1000 < currentTime) {
+        handleLogout();
+      } else if (role !== 'ROLE_ROLE_STUDENT') {
+        Alert.alert('Unauthorized access', 'You will be redirected to login.');
+        handleLogout();
+      } else {
+        await fetchStudentData(userId, token);
       }
     };
 
     fetchData();
-  }, [studentId]);
+  }, []);
+
+  const fetchStudentData = async (userId, token) => {
+    setLoading(true);
+    try {
+      const [semesterResponse, statusResponse, studentResponse] = await Promise.all([
+        axios.get('http://192.168.1.19:8080/Admin/semester/current', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(`http://192.168.1.19:8080/Status/student/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(`http://192.168.1.19:8080/Student/students/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      console.log("Semester Response:", semesterResponse.data);
+      console.log("Status Response:", statusResponse.data);
+      console.log("Student Response:", studentResponse.data);
+
+      setCurrentSemester(semesterResponse.data.currentSemester || 'N/A');
+      setCurrentAcademicYear(semesterResponse.data.academicYear || 'N/A');
+      setClearanceStatuses(Array.isArray(statusResponse.data) ? statusResponse.data : Object.values(statusResponse.data));
+      const studentData = studentResponse.data;
+      setStudentFirstName(studentData.firstName || 'N/A');
+      setStudentMiddleName(studentData.middleName || '');
+      setStudentLastName(studentData.lastName || 'N/A');
+      setStudentNumber(studentData.studentNumber || 'N/A');
+      setSectionName(studentData.section?.sectionName || 'N/A');
+
+      setFilteredStatuses(Array.isArray(statusResponse.data) ? statusResponse.data : Object.values(statusResponse.data));
+
+      console.log("Clearance Statuses after fetch:", clearanceStatuses);
+    } catch (error) {
+      setError('Failed to fetch data. Please try again.');
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const filtered = statusFilter
@@ -110,9 +133,9 @@ const ClearanceStatus = () => {
           <tbody>
             ${filteredStatuses.map(status => `
               <tr>
-                <td>${status.department}</td>
-                <td>${status.status}</td>
-                <td>${status.remarks}</td>
+                <td>${status.department || 'N/A'}</td>
+                <td>${status.status || 'N/A'}</td>
+                <td>${status.remarks || 'N/A'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -126,6 +149,11 @@ const ClearanceStatus = () => {
     } catch (error) {
       Alert.alert('Error', 'Could not print the document');
     }
+  };
+
+  const handleLogout = async () => {
+    await AsyncStorage.clear();
+    navigation.navigate('Auth', { screen: 'Login' });
   };
 
   if (loading) {
@@ -153,7 +181,6 @@ const ClearanceStatus = () => {
         </View>
 
         <View style={[styles.infoContainer, styles.invisible]}>
-          <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
           <Text style={styles.infoText}>A.Y. {currentAcademicYear}</Text>
           <Text style={styles.infoText}>Semester: {currentSemester.replace('_', ' ')}</Text>
           <Text style={styles.infoText}>Name: {`${studentFirstName} ${studentMiddleName} ${studentLastName}`}</Text>
@@ -188,9 +215,9 @@ const ClearanceStatus = () => {
             <ScrollView style={styles.tableContent} nestedScrollEnabled={true}>
               {filteredStatuses.map((item, index) => (
                 <View key={index} style={styles.tableRow}>
-                  <Text style={[styles.cell, styles.departmentCell]}>{item.department}</Text>
-                  <Text style={[styles.cell, styles.statusCell, item.status === 'Cleared' ? styles.cleared : styles.pending]}>{item.status}</Text>
-                  <Text style={[styles.cell, styles.remarksCell]}>{item.remarks}</Text>
+                  <Text style={[styles.cell, styles.departmentCell]}>{item.department || 'N/A'}</Text>
+                  <Text style={[styles.cell, styles.statusCell, item.status === 'Cleared' ? styles.cleared : styles.pending]}>{item.status || 'N/A'}</Text>
+                  <Text style={[styles.cell, styles.remarksCell]}>{item.remarks || 'N/A'}</Text>
                 </View>
               ))}
             </ScrollView>
@@ -224,12 +251,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   invisible: {
-    display: 'none', // Hides the component completely
+    display: 'none',
   },
   logo: {
-    width: 100,  // Adjust as needed
-    height: 100, // Adjust as needed
-    marginBottom: 10, // Add spacing between the logo and the text below
+    width: 100,
+    height: 100,
+    marginBottom: 10,
   },
   header: {
     marginTop: 20,

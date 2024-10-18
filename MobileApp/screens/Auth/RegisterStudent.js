@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import { TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, View, StyleSheet, Text, Image, Alert, Dimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const RegisterStudent = () => {
   const [username, setUsername] = useState("");
@@ -28,6 +27,7 @@ const RegisterStudent = () => {
   const handleRegister = async () => {
     setErrorMessage('');
 
+    // Input validation
     if (!username || !/^[a-zA-Z0-9]+$/.test(username)) {
       setErrorMessage('Please enter a valid username (alphanumeric characters only).');
       return;
@@ -57,8 +57,13 @@ const RegisterStudent = () => {
     };
 
     try {
-      const response = await axios.post('http://192.168.1.6:8080/user/register', payload);
+      const response = await axios.post('http://192.168.1.19:8080/user/register', payload);
+      
       if (response.status === 200) {
+        const { userId } = response.data;
+
+        await AsyncStorage.setItem('userId', userId);
+        
         navigation.navigate('VerifyOtp', { username });
       } else {
         Alert.alert('Error', 'Unexpected response received.');

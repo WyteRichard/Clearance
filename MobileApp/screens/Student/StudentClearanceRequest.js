@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicat
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const StudentClearanceRequest = () => {
   const [department, setDepartment] = useState('');
@@ -12,10 +14,10 @@ const StudentClearanceRequest = () => {
   const [currentSemester, setCurrentSemester] = useState('Loading...');
   const [currentAcademicYear, setCurrentAcademicYear] = useState('Loading...');
   const [studentFirstName, setStudentFirstName] = useState('Loading...');
+  const [studentInternalId, setStudentInternalId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigation = useNavigation();
-  const studentId = 1; // Replace with the actual student ID
 
   const firstSemesterDepartments = [
     { id: '2', name: 'Cashier' },
@@ -48,38 +50,55 @@ const StudentClearanceRequest = () => {
       setLoading(true);
       setError(null);
 
-      try {
-        const [semesterResponse, studentResponse] = await Promise.all([
-          fetch('http://192.168.1.6:8080/Admin/semester/current'),
-          fetch(`http://192.168.1.6:8080/Student/students/${studentId}`)
-        ]);
+      const userId = await AsyncStorage.getItem('userId');
+      const role = await AsyncStorage.getItem('role');
+      const exp = await AsyncStorage.getItem('exp');
+      const token = await AsyncStorage.getItem('token');
+      const currentTime = new Date().getTime();
 
-        if (!semesterResponse.ok) throw new Error('Failed to fetch semester data');
-        if (!studentResponse.ok) throw new Error('Failed to fetch student data');
-
-        const semesterData = await semesterResponse.json();
-        const studentData = await studentResponse.json();
-
-        setCurrentSemester(semesterData.currentSemester);
-        setCurrentAcademicYear(semesterData.academicYear);
-        setStudentFirstName(studentData.firstName);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setError('Failed to fetch data. Please try again.');
-      } finally {
-        setLoading(false);
+      if (!role || !exp || exp * 1000 < currentTime) {
+        handleLogout();
+      } else if (role !== 'ROLE_ROLE_STUDENT') {
+        Alert.alert('Unauthorized access', 'You will be redirected to login.');
+        handleLogout();
+      } else {
+        await fetchStudentData(userId, token);
       }
     };
 
     fetchData();
   }, []);
 
+  const fetchStudentData = async (userId, token) => {
+    try {
+      const [semesterResponse, studentResponse] = await Promise.all([
+        axios.get('http://192.168.1.19:8080/Admin/semester/current', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(`http://192.168.1.19:8080/Student/students/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      setCurrentSemester(semesterResponse.data.currentSemester || 'N/A');
+      setCurrentAcademicYear(semesterResponse.data.academicYear || 'N/A');
+      setStudentFirstName(studentResponse.data.firstName || 'N/A');
+      setStudentInternalId(studentResponse.data.id);
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setError('Failed to fetch data. Please try again.');
+      setLoading(false);
+    }
+  };
+
   const handleSemesterChange = (selectedSemester) => {
     const normalizedSelectedSemester = selectedSemester === 'first' ? 'first_semester' : 'second_semester';
     const normalizedCurrentSemester = currentSemester.toLowerCase();
 
     if (normalizedSelectedSemester !== normalizedCurrentSemester) {
-      Alert.alert(`You are only allowed to choose ${currentSemester.replace("_", " ")}.`);
+      Alert.alert(`You are only allowed to choose ${currentSemester.replace('_', ' ')}.`);
     } else {
       setSemester(selectedSemester);
     }
@@ -98,24 +117,47 @@ const StudentClearanceRequest = () => {
   };
 
   const handleSubmit = async () => {
+    const token = await AsyncStorage.getItem('token');
+
+    if (!studentInternalId || !department || !semester || !schoolYear) {
+      Alert.alert('Error', 'Please fill in all fields.');
+      return;
+    }
+
     const clearanceRequest = {
-      student: { id: studentId },
-      department: { id: department },
-      semester,
+      student: { id: studentInternalId },
+      department: { id: parseInt(department, 10) },
+      semester: semester === 'first' ? 'First Semester' : 'Second Semester',
       schoolYear,
-      graduating: graduating === 'yes',
+      graduating: graduating === 'yes' ? 1 : 0,
     };
 
+    console.log('Sending Clearance Request Payload:', clearanceRequest);
+
     try {
-      const response = await fetch('http://192.168.1.6:8080/Requests/add', {
+      const response = await fetch('http://192.168.1.19:8080/Requests/add', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(clearanceRequest),
       });
 
+      console.log('Request Headers:', {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      });
+      console.log('Request Body:', JSON.stringify(clearanceRequest));
+
+      console.log('Raw Response:', response);
+
       if (response.ok) {
+        console.log('Response OK:', response);
         Alert.alert('Clearance request successfully added');
       } else {
+        const errorMessage = await response.text();
+        console.error('Error response:', errorMessage);
         Alert.alert(`Failed to add clearance request. Status code: ${response.status}`);
       }
     } catch (error) {
@@ -125,6 +167,11 @@ const StudentClearanceRequest = () => {
   };
 
   const availableDepartments = semester === 'first' ? firstSemesterDepartments : allDepartments;
+
+  const handleLogout = async () => {
+    await AsyncStorage.clear();
+    navigation.navigate('Auth', { screen: 'Login' });
+  };
 
   if (loading) {
     return <ActivityIndicator size="large" color="#0000ff" />;
@@ -153,7 +200,6 @@ const StudentClearanceRequest = () => {
         <View style={styles.formContainer}>
           <Text style={styles.title}>CLEARANCE REQUEST</Text>
 
-          {/* Department Dropdown */}
           <View style={styles.pickerContainer}>
             <Picker selectedValue={department} onValueChange={(itemValue) => setDepartment(itemValue)} style={styles.picker}>
               <Picker.Item label="Select Department" value="" />
@@ -163,7 +209,6 @@ const StudentClearanceRequest = () => {
             </Picker>
           </View>
 
-          {/* Semester Dropdown */}
           <View style={styles.pickerContainer}>
             <Picker selectedValue={semester} onValueChange={handleSemesterChange} style={styles.picker}>
               <Picker.Item label="Semester" value="" />
@@ -172,7 +217,6 @@ const StudentClearanceRequest = () => {
             </Picker>
           </View>
 
-          {/* School Year Dropdown */}
           <View style={styles.pickerContainer}>
             <Picker selectedValue={schoolYear} onValueChange={handleSchoolYearChange} style={styles.picker}>
               <Picker.Item label="School Year" value="" />
@@ -181,7 +225,6 @@ const StudentClearanceRequest = () => {
             </Picker>
           </View>
 
-          {/* Graduating Dropdown */}
           <View style={styles.pickerContainer}>
             <Picker selectedValue={graduating} onValueChange={handleGraduatingChange} style={styles.picker}>
               <Picker.Item label="Graduating?" value="" />
@@ -196,7 +239,6 @@ const StudentClearanceRequest = () => {
         </View>
       </View>
 
-      {/* Bottom Navigation */}
       <View style={styles.navbar}>
         <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentDashboard')}>
           <Image source={require('../../assets/images/blhome.png')} style={styles.navIcon} />
