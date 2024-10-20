@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from '../../styles/DepartmentDashboard.module.css';
 import dashIcon from '../../assets/bhome.png';
 import requestIcon from '../../assets/notes.png';
-import avatar from '../../assets/avatar.png';
+import avatar from '../../assets/avatar2.png';
 
 const GuidanceDashboard = () => {
     const [currentSemester, setCurrentSemester] = useState("Loading...");
@@ -84,11 +84,11 @@ const GuidanceDashboard = () => {
                 <div className={styles.logoContainer}>
                 </div>
                 <nav className={styles.nav}>
-                    <button className={styles.whiteButton} onClick={() => navigate('/cashier-dashboard')}>
+                    <button className={styles.whiteButton} onClick={() => navigate('/guidance-dashboard')}>
                         <img src={dashIcon} alt="Dashboard" className={styles.navIcon} />
                         Dashboard
                     </button>
-                    <button className={styles.ghostButton} onClick={() => navigate('/cashier-clearance-request')}>
+                    <button className={styles.ghostButton} onClick={() => navigate('/guidance-clearance-request')}>
                         <img src={requestIcon} alt="Clearance Request" className={styles.navIcon} />
                         Clearance Request
                     </button>

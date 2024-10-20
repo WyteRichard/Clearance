@@ -56,7 +56,7 @@ const ForgotPassword = () => {
     }
 
     try {
-      const response = await axios.post('http://192.168.1.6:8080/user/verify-forgot-password', {
+      const response = await axios.post('http://192.168.1.19:8080/user/verify-forgot-password', {
         username,
         otp,
         password,
@@ -115,6 +115,7 @@ const ForgotPassword = () => {
               placeholderTextColor="rgba(255,255,255,0.7)"
               value={otp}
               onChangeText={setOtp}
+              keyboardType="numeric"
             />
           </View>
           {errors.otp && <Text style={styles.errorText}>{errors.otp}</Text>}
@@ -122,7 +123,7 @@ const ForgotPassword = () => {
           <View style={styles.passwordContainer}>
             <TextInput
               style={styles.input}
-              placeholder="Password"
+              placeholder="New Password"
               placeholderTextColor="rgba(255,255,255,0.7)"
               secureTextEntry={!isPasswordVisible}
               value={password}

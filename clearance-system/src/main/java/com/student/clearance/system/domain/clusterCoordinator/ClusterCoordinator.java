@@ -1,7 +1,7 @@
 package com.student.clearance.system.domain.clusterCoordinator;
 
-import com.student.clearance.system.domain.department.Department;
 import com.student.clearance.system.domain.person.Person;
+import com.student.clearance.system.domain.section.Section;
 import com.student.clearance.system.domain.user.User;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -12,12 +12,11 @@ import java.io.Serializable;
 @Data
 public class ClusterCoordinator extends Person implements Serializable {
 
-    private Long clusterCoordinatorId;
     private String clusterCoordinatorNumber;
 
     @ManyToOne
-    @JoinColumn(name = "department_id")
-    private Department department;
+    @JoinColumn(name = "section_id")
+    private Section section;
 
     @OneToOne
     @JoinColumn(name = "user_id")

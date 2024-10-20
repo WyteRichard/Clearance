@@ -7,7 +7,7 @@ import homeIcon from '../../assets/home.png';
 import requestIcon from '../../assets/bnotes.png';
 import clearedtoggle from '../../assets/clearedtoggle.svg';
 import pendingtoggle from '../../assets/pendingtoggle.svg';
-import avatar from '../../assets/avatar.png';
+import avatar from '../../assets/avatar2.png';
 
 const ClinicClearanceRequest = () => {
     const [clearanceRequests, setClearanceRequests] = useState([]);

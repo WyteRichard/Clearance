@@ -19,4 +19,10 @@ public interface ClearanceStatusService {
     List<ClearanceStatus> getClearanceStatusesByStudentNumber(String studentNumber);
 
     int countByDepartmentIdAndStatus(Long departmentId, ClearanceStatus.Status status);
+
+    int countByDepartmentIdAndCourseAndStatus(Long departmentId, String courseName, ClearanceStatus.Status status);
+
+    int countByDepartmentIdAndClusterAndStatus(Long departmentId, String clusterName, ClearanceStatus.Status status);
+
+
 }

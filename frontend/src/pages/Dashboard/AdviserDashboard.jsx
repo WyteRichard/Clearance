@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from '../../styles/DepartmentDashboard.module.css';
 import dashIcon from '../../assets/bhome.png';
 import requestIcon from '../../assets/notes.png';
-import avatar from '../../assets/avatar.png';
+import avatar from '../../assets/avatar2.png';
 
 const AdviserDashboard = () => {
     const [currentSemester, setCurrentSemester] = useState("Loading...");
@@ -47,17 +47,30 @@ const AdviserDashboard = () => {
 
     const fetchCounts = async () => {
         try {
-            const departmentId = 1;
             const token = localStorage.getItem('token');
-            const clearanceResponse = await axios.get(`http://localhost:8080/Requests/count?departmentId=${departmentId}`, {
+            const adviserId = localStorage.getItem('userId');
+    
+            const adviserResponse = await axios.get(`http://localhost:8080/Adviser/advisers/${adviserId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            const statusCountsResponse = await axios.get(`http://localhost:8080/Status/department/${departmentId}/status-counts`, {
+            const adviserCourse = adviserResponse.data?.course?.courseName; 
+    
+            if (!adviserCourse) {
+                console.error("Adviser course not found.");
+                return;
+            }
+    
+            const departmentId = 1;
+            const clearanceResponse = await axios.get(`http://localhost:8080/Requests/department/${departmentId}/course?courseName=${adviserCourse}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-
+    
+            const statusCountsResponse = await axios.get(`http://localhost:8080/Status/department/course/${departmentId}/status-counts?courseName=${adviserCourse}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+    
             setCounts({
-                clearanceRequests: clearanceResponse.data,
+                clearanceRequests: clearanceResponse.data.length,
                 cleared: statusCountsResponse.data.cleared,
                 pending: statusCountsResponse.data.pending,
                 remarks: counts.remarks

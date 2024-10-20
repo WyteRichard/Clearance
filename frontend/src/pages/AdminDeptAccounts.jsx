@@ -7,7 +7,7 @@ import requestIcon from '../assets/bdept.png';
 import userIcon from '../assets/user.png';
 import deleteIcon from '../assets/delete.svg';
 import announcementIcon from '../assets/announcement.png';
-import avatar from '../assets/avatar.png';
+import avatar from '../assets/avatar2.png';
 
 const ConfirmationModal = ({ isOpen, message, onConfirm, onCancel }) => {
     if (!isOpen) return null;

@@ -27,6 +27,16 @@ public class ClearanceRequestServiceImpl implements ClearanceRequestService {
     }
 
     @Override
+    public List<ClearanceRequest> getClearanceRequestsByDepartmentAndCourse(Long departmentId, String courseName) {
+        return clearanceRequestRepository.findByDepartment_IdAndStudent_Course_CourseName(departmentId, courseName);
+    }
+
+    @Override
+    public List<ClearanceRequest> getClearanceRequestsByDepartmentAndCluster(Long departmentId, String clusterName) {
+        return clearanceRequestRepository.findByDepartment_IdAndStudent_Section_ClusterName(departmentId, clusterName);
+    }
+
+    @Override
     public ClearanceRequest getClearanceRequestById(Long id) {
         Optional<ClearanceRequest> clearanceRequest = clearanceRequestRepository.findById(id);
         return clearanceRequest.orElseThrow(() -> new RuntimeException("Clearance request not found with id: " + id));
@@ -98,4 +108,10 @@ public class ClearanceRequestServiceImpl implements ClearanceRequestService {
             throw new RuntimeException("No clearance requests found for student number: " + studentNumber);
         }
     }
+
+    @Override
+    public List<ClearanceRequest> getClearanceRequestsByStudentIdAndDepartmentId(Long studentId, Long departmentId) {
+        return clearanceRequestRepository.findByStudentIdAndDepartmentId(studentId, departmentId);
+    }
+
 }

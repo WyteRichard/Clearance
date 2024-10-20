@@ -95,7 +95,8 @@ const RegisterPage = () => {
         "Student Affairs": "studentAffairs",
         "Student Discipline": "studentDiscipline",
         "Supreme Student Council": "supremeStudentCouncil",
-        Student: "student"
+        Student: "student",
+        Admin: "admin"
       };
   
       const roleField = roleMap[selectedRole];

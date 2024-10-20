@@ -7,6 +7,7 @@ import dashIcon from '../assets/bhome.png';
 import requestIcon from '../assets/notes.png';
 import statusIcon from '../assets/idcard.png';
 import accountIcon from '../assets/user.png';
+import avatar from '../assets/avatar2.png';
 
 const StudentDashboard = () => {
     const [currentSemester, setCurrentSemester] = useState("Loading...");
@@ -87,7 +88,7 @@ const StudentDashboard = () => {
             if (Array.isArray(response.data)) {
                 const dates = response.data.map(announcement => ({
                     title: announcement.title,
-                    content: announcement.content,
+                    content: announcement.details,
                     announcementDate: new Date(announcement.announcementDate).toLocaleDateString('en-US', {
                         year: 'numeric', month: 'long', day: 'numeric'
                     })
@@ -100,6 +101,7 @@ const StudentDashboard = () => {
             setError("Error fetching announcements");
         }
     };
+    
 
     const toggleModal = () => {
         setShowModal(!showModal);
@@ -148,7 +150,9 @@ const StudentDashboard = () => {
                         <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
                         <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
 
-                        <div className={styles.avatar} onClick={toggleModal}>AN</div>
+                        <div className={styles.avatar} onClick={toggleModal}>
+                            <img src={avatar} alt="Avatar" />
+                        </div>
                         {showModal && (
                           <div className={styles.modal}>
                             <ul>
@@ -220,6 +224,7 @@ const StudentDashboard = () => {
                                     <li key={index} className={styles.dateItem}>
                                         <img src={dateIcon} alt="Date" className={styles.smallIcon} />
                                         {date.title} - {date.announcementDate}
+                                        <p>{date.content}</p>
                                     </li>
                                 ))}
                             </ul>

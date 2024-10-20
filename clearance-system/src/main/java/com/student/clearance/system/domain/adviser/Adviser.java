@@ -13,7 +13,6 @@ import java.io.Serializable;
 @Data
 public class Adviser extends Person implements Serializable {
 
-    private Long adviserId;
     private String adviserNumber;
 
     @ManyToOne

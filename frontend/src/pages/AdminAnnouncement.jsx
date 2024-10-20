@@ -6,7 +6,7 @@ import requestIcon from '../assets/dept.png';
 import userIcon from '../assets/user.png';
 import announcementIcon from '../assets/bannouncement.png';
 import styles from '../styles/AdminAnnouncement.module.css';
-import avatar from '../assets/avatar.png';
+import avatar from '../assets/avatar2.png';
 
 const Announcement = () => {
     const [announcements, setAnnouncements] = useState([]);

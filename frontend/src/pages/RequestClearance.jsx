@@ -6,6 +6,7 @@ import dashIcon from '../assets/home.png';
 import requestIcon from '../assets/bnotes.png';
 import statusIcon from '../assets/idcard.png';
 import accountIcon from '../assets/user.png';
+import avatar from '../assets/avatar2.png';
 
 const RequestClearance = () => {
     const [semester, setSemester] = useState("");
@@ -116,12 +117,27 @@ const RequestClearance = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const token = localStorage.getItem('token');
-        
+    
         if (!studentId || isNaN(departmentId)) {
             alert("Invalid student ID or department ID.");
             return;
         }
-        
+    
+        try {
+            const existingRequestResponse = await axios.get(`http://localhost:8080/Requests/student/${studentId}/department/${departmentId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+    
+            if (existingRequestResponse.data.length > 0) {
+                alert("You have already submitted a clearance request to this department.");
+                return;
+            }
+        } catch (error) {
+            console.error("Error checking existing requests:", error);
+            alert("Error checking existing requests. Please try again later.");
+            return;
+        }
+    
         const clearanceRequest = {
             student: { id: studentId },
             department: { id: parseInt(departmentId, 10) },
@@ -156,6 +172,7 @@ const RequestClearance = () => {
             }
         }
     };
+    
 
     const toggleModal = () => {
         setShowModal(!showModal);
@@ -204,7 +221,9 @@ const RequestClearance = () => {
                     <div className={styles.headerRight}>
                     <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
                     <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
-                        <div className={styles.avatar} onClick={toggleModal}>AN</div>
+                    <div className={styles.avatar} onClick={toggleModal}>
+                            <img src={avatar} alt="Avatar" />
+                        </div>
                         {showModal && (
                             <div className={styles.modal}>
                                 <ul>

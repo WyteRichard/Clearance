@@ -7,7 +7,7 @@ import homeIcon from '../../assets/home.png';
 import requestIcon from '../../assets/bnotes.png';
 import clearedtoggle from '../../assets/clearedtoggle.svg';
 import pendingtoggle from '../../assets/pendingtoggle.svg';
-import avatar from '../../assets/avatar.png';
+import avatar from '../../assets/avatar2.png';
 
 const SSCDashboard = () => {
     const [clearanceRequests, setClearanceRequests] = useState([]);
@@ -211,11 +211,11 @@ useEffect(() => {
                 <div className={styles.logoContainer}>
                 </div>
                 <nav className={styles.nav}>
-                    <button className={styles.ghostButton} onClick={() => navigate('/clinic-dashboard')}>
+                    <button className={styles.ghostButton} onClick={() => navigate('/ssc-dashboard')}>
                         <img src={homeIcon} alt="Dashboard" className={styles.navIcon} />
                         Dashboard
                     </button>
-                    <button className={styles.whiteButton} onClick={() => navigate('/clinic-request-clearance')}>
+                    <button className={styles.whiteButton} onClick={() => navigate('/ssc-request-clearance')}>
                         <img src={requestIcon} alt="Clearance Request" className={styles.navIcon} />
                         Clearance Request
                     </button>

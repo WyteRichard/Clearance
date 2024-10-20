@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Image, Alert, ScrollView } from 'react-native';
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Image, Alert, ScrollView, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -15,28 +15,31 @@ const StudentDashboard = () => {
   const [remarkCount, setRemarkCount] = useState(0);
   const [importantDates, setImportantDates] = useState([]);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      const userId = await AsyncStorage.getItem('userId');
-      const role = await AsyncStorage.getItem('role');
-      const exp = await AsyncStorage.getItem('exp');
-      const token = await AsyncStorage.getItem('token');
-      const currentTime = new Date().getTime();
-
-      if (!role || !exp || exp * 1000 < currentTime) {
-        handleLogout();
-      } else if (role !== "ROLE_ROLE_STUDENT") {
-        Alert.alert("Unauthorized access", "You will be redirected to login.");
-        handleLogout();
-      } else {
-        fetchFirstName(userId, token);
-        fetchSemesterData(token);
-        fetchStatusCounts(userId, token);
-        fetchImportantDates(token);
-      }
-    })();
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    const userId = await AsyncStorage.getItem('userId');
+    const role = await AsyncStorage.getItem('role');
+    const exp = await AsyncStorage.getItem('exp');
+    const token = await AsyncStorage.getItem('token');
+    const currentTime = new Date().getTime();
+
+    if (!role || !exp || exp * 1000 < currentTime) {
+      handleLogout();
+    } else if (role !== "ROLE_ROLE_STUDENT") {
+      Alert.alert("Unauthorized access", "You will be redirected to login.");
+      handleLogout();
+    } else {
+      fetchFirstName(userId, token);
+      fetchSemesterData(token);
+      fetchStatusCounts(userId, token);
+      fetchImportantDates(token);
+    }
+  };
 
   const fetchFirstName = async (userId, token) => {
     try {
@@ -89,7 +92,8 @@ const StudentDashboard = () => {
           title: announcement.title,
           date: new Date(announcement.announcementDate).toLocaleDateString('en-US', {
             year: 'numeric', month: 'long', day: 'numeric'
-          })
+          }),
+          details: announcement.details
         }));
         setImportantDates(dates);
       } else {
@@ -106,16 +110,27 @@ const StudentDashboard = () => {
     navigation.navigate('Login');
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
+
   return (
     <LinearGradient style={styles.container} colors={['#266ca9', '#0042be']}>
       <SafeAreaView style={styles.content}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 100 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           <View style={styles.header}>
             <View>
               <Text style={styles.greeting}>Hello</Text>
               <Text style={styles.name}>{firstName}</Text>
             </View>
-            <Image source={require('../../assets/images/avatar.png')} style={styles.avatar} />
+            <Image source={require('../../assets/images/avatar2.png')} style={styles.avatar} />
           </View>
 
           <View style={styles.card}>
@@ -144,7 +159,10 @@ const StudentDashboard = () => {
             {importantDates.map((date, index) => (
               <View key={index} style={styles.dateItem}>
                 <Image source={require('../../assets/images/calendar.png')} style={styles.dateIcon} />
-                <Text style={styles.dateText}>{date.title} - {date.date}</Text>
+                <View>
+                  <Text style={styles.dateText}>{date.title} - {date.date}</Text>
+                  <Text style={styles.detailsText}>{date.details}</Text>
+                </View>
               </View>
             ))}
           </View>
@@ -269,6 +287,11 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 16,
     color: '#000',
+  },
+  detailsText: {
+    fontSize: 14,
+    color: '#555',
+    marginTop: 4,
   },
   navbar: {
     flexDirection: 'row',

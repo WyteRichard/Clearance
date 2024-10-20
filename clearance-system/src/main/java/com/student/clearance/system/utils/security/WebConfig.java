@@ -20,14 +20,6 @@ public class WebConfig implements WebMvcConfigurer {
                         .allowedHeaders("*")
                         .allowCredentials(true);
             }
-
-            @Override
-            public void addResourceHandlers(ResourceHandlerRegistry registry) {
-                registry.addResourceHandler("/uploads/**")
-                        .addResourceLocations("file:uploads/")
-                        .setCachePeriod(3600) // Optional: Set cache period in seconds
-                        .resourceChain(true);
-            }
         };
     }
 }

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from '../../styles/DepartmentDashboard.module.css';
 import dashIcon from '../../assets/bhome.png';
 import requestIcon from '../../assets/notes.png';
-import avatar from '../../assets/avatar.png';
+import avatar from '../../assets/avatar2.png';
 
 const LaboratoryDashboard = () => {
     const [currentSemester, setCurrentSemester] = useState("Loading...");
@@ -47,17 +47,30 @@ const LaboratoryDashboard = () => {
 
     const fetchCounts = async () => {
         try {
-            const departmentId = 7;
             const token = localStorage.getItem('token');
-            const clearanceResponse = await axios.get(`http://localhost:8080/Requests/count?departmentId=${departmentId}`, {
+            const laboratoryId = localStorage.getItem('userId');
+
+            const labResponse = await axios.get(`http://localhost:8080/Laboratory/laboratories/${laboratoryId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            const statusCountsResponse = await axios.get(`http://localhost:8080/Status/department/${departmentId}/status-counts`, {
+            const labCourse = labResponse.data?.course?.courseName;
+
+            if (!labCourse) {
+                console.error("Laboratory course not found.");
+                return;
+            }
+
+            const departmentId = 7;
+            const clearanceResponse = await axios.get(`http://localhost:8080/Requests/department/${departmentId}/course?courseName=${labCourse}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const statusCountsResponse = await axios.get(`http://localhost:8080/Status/department/course/${departmentId}/status-counts?courseName=${labCourse}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
             setCounts({
-                clearanceRequests: clearanceResponse.data,
+                clearanceRequests: clearanceResponse.data.length,
                 cleared: statusCountsResponse.data.cleared,
                 pending: statusCountsResponse.data.pending,
                 remarks: counts.remarks
@@ -84,11 +97,11 @@ const LaboratoryDashboard = () => {
                 <div className={styles.logoContainer}>
                 </div>
                 <nav className={styles.nav}>
-                    <button className={styles.whiteButton} onClick={() => navigate('/cashier-dashboard')}>
+                    <button className={styles.whiteButton} onClick={() => navigate('/laboratory-dashboard')}>
                         <img src={dashIcon} alt="Dashboard" className={styles.navIcon} />
                         Dashboard
                     </button>
-                    <button className={styles.ghostButton} onClick={() => navigate('/cashier-clearance-request')}>
+                    <button className={styles.ghostButton} onClick={() => navigate('/laboratory-clearance-request')}>
                         <img src={requestIcon} alt="Clearance Request" className={styles.navIcon} />
                         Clearance Request
                     </button>
@@ -116,7 +129,7 @@ const LaboratoryDashboard = () => {
                     <div className={styles.card}>
                         <div className={styles.cardHeader}>
                             <span className={styles.cardTitle}>Clearance Requests</span>
-                            <span className={styles.greenIcon}></span>
+                            <span className={styles.blueIcon}></span>
                         </div>
                         <div className={styles.cardContent}>
                             <div className={styles.boldText}>{counts.clearanceRequests}</div>
@@ -126,7 +139,7 @@ const LaboratoryDashboard = () => {
                     <div className={styles.card}>
                         <div className={styles.cardHeader}>
                             <span className={styles.cardTitle}>Cleared</span>
-                            <span className={styles.yellowIcon}></span>
+                            <span className={styles.greenIcon}></span>
                         </div>
                         <div className={styles.cardContent}>
                             <div className={styles.boldText}>{counts.cleared}</div>
@@ -136,7 +149,7 @@ const LaboratoryDashboard = () => {
                     <div className={styles.card}>
                         <div className={styles.cardHeader}>
                             <span className={styles.cardTitle}>Pending</span>
-                            <span className={styles.redIcon}></span>
+                            <span className={styles.yellowIcon}></span>
                         </div>
                         <div className={styles.cardContent}>
                             <div className={styles.boldText}>{counts.pending}</div>

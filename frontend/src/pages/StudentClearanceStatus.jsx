@@ -8,6 +8,7 @@ import statusIcon from '../assets/bidcard.png';
 import accountIcon from '../assets/user.png';
 import printIcon from '../assets/printIcon.svg';
 import logo from '../assets/logo.png';
+import avatar from '../assets/avatar2.png';
 
 const StudentClearanceStatus = () => {
     const [currentSemester, setCurrentSemester] = useState("Loading...");
@@ -161,7 +162,9 @@ const StudentClearanceStatus = () => {
                     <div className={styles.headerRight}>
                         <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
                         <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
-                        <div className={styles.avatar} onClick={toggleModal}>AN</div>
+                        <div className={styles.avatar} onClick={toggleModal}>
+                            <img src={avatar} alt="Avatar" />
+                        </div>
                         {showModal && (
                             <div className={styles.modal}>
                                 <ul>

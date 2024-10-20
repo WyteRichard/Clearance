@@ -7,9 +7,9 @@ import homeIcon from '../../assets/home.png';
 import requestIcon from '../../assets/bnotes.png';
 import clearedtoggle from '../../assets/clearedtoggle.svg';
 import pendingtoggle from '../../assets/pendingtoggle.svg';
-import avatar from '../../assets/avatar.png';
+import avatar from '../../assets/avatar2.png';
 
-const StudentDisciplineClearanceRequest = () => {
+const ClusterCoordinatorClearanceRequest = () => {
     const [clearanceRequests, setClearanceRequests] = useState([]);
     const [filteredRequests, setFilteredRequests] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
@@ -55,21 +55,36 @@ const StudentDisciplineClearanceRequest = () => {
 
     const fetchClearanceRequests = async () => {
         try {
-            const departmentId = 12;
             const token = localStorage.getItem('token');
+            const prefectId = localStorage.getItem('userId');
+    
+            const coordinatorResponse = await axios.get(`http://localhost:8080/Prefect/prefects/${prefectId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const coordinatorCluster = coordinatorResponse.data?.section?.clusterName;
+    
+            if (!coordinatorCluster) {
+                console.error("Coordinator cluster not found.");
+                return;
+            }
+    
+            const departmentId = 4;
             const requestResponse = await axios.get(`http://localhost:8080/Requests/department/${departmentId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
     
             const requestsData = requestResponse.data || [];
+    
+            const filteredRequestsBySection = requestsData.filter(request => {
+                return request.student?.section?.clusterName === coordinatorCluster;
+            });
+    
             const requestsWithRemarks = await Promise.all(
-                requestsData.map(async (request) => {
+                filteredRequestsBySection.map(async (request) => {
                     try {
                         const remarksResponse = await axios.get(`http://localhost:8080/Status/${request.id}`, {
                             headers: { 'Authorization': `Bearer ${token}` }
                         });
-
-                        console.log(`Request ID ${request.id} status fetched:`, remarksResponse.data?.status);
                         return { ...request, remarks: remarksResponse.data?.remarks || '', status: remarksResponse.data?.status };
                     } catch (error) {
                         console.error(`Error fetching remarks for request ${request.id}:`, error);
@@ -102,35 +117,35 @@ const StudentDisciplineClearanceRequest = () => {
     };
 
     const handleFilter = useCallback(() => {
-    let filtered = [...clearanceRequests];
+        let filtered = [...clearanceRequests];
 
-    if (searchTerm) {
-        const searchTerms = searchTerm.toLowerCase().split(/\s+/);
-        filtered = filtered.filter(request => {
-            const student = request.student || {};
-            const fullName = `${student.firstName || ''} ${student.middleName || ''} ${student.lastName || ''}`.toLowerCase();
-            return searchTerms.every(term => fullName.includes(term));
-        });
-    }
+        if (searchTerm) {
+            const searchTerms = searchTerm.toLowerCase().split(/\s+/);
+            filtered = filtered.filter(request => {
+                const student = request.student || {};
+                const fullName = `${student.firstName || ''} ${student.middleName || ''} ${student.lastName || ''}`.toLowerCase();
+                return searchTerms.every(term => fullName.includes(term));
+            });
+        }
 
-    if (statusFilter) {
-        filtered = filtered.filter(request => request.status?.toLowerCase() === statusFilter.toLowerCase());
-    }
+        if (statusFilter) {
+            filtered = filtered.filter(request => request.status?.toLowerCase() === statusFilter.toLowerCase());
+        }
 
-    if (yearLevelFilter) {
-        filtered = filtered.filter(request => request.student?.yearLevel?.yearLevel === yearLevelFilter);
-    }
+        if (yearLevelFilter) {
+            filtered = filtered.filter(request => request.student?.yearLevel?.yearLevel === yearLevelFilter);
+        }
 
-    if (courseFilter) {
-        filtered = filtered.filter(request => request.student?.course?.courseName === courseFilter);
-    }
+        if (courseFilter) {
+            filtered = filtered.filter(request => request.student?.course?.courseName === courseFilter);
+        }
 
-    setFilteredRequests(filtered);
-}, [clearanceRequests, searchTerm, statusFilter, yearLevelFilter, courseFilter]);
+        setFilteredRequests(filtered);
+    }, [clearanceRequests, searchTerm, statusFilter, yearLevelFilter, courseFilter]);
 
-useEffect(() => {
-    handleFilter();
-}, [handleFilter]);
+    useEffect(() => {
+        handleFilter();
+    }, [handleFilter]);
 
     const toggleStatus = async (id, currentStatus) => {
         const newStatus = currentStatus?.toLowerCase() === "cleared" ? "PENDING" : "CLEARED";
@@ -142,8 +157,6 @@ useEffect(() => {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
     
-            console.log("Backend response:", response.data);
-            
             if (response.status === 200) {
                 setClearanceRequests(prevRequests =>
                     prevRequests.map(request =>
@@ -211,11 +224,11 @@ useEffect(() => {
                 <div className={styles.logoContainer}>
                 </div>
                 <nav className={styles.nav}>
-                    <button className={styles.ghostButton} onClick={() => navigate('/clinic-dashboard')}>
+                    <button className={styles.ghostButton} onClick={() => navigate('/discipline-dashboard')}>
                         <img src={homeIcon} alt="Dashboard" className={styles.navIcon} />
                         Dashboard
                     </button>
-                    <button className={styles.whiteButton} onClick={() => navigate('/clinic-request-clearance')}>
+                    <button className={styles.whiteButton} onClick={() => navigate('/discipline-clearance-request')}>
                         <img src={requestIcon} alt="Clearance Request" className={styles.navIcon} />
                         Clearance Request
                     </button>
@@ -223,10 +236,10 @@ useEffect(() => {
             </div>
             <div className={styles.mainContent}>
                 <header className={styles.header}>
-                    <h2 className={styles.dashboardTitle}>Student Discipline Clearance Requests</h2>
+                    <h2 className={styles.dashboardTitle}>Cluster Coordinator Clearance Requests</h2>
                     <div className={styles.headerRight}>
-                    <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
-                    <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
+                        <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
+                        <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
                         <div className={styles.avatar} onClick={toggleModal}>
                             <img src={avatar} alt="Avatar" />
                         </div>
@@ -326,4 +339,4 @@ useEffect(() => {
     );
 };
 
-export default StudentDisciplineClearanceRequest;
+export default ClusterCoordinatorClearanceRequest;

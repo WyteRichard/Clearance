@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from '../../styles/DepartmentDashboard.module.css';
 import dashIcon from '../../assets/bhome.png';
 import requestIcon from '../../assets/notes.png';
-import avatar from '../../assets/avatar.png';
+import avatar from '../../assets/avatar2.png';
 
 const CashierDashboard = () => {
     const [currentSemester, setCurrentSemester] = useState("Loading...");

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, Image, Alert, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, Image, Alert, ActivityIndicator, StyleSheet, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
@@ -21,52 +21,43 @@ const ClearanceStatus = () => {
   const [studentNumber, setStudentNumber] = useState('Loading...');
   const [sectionName, setSectionName] = useState('Loading...');
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const navigation = useNavigation();
 
   useEffect(() => {
-    const fetchData = async () => {
-      const userId = await AsyncStorage.getItem('userId');
-      const role = await AsyncStorage.getItem('role');
-      const exp = await AsyncStorage.getItem('exp');
-      const token = await AsyncStorage.getItem('token');
-      const currentTime = new Date().getTime();
-
-      if (!role || !exp || exp * 1000 < currentTime) {
-        handleLogout();
-      } else if (role !== 'ROLE_ROLE_STUDENT') {
-        Alert.alert('Unauthorized access', 'You will be redirected to login.');
-        handleLogout();
-      } else {
-        await fetchStudentData(userId, token);
-      }
-    };
-
-    fetchData();
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    const userId = await AsyncStorage.getItem('userId');
+    const role = await AsyncStorage.getItem('role');
+    const exp = await AsyncStorage.getItem('exp');
+    const token = await AsyncStorage.getItem('token');
+    const currentTime = new Date().getTime();
+
+    if (!role || !exp || exp * 1000 < currentTime) {
+      handleLogout();
+    } else if (role !== 'ROLE_ROLE_STUDENT') {
+      Alert.alert('Unauthorized access', 'You will be redirected to login.');
+      handleLogout();
+    } else {
+      await fetchStudentData(userId, token);
+    }
+  };
 
   const fetchStudentData = async (userId, token) => {
     setLoading(true);
     try {
-      const [semesterResponse, statusResponse, studentResponse] = await Promise.all([
-        axios.get('http://192.168.1.19:8080/Admin/semester/current', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get(`http://192.168.1.19:8080/Status/student/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get(`http://192.168.1.19:8080/Student/students/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      console.log("Semester Response:", semesterResponse.data);
-      console.log("Status Response:", statusResponse.data);
-      console.log("Student Response:", studentResponse.data);
-
+      const semesterResponse = await axios.get('http://192.168.1.19:8080/Admin/semester/current', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setCurrentSemester(semesterResponse.data.currentSemester || 'N/A');
       setCurrentAcademicYear(semesterResponse.data.academicYear || 'N/A');
-      setClearanceStatuses(Array.isArray(statusResponse.data) ? statusResponse.data : Object.values(statusResponse.data));
+
+      const studentResponse = await axios.get(`http://192.168.1.19:8080/Student/students/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const studentData = studentResponse.data;
       setStudentFirstName(studentData.firstName || 'N/A');
       setStudentMiddleName(studentData.middleName || '');
@@ -74,15 +65,24 @@ const ClearanceStatus = () => {
       setStudentNumber(studentData.studentNumber || 'N/A');
       setSectionName(studentData.section?.sectionName || 'N/A');
 
-      setFilteredStatuses(Array.isArray(statusResponse.data) ? statusResponse.data : Object.values(statusResponse.data));
+      const statusResponse = await axios.get(`http://192.168.1.19:8080/Status/student/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      console.log("Clearance Statuses after fetch:", clearanceStatuses);
+      const clearanceData = Array.isArray(statusResponse.data) ? statusResponse.data : Object.values(statusResponse.data);
+      setClearanceStatuses(clearanceData);
+      setFilteredStatuses(clearanceData);
     } catch (error) {
       setError('Failed to fetch data. Please try again.');
-      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
   };
 
   useEffect(() => {
@@ -160,10 +160,6 @@ const ClearanceStatus = () => {
     return <ActivityIndicator size="large" color="#0000ff" />;
   }
 
-  if (error) {
-    return <Text>Error: {error}</Text>;
-  }
-
   return (
     <LinearGradient
       style={styles.container}
@@ -175,17 +171,17 @@ const ClearanceStatus = () => {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Hello</Text>
-            <Text style={styles.name}>{studentFirstName}</Text>
+            <Text style={styles.name}>{studentFirstName || 'N/A'}</Text>
           </View>
-          <Image source={require('../../assets/images/avatar.png')} style={styles.avatar} />
+          <Image source={require('../../assets/images/avatar2.png')} style={styles.avatar} />
         </View>
 
         <View style={[styles.infoContainer, styles.invisible]}>
-          <Text style={styles.infoText}>A.Y. {currentAcademicYear}</Text>
-          <Text style={styles.infoText}>Semester: {currentSemester.replace('_', ' ')}</Text>
-          <Text style={styles.infoText}>Name: {`${studentFirstName} ${studentMiddleName} ${studentLastName}`}</Text>
-          <Text style={styles.infoText}>Student No.: {studentNumber}</Text>
-          <Text style={styles.infoText}>Section: {sectionName}</Text>
+          <Text style={styles.infoText}>A.Y. {currentAcademicYear || 'N/A'}</Text>
+          <Text style={styles.infoText}>Semester: {currentSemester.replace('_', ' ') || 'N/A'}</Text>
+          <Text style={styles.infoText}>Name: {`${studentFirstName || 'N/A'} ${studentMiddleName || ''} ${studentLastName || 'N/A'}`}</Text>
+          <Text style={styles.infoText}>Student No.: {studentNumber || 'N/A'}</Text>
+          <Text style={styles.infoText}>Section: {sectionName || 'N/A'}</Text>
         </View>
 
         <View style={styles.filterContainer}>
@@ -204,22 +200,34 @@ const ClearanceStatus = () => {
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           <View style={styles.tableContainer}>
             <View style={styles.tableHeader}>
               <Text style={[styles.headerCell, styles.departmentCell]}>Department</Text>
               <Text style={[styles.headerCell, styles.statusCell]}>Status</Text>
               <Text style={[styles.headerCell, styles.remarksCell]}>Remarks</Text>
             </View>
-            
+
             <ScrollView style={styles.tableContent} nestedScrollEnabled={true}>
-              {filteredStatuses.map((item, index) => (
-                <View key={index} style={styles.tableRow}>
-                  <Text style={[styles.cell, styles.departmentCell]}>{item.department || 'N/A'}</Text>
-                  <Text style={[styles.cell, styles.statusCell, item.status === 'Cleared' ? styles.cleared : styles.pending]}>{item.status || 'N/A'}</Text>
-                  <Text style={[styles.cell, styles.remarksCell]}>{item.remarks || 'N/A'}</Text>
+              {filteredStatuses.length > 0 ? (
+                filteredStatuses.map((item, index) => (
+                  <View key={index} style={styles.tableRow}>
+                    <Text style={[styles.cell, styles.departmentCell]}>{item.department || 'N/A'}</Text>
+                    <Text style={[styles.cell, styles.statusCell, item.status === 'Cleared' ? styles.cleared : styles.pending]}>{item.status || 'N/A'}</Text>
+                    <Text style={[styles.cell, styles.remarksCell]}>{item.remarks || 'N/A'}</Text>
+                  </View>
+                ))
+              ) : (
+                <View style={styles.noDataContainer}>
+                  <Text style={styles.noDataText}>No clearance data available.</Text>
                 </View>
-              ))}
+              )}
             </ScrollView>
           </View>
         </ScrollView>

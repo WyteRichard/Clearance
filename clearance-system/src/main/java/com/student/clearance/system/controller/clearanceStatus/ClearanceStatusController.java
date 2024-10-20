@@ -174,4 +174,34 @@ public class ClearanceStatusController {
         return new ResponseEntity<>(statusCounts, HttpStatus.OK);
     }
 
+    @GetMapping("/department/course/{departmentId}/status-counts")
+    public ResponseEntity<Map<String, Integer>> getStatusCountsByDepartmentAndCourse(
+            @PathVariable Long departmentId,
+            @RequestParam String courseName) {
+
+        int clearedCount = clearanceStatusService.countByDepartmentIdAndCourseAndStatus(departmentId, courseName, ClearanceStatus.Status.CLEARED);
+        int pendingCount = clearanceStatusService.countByDepartmentIdAndCourseAndStatus(departmentId, courseName, ClearanceStatus.Status.PENDING);
+
+        Map<String, Integer> statusCounts = new HashMap<>();
+        statusCounts.put("cleared", clearedCount);
+        statusCounts.put("pending", pendingCount);
+
+        return new ResponseEntity<>(statusCounts, HttpStatus.OK);
+    }
+
+    @GetMapping("/department/cluster/{departmentId}/status-counts")
+    public ResponseEntity<Map<String, Integer>> getStatusCountsByDepartmentAndCluster(
+            @PathVariable Long departmentId,
+            @RequestParam String clusterName) {
+
+        int clearedCount = clearanceStatusService.countByDepartmentIdAndClusterAndStatus(departmentId, clusterName, ClearanceStatus.Status.CLEARED);
+        int pendingCount = clearanceStatusService.countByDepartmentIdAndClusterAndStatus(departmentId, clusterName, ClearanceStatus.Status.PENDING);
+
+        Map<String, Integer> statusCounts = new HashMap<>();
+        statusCounts.put("cleared", clearedCount);
+        statusCounts.put("pending", pendingCount);
+
+        return new ResponseEntity<>(statusCounts, HttpStatus.OK);
+    }
+
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback  } from "react";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
@@ -7,7 +7,7 @@ import homeIcon from '../../assets/home.png';
 import requestIcon from '../../assets/bnotes.png';
 import clearedtoggle from '../../assets/clearedtoggle.svg';
 import pendingtoggle from '../../assets/pendingtoggle.svg';
-import avatar from '../../assets/avatar.png';
+import avatar from '../../assets/avatar2.png';
 
 const ClusterCoordinatorClearanceRequest = () => {
     const [clearanceRequests, setClearanceRequests] = useState([]);
@@ -55,21 +55,36 @@ const ClusterCoordinatorClearanceRequest = () => {
 
     const fetchClearanceRequests = async () => {
         try {
-            const departmentId = 4;
             const token = localStorage.getItem('token');
+            const coordinatorId = localStorage.getItem('userId');
+    
+            const coordinatorResponse = await axios.get(`http://localhost:8080/Cluster/coordinators/${coordinatorId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const coordinatorCluster = coordinatorResponse.data?.section?.clusterName;
+    
+            if (!coordinatorCluster) {
+                console.error("Coordinator cluster not found.");
+                return;
+            }
+    
+            const departmentId = 4;
             const requestResponse = await axios.get(`http://localhost:8080/Requests/department/${departmentId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
     
             const requestsData = requestResponse.data || [];
+    
+            const filteredRequestsBySection = requestsData.filter(request => {
+                return request.student?.section?.clusterName === coordinatorCluster;
+            });
+    
             const requestsWithRemarks = await Promise.all(
-                requestsData.map(async (request) => {
+                filteredRequestsBySection.map(async (request) => {
                     try {
                         const remarksResponse = await axios.get(`http://localhost:8080/Status/${request.id}`, {
                             headers: { 'Authorization': `Bearer ${token}` }
                         });
-
-                        console.log(`Request ID ${request.id} status fetched:`, remarksResponse.data?.status);
                         return { ...request, remarks: remarksResponse.data?.remarks || '', status: remarksResponse.data?.status };
                     } catch (error) {
                         console.error(`Error fetching remarks for request ${request.id}:`, error);
@@ -211,11 +226,11 @@ useEffect(() => {
                 <div className={styles.logoContainer}>
                 </div>
                 <nav className={styles.nav}>
-                    <button className={styles.ghostButton} onClick={() => navigate('/clinic-dashboard')}>
+                    <button className={styles.ghostButton} onClick={() => navigate('/cluster-dashboard')}>
                         <img src={homeIcon} alt="Dashboard" className={styles.navIcon} />
                         Dashboard
                     </button>
-                    <button className={styles.whiteButton} onClick={() => navigate('/clinic-request-clearance')}>
+                    <button className={styles.whiteButton} onClick={() => navigate('/cluster-clearance-request')}>
                         <img src={requestIcon} alt="Clearance Request" className={styles.navIcon} />
                         Clearance Request
                     </button>

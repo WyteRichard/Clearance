@@ -68,4 +68,16 @@ public class ClearanceStatusServiceImpl implements ClearanceStatusService {
     public int countByDepartmentIdAndStatus(Long departmentId, ClearanceStatus.Status status) {
         return clearanceStatusRepository.countByClearanceRequest_Department_IdAndStatus(departmentId, status);
     }
+
+    @Override
+    public int countByDepartmentIdAndCourseAndStatus(Long departmentId, String courseName, ClearanceStatus.Status status) {
+        return clearanceStatusRepository.countByDepartmentIdAndCourseAndStatus(departmentId, courseName, status);
+    }
+
+    @Override
+    public int countByDepartmentIdAndClusterAndStatus(Long departmentId, String clusterName, ClearanceStatus.Status status) {
+        return clearanceStatusRepository.countByDepartmentIdAndClusterAndStatus(departmentId, clusterName, status);
+    }
+
+
 }

@@ -6,13 +6,12 @@ import dashIcon from '../assets/home.png';
 import requestIcon from '../assets/notes.png';
 import statusIcon from '../assets/idcard.png';
 import accountIcon from '../assets/buser.png';
+import avatar from '../assets/avatar2.png';
 
 const StudentAccount = () => {
   const [student, setStudent] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
-  const [profileImage, setProfileImage] = useState(null);
-  const [profileImagePreview, setProfileImagePreview] = useState(null);
   const studentNumber = localStorage.getItem('userId');
   const navigate = useNavigate();
 
@@ -36,12 +35,6 @@ const StudentAccount = () => {
       });
       setStudent(response.data);
       setFormData(response.data);
-      if (response.data.profileImage) {
-        const imageURL = `http://localhost:8080/Student/uploads/${response.data.profileImage}?${new Date().getTime()}`;
-        setProfileImagePreview(imageURL);
-        console.log("Updated Profile Image URL:", imageURL);
-      }
-      
     } catch (error) {
       console.error("Error fetching student data:", error);
     }
@@ -58,8 +51,6 @@ const StudentAccount = () => {
   const handleCancel = () => {
     setIsEditing(false);
     setFormData(student);
-    setProfileImage(null);
-    setProfileImagePreview(`http://localhost:8080/Student/uploads/${student.profileImage}`);
   };
 
   const handleChange = (e) => {
@@ -67,14 +58,6 @@ const StudentAccount = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setProfileImage(file);
-    const previewURL = URL.createObjectURL(file);
-    setProfileImagePreview(previewURL);
-    console.log("Image Preview URL:", previewURL);
   };
 
   const handleSave = async () => {
@@ -89,10 +72,6 @@ const StudentAccount = () => {
     formDataToSend.append("civilStatus", formData.civilStatus || student.civilStatus);
     formDataToSend.append("sex", formData.sex || student.sex);
   
-    if (profileImage) {
-      formDataToSend.append("profileImage", profileImage);
-    }
-  
     try {
       const response = await axios.put(`http://localhost:8080/Student/student/${studentNumber}`, formDataToSend, {
         headers: {
@@ -102,14 +81,6 @@ const StudentAccount = () => {
       });
       setIsEditing(false);
       setStudent(response.data);
-  
-      if (response.data.profileImage) {
-        const imageURL = `http://localhost:8080/Student/uploads/${response.data.profileImage}?${new Date().getTime()}`;
-        setProfileImagePreview(imageURL);
-        console.log("Updated Profile Image URL:", imageURL);
-      } else {
-        console.warn("Profile image path was not returned by the server.");
-      }
     } catch (error) {
       alert(`Update failed: ${error.response?.data?.message || 'Unknown error'}`);
     }
@@ -148,10 +119,10 @@ const StudentAccount = () => {
         <div className={styles.cardGrid}>
           <div className={styles.card}>
             <div className={styles.studentInfo}>
-            <div className={styles.profilePic}>
+              <div className={styles.profilePic}>
                 <img
-                  src={profileImagePreview}
-                  alt=""
+                  src={avatar}
+                  alt="Profile"
                   className={styles.profileImage}
                   style={{ width: '150px', height: '150px', borderRadius: '50%' }}
                 />
@@ -163,15 +134,8 @@ const StudentAccount = () => {
                 <p>Course: {student.course?.courseName}</p>
               </div>
             </div>
-            {isEditing && (
-              <div className={styles.generalInfoContent}>
-                <div className={styles.generalInfoLabel}>Change Profile Image:</div>
-                <input type="file" accept="image/*" onChange={handleImageChange} />
-              </div>
-            )}
           </div>
 
-          {/* General Info Card */}
           <div className={styles.generalInfo}>
             <h3>General Information</h3>
             <br></br>

@@ -20,6 +20,20 @@ public class ClearanceRequestController {
         return clearanceRequestService.getAllClearanceRequests();
     }
 
+    @GetMapping("/department/{departmentId}/course")
+    public List<ClearanceRequest> getClearanceRequestsByDepartmentAndCourse(
+            @PathVariable Long departmentId,
+            @RequestParam String courseName) {
+        return clearanceRequestService.getClearanceRequestsByDepartmentAndCourse(departmentId, courseName);
+    }
+
+    @GetMapping("/department/{departmentId}/cluster")
+    public List<ClearanceRequest> getClearanceRequestsByDepartmentAndCluster(
+            @PathVariable Long departmentId,
+            @RequestParam String clusterName) {
+        return clearanceRequestService.getClearanceRequestsByDepartmentAndCluster(departmentId, clusterName);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ClearanceRequest> getClearanceRequestById(@PathVariable Long id) {
         ClearanceRequest clearanceRequest = clearanceRequestService.getClearanceRequestById(id);
@@ -72,4 +86,12 @@ public class ClearanceRequestController {
         clearanceRequestService.deleteAllClearanceRequestsAndStatusesByStudentNumber(studentNumber);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/student/{studentId}/department/{departmentId}")
+    public List<ClearanceRequest> getClearanceRequestByStudentAndDepartment(
+            @PathVariable Long studentId,
+            @PathVariable Long departmentId) {
+        return clearanceRequestService.getClearanceRequestsByStudentIdAndDepartmentId(studentId, departmentId);
+    }
+
 }

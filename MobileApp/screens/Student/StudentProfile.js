@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,26 +9,29 @@ const StudentAccount = () => {
   const navigation = useNavigation();
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    (async () => {
-      const userId = await AsyncStorage.getItem('userId');
-      const role = await AsyncStorage.getItem('role');
-      const exp = await AsyncStorage.getItem('exp');
-      const token = await AsyncStorage.getItem('token');
-      const currentTime = new Date().getTime();
-
-      if (!role || !exp || exp * 1000 < currentTime) {
-        handleLogout();
-      } else if (role !== "ROLE_ROLE_STUDENT") {
-        Alert.alert("Unauthorized access", "You will be redirected to login.");
-        handleLogout();
-      } else {
-        fetchStudentData(userId, token);
-      }
-    })();
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    const userId = await AsyncStorage.getItem('userId');
+    const role = await AsyncStorage.getItem('role');
+    const exp = await AsyncStorage.getItem('exp');
+    const token = await AsyncStorage.getItem('token');
+    const currentTime = new Date().getTime();
+
+    if (!role || !exp || exp * 1000 < currentTime) {
+      handleLogout();
+    } else if (role !== "ROLE_ROLE_STUDENT") {
+      Alert.alert("Unauthorized access", "You will be redirected to login.");
+      handleLogout();
+    } else {
+      fetchStudentData(userId, token);
+    }
+  };
 
   const fetchStudentData = async (userId, token) => {
     setLoading(true);
@@ -43,6 +46,12 @@ const StudentAccount = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
   };
 
   const formatDate = (dateString) => {
@@ -70,7 +79,12 @@ const StudentAccount = () => {
         <Text style={styles.headerTitle}>My Profile</Text>
       </View>
 
-      <ScrollView style={styles.contentContainer}>
+      <ScrollView
+        style={styles.contentContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <View style={styles.card}>
           <Text style={styles.cardTitle}>My Information</Text>
 

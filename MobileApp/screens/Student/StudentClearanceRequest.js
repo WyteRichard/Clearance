@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
@@ -16,6 +16,7 @@ const StudentClearanceRequest = () => {
   const [studentFirstName, setStudentFirstName] = useState('Loading...');
   const [studentInternalId, setStudentInternalId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const navigation = useNavigation();
 
@@ -46,28 +47,28 @@ const StudentClearanceRequest = () => {
   ];
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-
-      const userId = await AsyncStorage.getItem('userId');
-      const role = await AsyncStorage.getItem('role');
-      const exp = await AsyncStorage.getItem('exp');
-      const token = await AsyncStorage.getItem('token');
-      const currentTime = new Date().getTime();
-
-      if (!role || !exp || exp * 1000 < currentTime) {
-        handleLogout();
-      } else if (role !== 'ROLE_ROLE_STUDENT') {
-        Alert.alert('Unauthorized access', 'You will be redirected to login.');
-        handleLogout();
-      } else {
-        await fetchStudentData(userId, token);
-      }
-    };
-
-    fetchData();
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    setError(null);
+
+    const userId = await AsyncStorage.getItem('userId');
+    const role = await AsyncStorage.getItem('role');
+    const exp = await AsyncStorage.getItem('exp');
+    const token = await AsyncStorage.getItem('token');
+    const currentTime = new Date().getTime();
+
+    if (!role || !exp || exp * 1000 < currentTime) {
+      handleLogout();
+    } else if (role !== 'ROLE_ROLE_STUDENT') {
+      Alert.alert('Unauthorized access', 'You will be redirected to login.');
+      handleLogout();
+    } else {
+      await fetchStudentData(userId, token);
+    }
+  };
 
   const fetchStudentData = async (userId, token) => {
     try {
@@ -91,6 +92,12 @@ const StudentClearanceRequest = () => {
       setError('Failed to fetch data. Please try again.');
       setLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
   };
 
   const handleSemesterChange = (selectedSemester) => {
@@ -118,12 +125,30 @@ const StudentClearanceRequest = () => {
 
   const handleSubmit = async () => {
     const token = await AsyncStorage.getItem('token');
-
+  
     if (!studentInternalId || !department || !semester || !schoolYear) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
-
+  
+    try {
+      const existingRequestResponse = await axios.get(
+        `http://192.168.1.19:8080/Requests/student/${studentInternalId}/department/${department}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+  
+      if (existingRequestResponse.data.length > 0) {
+        Alert.alert("You have already submitted a clearance request to this department.");
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking existing requests:', error);
+      Alert.alert('Error', 'Error checking existing requests. Please try again later.');
+      return;
+    }
+  
     const clearanceRequest = {
       student: { id: studentInternalId },
       department: { id: parseInt(department, 10) },
@@ -131,9 +156,7 @@ const StudentClearanceRequest = () => {
       schoolYear,
       graduating: graduating === 'yes' ? 1 : 0,
     };
-
-    console.log('Sending Clearance Request Payload:', clearanceRequest);
-
+  
     try {
       const response = await fetch('http://192.168.1.19:8080/Requests/add', {
         method: 'POST',
@@ -143,21 +166,11 @@ const StudentClearanceRequest = () => {
         },
         body: JSON.stringify(clearanceRequest),
       });
-
-      console.log('Request Headers:', {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      });
-      console.log('Request Body:', JSON.stringify(clearanceRequest));
-
-      console.log('Raw Response:', response);
-
+  
       if (response.ok) {
-        console.log('Response OK:', response);
         Alert.alert('Clearance request successfully added');
       } else {
         const errorMessage = await response.text();
-        console.error('Error response:', errorMessage);
         Alert.alert(`Failed to add clearance request. Status code: ${response.status}`);
       }
     } catch (error) {
@@ -188,15 +201,21 @@ const StudentClearanceRequest = () => {
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
     >
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Hello</Text>
-          <Text style={styles.name}>{studentFirstName}</Text>
+      <SafeAreaView style={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>Hello</Text>
+            <Text style={styles.name}>{studentFirstName}</Text>
+          </View>
+          <Image source={require('../../assets/images/avatar2.png')} style={styles.avatar} />
         </View>
-        <Image source={require('../../assets/images/avatar.png')} style={styles.avatar} />
-      </View>
 
-      <View style={styles.contentContainer}>
         <View style={styles.formContainer}>
           <Text style={styles.title}>CLEARANCE REQUEST</Text>
 
@@ -222,6 +241,8 @@ const StudentClearanceRequest = () => {
               <Picker.Item label="School Year" value="" />
               <Picker.Item label="2023-2024" value="2023-2024" />
               <Picker.Item label="2024-2025" value="2024-2025" />
+              <Picker.Item label="2025-2026" value="2025-2026" />
+              <Picker.Item label="2026-2027" value="2026-2027" />
             </Picker>
           </View>
 
@@ -237,7 +258,7 @@ const StudentClearanceRequest = () => {
             <Text style={styles.submitButtonText}>Submit</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
 
       <View style={styles.navbar}>
         <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentDashboard')}>
@@ -253,6 +274,7 @@ const StudentClearanceRequest = () => {
           <Image source={require('../../assets/images/bluser.png')} style={styles.navIcon} />
         </TouchableOpacity>
       </View>
+      </SafeAreaView>
     </LinearGradient>
   );
 };
@@ -261,13 +283,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  content: {
+    flex: 1,
+  },
   header: {
+    marginTop: 20,
+    marginBottom: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    paddingTop: 40,
-    paddingBottom: 40,
   },
   greeting: {
     color: 'white',
@@ -288,7 +313,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    paddingTop: 30,
+    paddingTop: 0,
   },
   formContainer: {
     paddingHorizontal: 20,

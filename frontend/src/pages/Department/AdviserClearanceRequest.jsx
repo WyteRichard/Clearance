@@ -7,7 +7,7 @@ import homeIcon from '../../assets/home.png';
 import requestIcon from '../../assets/bnotes.png';
 import clearedtoggle from '../../assets/clearedtoggle.svg';
 import pendingtoggle from '../../assets/pendingtoggle.svg';
-import avatar from '../../assets/avatar.png';
+import avatar from '../../assets/avatar2.png';
 
 const AdviserClearanceRequest = () => {
     const [clearanceRequests, setClearanceRequests] = useState([]);
@@ -55,21 +55,36 @@ const AdviserClearanceRequest = () => {
 
     const fetchClearanceRequests = async () => {
         try {
-            const departmentId = 1;
             const token = localStorage.getItem('token');
+            const adviserId = localStorage.getItem('userId');
+    
+            const adviserResponse = await axios.get(`http://localhost:8080/Adviser/advisers/${adviserId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const adviserCourse = adviserResponse.data?.course?.courseName;
+    
+            if (!adviserCourse) {
+                console.error("Adviser course not found.");
+                return;
+            }
+    
+            const departmentId = 1;
             const requestResponse = await axios.get(`http://localhost:8080/Requests/department/${departmentId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
     
             const requestsData = requestResponse.data || [];
+    
+            const filteredRequestsByCourse = requestsData.filter(request => {
+                return request.student?.course?.courseName === adviserCourse;
+            });
+    
             const requestsWithRemarks = await Promise.all(
-                requestsData.map(async (request) => {
+                filteredRequestsByCourse.map(async (request) => {
                     try {
                         const remarksResponse = await axios.get(`http://localhost:8080/Status/${request.id}`, {
                             headers: { 'Authorization': `Bearer ${token}` }
                         });
-
-                        console.log(`Request ID ${request.id} status fetched:`, remarksResponse.data?.status);
                         return { ...request, remarks: remarksResponse.data?.remarks || '', status: remarksResponse.data?.status };
                     } catch (error) {
                         console.error(`Error fetching remarks for request ${request.id}:`, error);

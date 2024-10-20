@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from '../../styles/DepartmentDashboard.module.css';
 import dashIcon from '../../assets/bhome.png';
 import requestIcon from '../../assets/notes.png';
-import avatar from '../../assets/avatar.png';
+import avatar from '../../assets/avatar2.png';
 
 const StudentDisciplineDashboard = () => {
     const [currentSemester, setCurrentSemester] = useState("Loading...");
@@ -47,23 +47,36 @@ const StudentDisciplineDashboard = () => {
 
     const fetchCounts = async () => {
         try {
-            const departmentId = 12;
             const token = localStorage.getItem('token');
-            const clearanceResponse = await axios.get(`http://localhost:8080/Requests/count?departmentId=${departmentId}`, {
+            const prefectId = localStorage.getItem('userId');
+
+            const prefectResponse = await axios.get(`http://localhost:8080/Prefect/prefects/${prefectId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            const statusCountsResponse = await axios.get(`http://localhost:8080/Status/department/${departmentId}/status-counts`, {
+            const departmentId = 12;
+            const disciplineCluster = prefectResponse.data?.section?.clusterName;
+
+            if (!disciplineCluster) {
+                console.error("Coordinator cluster not found.");
+                return;
+            }
+
+            const clearanceResponse = await axios.get(`http://localhost:8080/Requests/department/${departmentId}/cluster?clusterName=${disciplineCluster}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const statusCountsResponse = await axios.get(`http://localhost:8080/Status/department/cluster/${departmentId}/status-counts?clusterName=${disciplineCluster}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
             setCounts({
-                clearanceRequests: clearanceResponse.data,
+                clearanceRequests: clearanceResponse.data.length,
                 cleared: statusCountsResponse.data.cleared,
                 pending: statusCountsResponse.data.pending,
                 remarks: counts.remarks
             });
         } catch (error) {
-            console.error("Error fetching data:", error);
+            console.error("Error fetching prefect data or counts:", error);
         }
     };
 
@@ -84,11 +97,11 @@ const StudentDisciplineDashboard = () => {
                 <div className={styles.logoContainer}>
                 </div>
                 <nav className={styles.nav}>
-                    <button className={styles.whiteButton} onClick={() => navigate('/cashier-dashboard')}>
+                    <button className={styles.whiteButton} onClick={() => navigate('/discipline-dashboard')}>
                         <img src={dashIcon} alt="Dashboard" className={styles.navIcon} />
                         Dashboard
                     </button>
-                    <button className={styles.ghostButton} onClick={() => navigate('/cashier-clearance-request')}>
+                    <button className={styles.ghostButton} onClick={() => navigate('/discipline-clearance-request')}>
                         <img src={requestIcon} alt="Clearance Request" className={styles.navIcon} />
                         Clearance Request
                     </button>

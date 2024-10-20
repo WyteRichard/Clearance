@@ -18,7 +18,15 @@ public interface ClearanceStatusRepository extends JpaRepository<ClearanceStatus
     @Query("SELECT cs FROM ClearanceStatus cs WHERE cs.student.studentNumber = :studentNumber")
     List<ClearanceStatus> findByStudentNumber(String studentNumber);
 
+    @Query("SELECT COUNT(cs) FROM ClearanceStatus cs WHERE cs.clearanceRequest.department.id = :departmentId AND cs.student.course.courseName = :courseName AND cs.status = :status")
+    int countByDepartmentIdAndCourseAndStatus(Long departmentId, String courseName, ClearanceStatus.Status status);
+
+    @Query("SELECT COUNT(cs) FROM ClearanceStatus cs WHERE cs.clearanceRequest.department.id = :departmentId AND cs.student.section.clusterName = :clusterName AND cs.status = :status")
+    int countByDepartmentIdAndClusterAndStatus(Long departmentId, String clusterName, ClearanceStatus.Status status);
+
+
     int countByClearanceRequest_Department_IdAndStatus(Long departmentId, ClearanceStatus.Status status);
 
     void deleteByClearanceRequest(ClearanceRequest clearanceRequest);
+
 }

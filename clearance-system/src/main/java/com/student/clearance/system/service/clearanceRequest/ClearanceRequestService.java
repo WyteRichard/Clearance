@@ -27,5 +27,11 @@ public interface ClearanceRequestService {
 
     void deleteAllClearanceRequestsAndStatusesByStudentNumber(String studentNumber);
 
+    List<ClearanceRequest> getClearanceRequestsByDepartmentAndCourse(Long departmentId, String courseName);
+
+    List<ClearanceRequest> getClearanceRequestsByDepartmentAndCluster(Long departmentId, String clusterName);
+
+    List<ClearanceRequest> getClearanceRequestsByStudentIdAndDepartmentId(Long studentId, Long departmentId);
+
 
 }

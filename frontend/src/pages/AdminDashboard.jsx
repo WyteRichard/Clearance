@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import homeIcon from '../assets/bhome.png';
 import requestIcon from '../assets/dept.png';
 import userIcon from '../assets/user.png';
-import avatar from '../assets/avatar.png';
+import avatar from '../assets/avatar2.png';
 import checkIcon from '../assets/check.png';
 import announcementIcon from '../assets/announcement.png';
 import styles from '../styles/AdminDashboard.module.css';
@@ -49,39 +49,137 @@ const AdminDashboard = () => {
     }, []);
 
     const fetchCounts = () => {
-        const endpoints = [
-            { url: 'http://localhost:8080/Adviser/advisers/count', setState: setAdviserCount },
-            { url: 'http://localhost:8080/Cashier/cashiers/count', setState: setCashierCount },
-            { url: 'http://localhost:8080/Clinic/clinics/count', setState: setClinicCount },
-            { url: 'http://localhost:8080/Cluster/coordinators/count', setState: setClusterCoordinatorCount },
-            { url: 'http://localhost:8080/Dean/deans/count', setState: setDeanCount },
-            { url: 'http://localhost:8080/Guidance/guidances/count', setState: setGuidanceCount },
-            { url: 'http://localhost:8080/Laboratory/laboratories/count', setState: setLaboratoryCount },
-            { url: 'http://localhost:8080/Library/libraries/count', setState: setLibraryCount },
-            { url: 'http://localhost:8080/Registrar/registrars/count', setState: setRegistrarCount },
-            { url: 'http://localhost:8080/Spiritual/affairs/count', setState: setSpiritualAffairsCount },
-            { url: 'http://localhost:8080/Student/affairs/count', setState: setStudentAffairsCount },
-            { url: 'http://localhost:8080/Prefect/prefects/count', setState: setPrefectCount },
-            { url: 'http://localhost:8080/Council/councils/count', setState: setCouncilCount }
-        ];
-
-        Promise.all(endpoints.map(({ url, setState }) =>
-            axios.get(url, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
-                .then(response => setState(response.data))
-                .catch(() => setError("Failed to fetch some department accounts."))
-        ))
-        .then(() => {
-            const totalAccounts = [adviserCount, cashierCount, clinicCount, clusterCoordinatorCount, deanCount, guidanceCount, laboratoryCount, libraryCount, registrarCount, spiritualAffairsCount, studentAffairsCount, prefectCount, councilCount]
-                .reduce((total, count) => total + count, 0);
+        let totalAccounts = 0;
+        
+        const updateTotalAccounts = (count) => {
+            totalAccounts += count;
             setDepartmentsAccounts(totalAccounts);
-        });
-
+        };
+    
+        axios.get('http://localhost:8080/Adviser/advisers/count', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            setAdviserCount(response.data);
+            updateTotalAccounts(response.data);
+        })
+        .catch(() => setError("Failed to fetch adviser count."));
+    
+        axios.get('http://localhost:8080/Cashier/cashiers/count', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            setCashierCount(response.data);
+            updateTotalAccounts(response.data);
+        })
+        .catch(() => setError("Failed to fetch cashier count."));
+    
+        axios.get('http://localhost:8080/Clinic/clinics/count', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            setClinicCount(response.data);
+            updateTotalAccounts(response.data);
+        })
+        .catch(() => setError("Failed to fetch clinic count."));
+    
+        axios.get('http://localhost:8080/Cluster/coordinators/count', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            setClusterCoordinatorCount(response.data);
+            updateTotalAccounts(response.data);
+        })
+        .catch(() => setError("Failed to fetch cluster coordinator count."));
+    
+        axios.get('http://localhost:8080/Dean/deans/count', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            setDeanCount(response.data);
+            updateTotalAccounts(response.data);
+        })
+        .catch(() => setError("Failed to fetch dean count."));
+    
+        axios.get('http://localhost:8080/Guidance/guidances/count', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            setGuidanceCount(response.data);
+            updateTotalAccounts(response.data);
+        })
+        .catch(() => setError("Failed to fetch guidance count."));
+    
+        axios.get('http://localhost:8080/Laboratory/laboratories/count', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            setLaboratoryCount(response.data);
+            updateTotalAccounts(response.data);
+        })
+        .catch(() => setError("Failed to fetch laboratory count."));
+    
+        axios.get('http://localhost:8080/Library/libraries/count', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            setLibraryCount(response.data);
+            updateTotalAccounts(response.data);
+        })
+        .catch(() => setError("Failed to fetch library count."));
+    
+        axios.get('http://localhost:8080/Registrar/registrars/count', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            setRegistrarCount(response.data);
+            updateTotalAccounts(response.data);
+        })
+        .catch(() => setError("Failed to fetch registrar count."));
+    
+        axios.get('http://localhost:8080/Spiritual/affairs/count', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            setSpiritualAffairsCount(response.data);
+            updateTotalAccounts(response.data);
+        })
+        .catch(() => setError("Failed to fetch spiritual affairs count."));
+    
+        axios.get('http://localhost:8080/Student/affairs/count', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            setStudentAffairsCount(response.data);
+            updateTotalAccounts(response.data);
+        })
+        .catch(() => setError("Failed to fetch student affairs count."));
+    
+        axios.get('http://localhost:8080/Prefect/prefects/count', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            setPrefectCount(response.data);
+            updateTotalAccounts(response.data);
+        })
+        .catch(() => setError("Failed to fetch prefect count."));
+    
+        axios.get('http://localhost:8080/Council/councils/count', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            setCouncilCount(response.data);
+            updateTotalAccounts(response.data);
+        })
+        .catch(() => setError("Failed to fetch council count."));
+    
         axios.get('http://localhost:8080/Student/students/count', {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
         .then(response => setStudentsCount(response.data))
         .catch(() => setError("Failed to fetch students count."));
     };
+        
 
     const fetchSemesterData = () => {
         axios.get('http://localhost:8080/Admin/semester/current', {
@@ -96,13 +194,13 @@ const AdminDashboard = () => {
                 localStorage.setItem('currentSemester', currentSemester);
                 localStorage.setItem('currentAcademicYear', academicYear);
             } else {
-                setCurrentSemester(""); // Ensure placeholders are shown if data is missing
+                setCurrentSemester("");
                 setCurrentAcademicYear("");
             }
         })
         .catch(() => {
             setError("Failed to fetch semester data.");
-            setCurrentSemester(""); // Ensure placeholders are shown on error
+            setCurrentSemester("");
             setCurrentAcademicYear("");
         });
     };

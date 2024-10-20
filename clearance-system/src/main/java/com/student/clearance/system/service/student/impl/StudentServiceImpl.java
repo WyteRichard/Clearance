@@ -6,12 +6,7 @@ import com.student.clearance.system.service.student.StudentService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,10 +52,8 @@ public class StudentServiceImpl implements StudentService {
             throw new RuntimeException("Student not found with student number: " + studentNumber);
         }
 
-        // Here, add deletion logic for related entities based on foreign key dependencies.
-        // You will need to delete records from each related entity that references the student.
+        // Add deletion logic for related entities based on foreign key dependencies if necessary
 
-        // Finally, delete the student record.
         studentRepository.delete(student);
     }
 
@@ -98,26 +91,5 @@ public class StudentServiceImpl implements StudentService {
 
         // Save the updated student back to the database
         return studentRepository.save(existingStudent);
-    }
-
-    @Override
-    public String saveProfileImage(MultipartFile profileImage) {
-        try {
-            String uploadDir = "src/main/resources/static/uploads/";
-            Path uploadPath = Paths.get(uploadDir);
-
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            String filename = System.currentTimeMillis() + "_" + profileImage.getOriginalFilename();
-            Path filePath = uploadPath.resolve(filename);
-            Files.write(filePath, profileImage.getBytes());
-
-            // Return just the filename for serving it later
-            return filename;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to store image", e);
-        }
     }
 }

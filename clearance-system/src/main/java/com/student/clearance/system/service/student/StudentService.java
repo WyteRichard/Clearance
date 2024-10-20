@@ -1,7 +1,6 @@
 package com.student.clearance.system.service.student;
 
 import com.student.clearance.system.domain.student.Student;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +13,4 @@ public interface StudentService {
     Student addStudent(Student student);
     void deleteStudentByStudentNumber(String studentNumber);
     int getStudentCount();
-
-    String saveProfileImage(MultipartFile profileImage);
 }
