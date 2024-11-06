@@ -9,7 +9,9 @@ import java.util.List;
 
 @Repository
 public interface LaboratoryRepository extends JpaRepository<Laboratory, Long> {
-    boolean existsByLaboratoryNumberAndEmail(String employeeNumber, String email);
+    boolean existsByLaboratoryNumberAndEmail(String laboratoryNumber, String email);
+
+    boolean existsByLaboratoryNumber(String laboratoryNumber);
 
     Laboratory findByLaboratoryNumber(String laboratoryNumber);
 

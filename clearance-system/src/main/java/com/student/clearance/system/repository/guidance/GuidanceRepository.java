@@ -6,7 +6,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface GuidanceRepository extends JpaRepository<Guidance, Long> {
-    boolean existsByGuidanceNumberAndEmail(String employeeNumber, String email);
+    boolean existsByGuidanceNumberAndEmail(String guidanceNumber, String email);
+
+    boolean existsByGuidanceNumber(String guidanceNumber);
 
     Guidance findByGuidanceNumber(String guidanceNumber);
 }

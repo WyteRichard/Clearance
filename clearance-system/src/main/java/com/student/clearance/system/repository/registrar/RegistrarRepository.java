@@ -6,7 +6,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RegistrarRepository extends JpaRepository<Registrar, Long> {
-    boolean existsByRegistrarNumberAndEmail(String employeeNumber, String email);
+    boolean existsByRegistrarNumberAndEmail(String registrarNumber, String email);
+
+    boolean existsByRegistrarNumber(String registrarNumber);
 
     Registrar findByRegistrarNumber(String registrarNumber);
 }

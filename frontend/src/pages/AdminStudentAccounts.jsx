@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import styles from '../styles/AdminStudentAccounts.module.css';
 import homeIcon from "../assets/home.png";
 import requestIcon from "../assets/dept.png";
+import checkIcon from '../assets/check.png';
+import errorIcon from '../assets/error.png';
 import userIcon from "../assets/buser.png";
 import deleteIcon from "../assets/delete.svg";
 import announcementIcon from '../assets/announcement.png';
@@ -26,19 +28,25 @@ const ConfirmationModal = ({ isOpen, message, onConfirm, onCancel }) => {
 };
 
 const AdminStudentAccounts = () => {
+    const [alertMessage, setAlertMessage] = useState(null);
+    const [alertType, setAlertType] = useState('success');
     const [students, setStudents] = useState([]);
     const [searchName, setSearchName] = useState("");
     const [searchYearLevel, setSearchYearLevel] = useState("");
     const [searchCourse, setSearchCourse] = useState("");
     const [courses, setCourses] = useState([]);
+    const [searchRegistrationStatus, setSearchRegistrationStatus] = useState("");
     const [yearLevels, setYearLevels] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [currentSemester, setCurrentSemester] = useState("Loading...");
     const [currentAcademicYear, setCurrentAcademicYear] = useState("Loading...");
+    const [logins, setLogins] = useState([]);
     const navigate = useNavigate();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedStudentNumber, setSelectedStudentNumber] = useState(null);
+    const [clearanceStatuses, setClearanceStatuses] = useState({});
+    const [openClearanceRow, setOpenClearanceRow] = useState(null);
 
     useEffect(() => {
         const role = localStorage.getItem('role');
@@ -48,15 +56,23 @@ const AdminStudentAccounts = () => {
         if (!role || !exp || exp * 1000 < currentTime) {
             handleLogout();
         } else if (role !== "ROLE_ROLE_ADMIN") {
-            alert("Unauthorized access. Redirecting to login.");
+            showAlert("Unauthorized access. Redirecting to login.");
             handleLogout();
         } else {
             fetchStudentData();
             fetchCourseData();
             fetchYearLevelData();
             fetchSemesterData();
+            fetchLoginData();
         }
     }, []);
+
+    useEffect(() => {
+        if (students.length > 0 && logins.length > 0) {
+            const updatedStudents = checkRegistrationStatus(students, logins);
+            setStudents(updatedStudents);
+        }
+    }, [students, logins]);
 
     const fetchStudentData = async () => {
         try {
@@ -67,6 +83,12 @@ const AdminStudentAccounts = () => {
         } catch (error) {
             console.error("There was an error fetching the student data!", error);
         }
+    };
+
+    const showAlert = (message, type) => {
+        setAlertMessage(message);
+        setAlertType(type);
+        setTimeout(() => setAlertMessage(null), 3000);
     };
 
     const fetchCourseData = async () => {
@@ -103,6 +125,28 @@ const AdminStudentAccounts = () => {
         }
     };
 
+    const fetchLoginData = async () => {
+        try {
+            const response = await axios.get("http://localhost:8080/user/list", {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            setLogins(response.data);
+        } catch (error) {
+            console.error("There was an error fetching the login data!", error);
+        }
+    };
+    
+
+    const checkRegistrationStatus = (students, logins) => {
+        return students.map(student => {
+            const isRegistered = logins.some(login => login.userId === student.studentNumber);
+            return {
+                ...student,
+                registrationStatus: isRegistered ? "Registered" : "Not Registered"
+            };
+        });
+    };
+
     const handleDeleteClick = (studentNumber) => {
         setSelectedStudentNumber(studentNumber);
         setIsModalOpen(true);
@@ -112,15 +156,20 @@ const AdminStudentAccounts = () => {
         if (!selectedStudentNumber) return;
     
         console.log("Attempting to delete all related clearance requests and statuses for student:", selectedStudentNumber);
-        
+    
         axios.delete(`http://localhost:8080/Requests/student/${selectedStudentNumber}/all`, {
             headers: { 
                 'Authorization': `Bearer ${localStorage.getItem('token')}` 
             }
         })
+        .catch((error) => {
+            if (error.response && error.response.status === 404) {
+                console.log("No related clearance requests or statuses found for deletion. Proceeding to delete the student.");
+            } else {
+                console.error("Error deleting clearance requests and statuses:", error.response || error.message);
+            }
+        })
         .then(() => {
-            console.log("Related clearance requests and statuses deleted successfully. Proceeding to delete the student.");
-    
             return axios.delete(`http://localhost:8080/Student/student/${selectedStudentNumber}`, {
                 headers: { 
                     'Authorization': `Bearer ${localStorage.getItem('token')}` 
@@ -129,18 +178,18 @@ const AdminStudentAccounts = () => {
         })
         .then(() => {
             setStudents(students.filter(student => student.studentNumber !== selectedStudentNumber));
-            alert("Student and all related records deleted successfully!");
+            showAlert("Student and all related records deleted successfully!", 'success');
         })
         .catch((error) => {
             if (error.response) {
                 console.error("Server responded with error:", error.response);
-                alert(`Error deleting the student or related records: ${error.response.data.message || error.response.status}`);
+                showAlert(`Error deleting the student: ${error.response.data.message || error.response.status}`);
             } else if (error.request) {
                 console.error("No response received:", error.request);
-                alert("No response from server. Please check the network or server status.");
+                showAlert("No response from server. Please check the network or server status.");
             } else {
                 console.error("Error setting up request:", error.message);
-                alert("Error setting up the delete request.");
+                showAlert("Error setting up the delete request.");
             }
         })
         .finally(() => {
@@ -148,6 +197,28 @@ const AdminStudentAccounts = () => {
             setSelectedStudentNumber(null);
         });
     };
+
+    const fetchClearanceStatuses = async (studentId) => {
+        try {
+            const response = await axios.get(`http://localhost:8080/Status/student/${studentId}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const statuses = Object.values(response.data);
+            setClearanceStatuses(prev => ({ ...prev, [studentId]: statuses }));
+        } catch (error) {
+            console.error("Error fetching clearance statuses", error);
+        }
+    };
+
+    const toggleClearanceRow = (student) => {
+        if (openClearanceRow === student.studentNumber) {
+            setOpenClearanceRow(null);
+        } else {
+            fetchClearanceStatuses(student.studentNumber);
+            setOpenClearanceRow(student.studentNumber);
+        }
+    };
+
 
     const handleDeleteCancel = () => {
         setIsModalOpen(false);
@@ -161,12 +232,14 @@ const AdminStudentAccounts = () => {
         navigate('/login');
     };
 
-    const filteredStudents = students.filter(student => {
+    const filteredStudents = checkRegistrationStatus(students, logins).filter(student => {
         const nameMatch = `${student.firstName} ${student.middleName} ${student.lastName}`.toLowerCase().includes(searchName.toLowerCase());
         const yearMatch = searchYearLevel === "" || student.yearLevel?.yearLevel === searchYearLevel;
         const courseMatch = searchCourse === "" || student.course?.courseName === searchCourse;
-        return nameMatch && yearMatch && courseMatch;
+        const registrationMatch = searchRegistrationStatus === "" || student.registrationStatus === searchRegistrationStatus;
+        return nameMatch && yearMatch && courseMatch && registrationMatch;
     });
+    
 
     const toggleModal = () => setShowModal(!showModal);
 
@@ -213,6 +286,23 @@ const AdminStudentAccounts = () => {
                     </div>
                 </div>
 
+
+                {alertMessage && (
+                    <div className={`${styles.alert} ${styles[alertType]}`}>
+                        <div className={styles.alertTopBar}></div>
+                            <div className={styles.alertContent}>
+                                <img 
+                                src={alertType === 'error' ? errorIcon : checkIcon}
+                                alt={alertType === 'error' ? 'Error' : 'Success'} 
+                                className={styles.alertIcon} 
+                                />
+                            <span>{alertMessage}</span>
+                        <button className={styles.closeButton} onClick={() => setAlertMessage(null)}>×</button>
+                    </div>
+                </div>
+                )}
+
+
                 <div className={styles.filterContainer}>
                     <div className={styles.inputBox}>
                         <input
@@ -251,51 +341,96 @@ const AdminStudentAccounts = () => {
                             ))}
                         </select>
                     </div>
+                    <div className={styles.inputBox}>
+                        <select
+                            className={styles.searchInput}
+                            value={searchRegistrationStatus}
+                            onChange={(e) => setSearchRegistrationStatus(e.target.value)}
+                        >
+                            <option value="">All Statuses</option>
+                            <option value="Registered">Registered</option>
+                            <option value="Not Registered">Not Registered</option>
+                        </select>
+                    </div>
                 </div>
 
-                <table className={styles.clearanceTable}>
-                    <thead>
-                        <tr>
-                            <th>Student ID</th>
-                            <th>Name</th>
-                            <th>Course</th>
-                            <th>Year Level</th>
-                            <th>Address</th>
-                            <th>Contact Number</th>
-                            <th>Email</th>
-                            <th>Birthday</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredStudents.length > 0 ? (
-                            filteredStudents.map((student) => (
-                                <tr key={student.id}>
-                                    <td>{student.studentNumber || "N/A"}</td>
-                                    <td>{`${student.firstName || ""} ${student.middleName || ""} ${student.lastName || ""}`}</td>
-                                    <td>{student.course?.courseName || "N/A"}</td>
-                                    <td>{student.yearLevel?.yearLevel || "N/A"}</td>
-                                    <td>{student.address || "N/A"}</td>
-                                    <td>{student.contactNumber || "N/A"}</td>
-                                    <td>{student.email || "N/A"}</td>
-                                    <td>{student.birthdate ? new Date(student.birthdate).toLocaleDateString() : "N/A"}</td>
-                                    <td>
-                                        <img
-                                            src={deleteIcon}
-                                            alt="delete"
-                                            className={styles.actionIcon}
-                                            onClick={() => handleDeleteClick(student.studentNumber)}
-                                        />
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
+                <div className={styles.tableContainer}>
+                    <table className={styles.clearanceTable}>
+                        <thead>
                             <tr>
-                                <td colSpan="9">No students found.</td>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Course</th>
+                                <th>Year Level</th>
+                                <th>Address</th>
+                                <th>Contact Number</th>
+                                <th>Email</th>
+                                <th>Birthday</th>
+                                <th>Registration Status</th>
+                                <th>Actions</th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {filteredStudents.length > 0 ? (
+                                filteredStudents.map((student) => (
+                                    <React.Fragment key={student.studentNumber}>
+                                        <tr onClick={() => toggleClearanceRow(student)}>
+                                            <td>{student.studentNumber || "N/A"}</td>
+                                            <td>{`${student.firstName || ""} ${student.middleName || ""} ${student.lastName || ""}`}</td>
+                                            <td>{student.course?.courseName || "N/A"}</td>
+                                            <td>{student.yearLevel?.yearLevel || "N/A"}</td>
+                                            <td>{student.address || "N/A"}</td>
+                                            <td>{student.contactNumber || "N/A"}</td>
+                                            <td>{student.email || "N/A"}</td>
+                                            <td>{student.birthdate ? new Date(student.birthdate).toLocaleDateString() : "N/A"}</td>
+                                            <td>{student.registrationStatus}</td>
+                                            <td>
+                                                <img
+                                                    src={deleteIcon}
+                                                    alt="delete"
+                                                    className={styles.actionIcon}
+                                                    onClick={() => handleDeleteClick(student.studentNumber)}
+                                                />
+                                            </td>
+                                        </tr>
+                                        {openClearanceRow === student.studentNumber && (
+                                            <tr>
+                                                <td colSpan="10">
+                                                    <table className={styles.clearanceTable}>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Department</th>
+                                                                <th>Status</th>
+                                                                <th>Remarks</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {clearanceStatuses[student.studentNumber] ? clearanceStatuses[student.studentNumber].map(status => (
+                                                                <tr key={status.clearanceType}>
+                                                                    <td>{status.department}</td>
+                                                                    <td>{status.status}</td>
+                                                                    <td>{status.remarks || "N/A"}</td>
+                                                                </tr>
+                                                            )) : (
+                                                                <tr>
+                                                                    <td colSpan="3">No clearance request has been submitted...</td>
+                                                                </tr>
+                                                            )}
+                                                        </tbody>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </React.Fragment>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="10">No students found.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <ConfirmationModal

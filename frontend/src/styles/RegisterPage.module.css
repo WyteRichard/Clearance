@@ -65,6 +65,24 @@
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+.errorMessage {
+  color: red;
+  font-size: 0.8em;
+  margin-top: 0.5em;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
 .inputField:focus {
   border-color: #1669EF;
 }
@@ -82,7 +100,6 @@
   appearance: none;
   padding-right: 40px;
   background: white;
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>'); /* Optional custom icon */
   background-repeat: no-repeat;
   background-position: right 15px center
 }
@@ -180,3 +197,32 @@
     margin-bottom: 10px;
   }
 }
+
+.modal {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modalContent {
+  background-color: #1d9bf0;
+  padding: 15px;
+  border-radius: 3px;
+  width: 100%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.modalContent p {
+  font-size: 1em;
+  margin-bottom: 0px;
+  color: #ffffff;
+}
+

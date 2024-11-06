@@ -5,11 +5,9 @@ import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import * as FileSystem from 'expo-file-system';
 import * as Print from 'expo-print';
-import { Asset } from 'expo-asset';
 
-const ClearanceStatus = () => {
+const StudentClearanceStatus = () => {
   const [clearanceStatuses, setClearanceStatuses] = useState([]);
   const [filteredStatuses, setFilteredStatuses] = useState([]);
   const [statusFilter, setStatusFilter] = useState('');
@@ -49,13 +47,13 @@ const ClearanceStatus = () => {
   const fetchStudentData = async (userId, token) => {
     setLoading(true);
     try {
-      const semesterResponse = await axios.get('http://192.168.1.19:8080/Admin/semester/current', {
+      const semesterResponse = await axios.get('https://amused-gnu-legally.ngrok-free.app/Admin/semester/current', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCurrentSemester(semesterResponse.data.currentSemester || 'N/A');
       setCurrentAcademicYear(semesterResponse.data.academicYear || 'N/A');
 
-      const studentResponse = await axios.get(`http://192.168.1.19:8080/Student/students/${userId}`, {
+      const studentResponse = await axios.get(`https://amused-gnu-legally.ngrok-free.app/Student/students/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const studentData = studentResponse.data;
@@ -65,7 +63,7 @@ const ClearanceStatus = () => {
       setStudentNumber(studentData.studentNumber || 'N/A');
       setSectionName(studentData.section?.sectionName || 'N/A');
 
-      const statusResponse = await axios.get(`http://192.168.1.19:8080/Status/student/${userId}`, {
+      const statusResponse = await axios.get(`https://amused-gnu-legally.ngrok-free.app/Status/student/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -97,25 +95,31 @@ const ClearanceStatus = () => {
   };
 
   const handlePrint = async () => {
-    const logoAsset = Asset.fromModule(require('../../assets/images/logo.png'));
-    await logoAsset.downloadAsync();
-    const logoUri = logoAsset.localUri || logoAsset.uri;
-    const logoBase64 = await FileSystem.readAsStringAsync(logoUri, { encoding: FileSystem.EncodingType.Base64 });
+    const currentDate = new Date();
+    const formattedDate = `${currentDate.toLocaleDateString()} ${currentDate.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+    })}`;
 
     const htmlContent = `
       <html>
       <head>
         <style>
-          body { font-family: Arial, sans-serif; text-align: center; }
-          .logo { width: 250px; margin-bottom: 10px; }
+          body { font-family: Arial, sans-serif; text-align: center; position: relative; }
+          .date { font-size: small; color: #555; position: absolute; top: 10px; left: 10px; }
           .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
           .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
           .table th { background-color: #f2f2f2; }
         </style>
       </head>
       <body>
-        <img src="data:image/png;base64,${logoBase64}" class="logo" alt="Logo" />
-        <h1>Student Clearance</h1>
+        <div class="date">${formattedDate}</div> <!-- Date positioned top left -->
+        <h1 style="margin: 3;">Rogationist College</h1>
+        <p style="margin: 0;">Km. 53 Aguinaldo Highway, Lalaan II, Silang Cavite, 4118</p>
+        <p style="margin: 0;">Tel. No.: (046) 423-8677 / 423 - 8470</p>
+        <h1>STUDENT CLEARANCE</h1>
         <p>Academic Year: ${currentAcademicYear}</p>
         <p>Semester: ${currentSemester.replace('_', ' ')}</p>
         <h2>${studentFirstName} ${studentMiddleName} ${studentLastName}</h2>
@@ -145,11 +149,13 @@ const ClearanceStatus = () => {
     `;
 
     try {
-      await Print.printAsync({ html: htmlContent });
+        await Print.printAsync({ html: htmlContent });
+        console.log("Print modal should open");
     } catch (error) {
-      Alert.alert('Error', 'Could not print the document');
+        console.error('Print Error:', error);
+        Alert.alert('Error', 'Could not print the document');
     }
-  };
+};
 
   const handleLogout = async () => {
     await AsyncStorage.clear();
@@ -267,7 +273,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   header: {
-    marginTop: 20,
+    marginTop: 0,
     marginBottom: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -334,6 +340,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: 20,
   },
   tableContainer: {
     backgroundColor: 'white',
@@ -341,6 +348,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: 'hidden',
     padding: 10,
+    flex: 1,
+    maxHeight: '85%',
   },
   tableHeader: {
     flexDirection: 'row',
@@ -355,7 +364,8 @@ const styles = StyleSheet.create({
   },
   tableContent: {
     flexGrow: 1,
-    maxHeight: 500,
+    maxHeight: 400,
+    width: '100%',
   },
   tableRow: {
     flexDirection: 'row',
@@ -397,4 +407,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ClearanceStatus;
+export default StudentClearanceStatus;

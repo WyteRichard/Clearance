@@ -215,7 +215,7 @@ useEffect(() => {
                         <img src={homeIcon} alt="Dashboard" className={styles.navIcon} />
                         Dashboard
                     </button>
-                    <button className={styles.whiteButton} onClick={() => navigate('/guidance-request-clearance')}>
+                    <button className={styles.whiteButton} onClick={() => navigate('/guidance-clearance-request')}>
                         <img src={requestIcon} alt="Clearance Request" className={styles.navIcon} />
                         Clearance Request
                     </button>

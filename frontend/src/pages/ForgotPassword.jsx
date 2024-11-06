@@ -16,20 +16,51 @@ const ForgotPassword = () => {
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [errors, setErrors] = useState({});
   const [showOtpAndPassword, setShowOtpAndPassword] = useState(false);
+  const [shake, setShake] = useState(false);
+  const [passwordChecked, setPasswordChecked] = useState(false);
+  const [alertMessage, setAlertMessage] = useState(''); // State for alert message
+  const [showAlert, setShowAlert] = useState(false); // State for alert visibility
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'username') {
       setUsername(value);
-      if (/[^a-zA-Z0-9]/.test(value)) {
-        setErrors({ ...errors, username: 'Username must be alphanumeric.' });
-      } else {
-        setErrors({ ...errors, username: '' });
-      }
     } else if (name === 'otp') {
       setOtp(value);
     } else if (name === 'newPassword') {
       setNewPassword(value);
+      setPasswordChecked(false);
+    }
+  };
+
+  const validatePassword = (password) => {
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters.';
+    }
+
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChars = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChars) {
+      return 'Your password is weak. Please include a mix of uppercase, lowercase, numbers, and special characters.';
+    }
+
+    return ''; // No error
+  };
+
+  const handlePasswordBlur = () => {
+    setPasswordChecked(true);
+    const validationError = validatePassword(newPassword);
+    if (validationError) {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        newPassword: validationError,
+      }));
+    } else {
+      setErrors((prevErrors) => ({ ...prevErrors, newPassword: '' }));
     }
   };
 
@@ -37,44 +68,113 @@ const ForgotPassword = () => {
     e.preventDefault();
     setErrors({});
     setIsButtonDisabled(true);
+    setIsLoading(true);
 
     if (!showOtpAndPassword) {
-      if (!username || /[^a-zA-Z0-9]/.test(username)) {
-        setErrors({ ...errors, username: 'Please enter a valid alphanumeric username.' });
+      if (!username) {
+        setErrors({ ...errors, username: 'Please put your Username.' });
+        showAlertMessage('Please put your Username.');
+        setShake(true); // Trigger shake effect
         setIsButtonDisabled(false);
+        setIsLoading(false);
         return;
       }
+
+      if (/[^a-zA-Z0-9]/.test(username)) {
+        setErrors({ ...errors, username: 'Username must be alphanumeric.' });
+        showAlertMessage('Username must be alphanumeric.');
+        setShake(true); // Trigger shake effect
+        setIsButtonDisabled(false);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const response = await axios.post('http://localhost:8080/user/forgot-password', { username });
         if (response.status === 200) {
           setShowOtpAndPassword(true);
         } else {
-          setErrors({ form: 'Failed to send OTP. Please try again.' });
+          showAlertMessage('Failed to send OTP. Please check your username and try again.');
         }
       } catch (error) {
-        setErrors({ form: error.response?.data?.message || 'An error occurred.' });
+        if (error.response?.status === 404) {
+          setErrors({ ...errors, username: 'Username does not exist. Please try again.' });
+          showAlertMessage('Username does not exist. Please try again.');
+          setShake(true); // Trigger shake effect
+        } else {
+          showAlertMessage(error.response?.data?.message || 'An error occurred.');
+        }
       } finally {
         setIsButtonDisabled(false);
+        setIsLoading(false);
       }
     } else {
       if (!otp || !newPassword) {
-        setErrors({ otp: !otp ? 'OTP is required' : '', newPassword: !newPassword ? 'Password is required' : '' });
+        if (!otp) {
+          setErrors((prevErrors) => ({ ...prevErrors, otp: 'OTP is required' }));
+        }
+        if (!newPassword) {
+          setErrors((prevErrors) => ({ ...prevErrors, newPassword: 'Password is required' }));
+        }
+        showAlertMessage('Both OTP and New Password are required.');
+        setShake(true); // Trigger shake effect
         setIsButtonDisabled(false);
+        setIsLoading(false);
         return;
       }
+
+      const validationError = validatePassword(newPassword);
+      if (validationError) {
+        setErrors((prevErrors) => ({ ...prevErrors, newPassword: validationError }));
+        showAlertMessage(validationError);
+        setShake(true); // Trigger shake effect
+        setIsButtonDisabled(false);
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const response = await axios.post('http://localhost:8080/user/verify-forgot-password', { username, otp, password: newPassword });
+        const response = await axios.post('http://localhost:8080/user/verify-forgot-password', {
+          username,
+          otp,
+          password: newPassword,
+        });
+
         if (response.status === 200) {
           navigate('/Login');
         } else {
-          setErrors({ form: 'Failed to reset password. Please try again.' });
+          setErrors((prevErrors) => ({ ...prevErrors, otp: 'Incorrect OTP code.' }));
+          showAlertMessage('Incorrect OTP code.');
+          setShake(true); // Trigger shake effect
         }
       } catch (error) {
-        setErrors({ form: error.response?.data?.message || 'An error occurred.' });
+        if (error.response) {
+          if (error.response?.status === 400 || error.response?.status === 401) {
+            setErrors((prevErrors) => ({ ...prevErrors, otp: 'Incorrect OTP code.' }));
+            showAlertMessage('Incorrect OTP code.');
+            setShake(true); // Trigger shake effect
+          } else {
+            setErrors((prevErrors) => ({ ...prevErrors, otp: 'An error occurred while verifying OTP.' }));
+            showAlertMessage('An error occurred while verifying OTP.');
+            setShake(true); // Trigger shake effect
+          }
+        } else {
+          showAlertMessage('An unexpected error occurred.');
+        }
       } finally {
         setIsButtonDisabled(false);
+        setIsLoading(false);
       }
     }
+  };
+
+  const showAlertMessage = (message) => {
+    setAlertMessage(message);
+    setShowAlert(true);
+    setTimeout(() => {
+      setShowAlert(false);
+      setAlertMessage('');
+    }, 4000); // Automatically close alert after 4 seconds
   };
 
   const togglePasswordVisibility = () => {
@@ -87,9 +187,17 @@ const ForgotPassword = () => {
         <div className={styles.leftPanel}>
           <h2 className={styles.loginTitle}>{showOtpAndPassword ? "Reset Password" : "Forgot Password"}</h2>
           <p>{showOtpAndPassword ? "Please enter the OTP and your new password" : "Please enter your username to receive an OTP"}</p>
+          
+          {/* Error Alert Modal */}
+          {showAlert && (
+            <div className={styles.alertModal}>
+              <div className={styles.alertModalContent}>
+                <p>{alertMessage}</p>
+              </div>
+            </div>
+          )}
+          
           <form className={styles.form} onSubmit={handleSubmit}>
-            {errors.form && <p className={styles.errorMessage}>{errors.form}</p>}
-
             <div className={styles.inputContainer}>
               <i className={`${styles.inputIcon} fas fa-user`}></i>
               <input
@@ -98,11 +206,16 @@ const ForgotPassword = () => {
                 placeholder="Username"
                 value={username}
                 onChange={handleChange}
-                className={styles.inputField}
+                className={`${styles.inputField} ${!showOtpAndPassword && shake && errors.username ? styles.shake : ''}`}
                 disabled={showOtpAndPassword || isButtonDisabled}
               />
-              {errors.username && <p className={styles.errorMessage}>{errors.username}</p>}
             </div>
+
+            {isLoading && (
+            <div className={styles.loadingMessage}>
+              Checking username...
+            </div>
+          )}
 
             {showOtpAndPassword && (
               <>
@@ -114,9 +227,8 @@ const ForgotPassword = () => {
                     placeholder="OTP"
                     value={otp}
                     onChange={handleChange}
-                    className={styles.inputField}
+                    className={`${styles.inputField} ${shake && errors.otp ? styles.shake : ''}`}
                   />
-                  {errors.otp && <p className={styles.errorMessage}>{errors.otp}</p>}
                 </div>
                 <div className={styles.passwordContainer}>
                   <i className={`${styles.inputIcon} fas fa-lock`}></i>
@@ -126,20 +238,30 @@ const ForgotPassword = () => {
                     placeholder="New Password"
                     value={newPassword}
                     onChange={handleChange}
-                    className={styles.inputField}
+                    onBlur={handlePasswordBlur}
+                    className={`${styles.inputField} ${shake && passwordChecked && errors.newPassword ? styles.shake : ''}`}
                   />
                   <img
                     src={showPassword ? eyeopen : eyeclose}
-                    alt="Toggle visibility"
+                    alt="Toggle Password Visibility"
                     className={styles.eyeIcon}
                     onClick={togglePasswordVisibility}
                   />
-                  {errors.newPassword && <p className={styles.errorMessage}>{errors.newPassword}</p>}
                 </div>
               </>
             )}
 
             <div className={styles.buttonContainer}>
+              {showOtpAndPassword && (
+                <button
+                  type="button"
+                  className={styles.cancelButton}
+                  onClick={() => setShowOtpAndPassword(false)}
+                  disabled={isButtonDisabled}
+                >
+                  Cancel
+                </button>
+              )}
               <button
                 type="submit"
                 className={styles.submitButton}
@@ -147,15 +269,6 @@ const ForgotPassword = () => {
               >
                 {showOtpAndPassword ? 'Change Password' : 'Submit'}
               </button>
-              {showOtpAndPassword && (
-                <button
-                  type="button"
-                  className={styles.cancelButton}
-                  onClick={() => setShowOtpAndPassword(false)}
-                >
-                  Cancel
-                </button>
-              )}
             </div>
           </form>
         </div>

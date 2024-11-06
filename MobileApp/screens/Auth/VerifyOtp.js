@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, TouchableOpacity, Text, View, TextInput, Alert } from "react-native";
+import { StyleSheet, TouchableOpacity, Text, View, TextInput, Modal } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
@@ -9,19 +9,37 @@ const VerifyOtp = () => {
   const [username, setUsername] = useState('');
   const [otp, setOtp] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
+  const [errors, setErrors] = useState({});
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+
+  const showCustomAlert = (message) => {
+    setAlertMessage(message);
+    setShowAlertModal(true);
+  };
 
   const handleVerifyOtp = async () => {
+    setErrors({});
+    let newErrors = {};
+
+    if (!username) {
+      newErrors.username = 'Please enter your username.';
+    }
+    if (!otp) {
+      newErrors.otp = 'Please enter the OTP.';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      showCustomAlert(Object.values(newErrors)[0]);
+      return;
+    }
+
     setIsSubmitting(true);
-    setMessage('');
-
     try {
-      const payload = {
-        username,
-        otp,
-      };
+      const payload = { username, otp };
 
-      const response = await axios.post('http://192.168.1.19:8080/user/verify-otp', payload, {
+      const response = await axios.post('https://amused-gnu-legally.ngrok-free.app/user/verify-otp', payload, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -29,16 +47,16 @@ const VerifyOtp = () => {
       });
 
       if (response.status === 200) {
-        setMessage('OTP Verified Successfully!');
+        showCustomAlert('OTP Verified Successfully!');
         setTimeout(() => {
           navigation.navigate('Login');
         }, 2000);
       } else {
-        setMessage('Failed to verify OTP. Please try again.');
+        showCustomAlert('Failed to verify OTP. Please try again.');
       }
     } catch (error) {
       const errorMsg = error.response?.data?.message || 'An error occurred while verifying OTP.';
-      setMessage(errorMsg);
+      showCustomAlert(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -49,30 +67,34 @@ const VerifyOtp = () => {
       <View style={styles.content}>
         <Text style={styles.headerText}>VERIFY OTP</Text>
         
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, errors.username && styles.errorBorder]}>
           <TextInput
             style={styles.input}
             placeholder="Username"
             placeholderTextColor="rgba(255,255,255,0.7)"
             value={username}
-            onChangeText={setUsername}
+            onChangeText={(text) => {
+              setUsername(text);
+              setErrors((prevErrors) => ({ ...prevErrors, username: null }));
+            }}
             editable={!isSubmitting}
           />
         </View>
 
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, errors.otp && styles.errorBorder]}>
           <TextInput
             style={styles.input}
             placeholder="OTP"
             placeholderTextColor="rgba(255,255,255,0.7)"
             value={otp}
-            onChangeText={setOtp}
+            onChangeText={(text) => {
+              setOtp(text);
+              setErrors((prevErrors) => ({ ...prevErrors, otp: null }));
+            }}
             editable={!isSubmitting}
             keyboardType="numeric"
           />
         </View>
-
-        {message ? <Text style={styles.messageText}>{message}</Text> : null}
 
         <TouchableOpacity
           onPress={handleVerifyOtp}
@@ -81,6 +103,26 @@ const VerifyOtp = () => {
         >
           <Text style={styles.submitButtonText}>{isSubmitting ? 'Verifying...' : 'Verify'}</Text>
         </TouchableOpacity>
+
+        <Modal
+          visible={showAlertModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowAlertModal(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.alertMessage}>{alertMessage}</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowAlertModal(false)}
+              >
+                <Text style={styles.closeButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
       </View>
     </LinearGradient>
   );
@@ -111,6 +153,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 20,
     width: '90%',
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   input: {
     flex: 1,
@@ -130,6 +174,38 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#0042be',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  errorBorder: {
+    borderColor: 'red',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  alertMessage: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: '#0042be',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });

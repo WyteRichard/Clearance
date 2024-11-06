@@ -9,7 +9,9 @@ import java.util.List;
 
 @Repository
 public interface ClusterCoordinatorRepository extends JpaRepository<ClusterCoordinator, Long> {
-    boolean existsByClusterCoordinatorNumberAndEmail(String employeeNumber, String email);
+    boolean existsByClusterCoordinatorNumberAndEmail(String clusterCoordinatorNumber, String email);
+
+    boolean existsByClusterCoordinatorNumber(String clusterCoordinatorNumber);
 
     ClusterCoordinator findByClusterCoordinatorNumber(String clusterCoordinatorNumber);
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, TouchableOpacity, Text, View, TextInput, Image } from "react-native";
+import { StyleSheet, TouchableOpacity, Text, View, TextInput, Image, Modal } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
@@ -13,30 +13,44 @@ const ForgotPassword = () => {
   const [showSecondScreen, setShowSecondScreen] = useState(false);
   const [errors, setErrors] = useState({});
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   const togglePasswordVisibility = () => {
     setIsPasswordVisible(!isPasswordVisible);
   };
 
+  const showCustomAlert = (message) => {
+    setAlertMessage(message);
+    setShowAlertModal(true);
+  };
+
   const handleUsernameSubmit = async () => {
     setErrors({});
     setIsButtonDisabled(true);
+    setStatusMessage("Checking username...");
 
-    if (!username || /[^a-zA-Z0-9]/.test(username)) {
-      setErrors({ username: 'Please enter a valid alphanumeric username.' });
+    if (!username.trim()) {
+      setErrors({ username: 'Username is required.' });
+      showCustomAlert('Please enter your username.');
       setIsButtonDisabled(false);
+      setStatusMessage("");
       return;
     }
 
     try {
-      const response = await axios.post('http://192.168.1.19:8080/user/forgot-password', { username });
+      const response = await axios.post('https://amused-gnu-legally.ngrok-free.app/user/forgot-password', { username });
       if (response.status === 200) {
         setShowSecondScreen(true);
+        setStatusMessage("");
       } else {
         setErrors({ username: 'Failed to send OTP. Please try again.' });
+        setStatusMessage("");
       }
     } catch (error) {
       setErrors({ username: error.response?.data?.message || 'An error occurred.' });
+      setStatusMessage("");
     } finally {
       setIsButtonDisabled(false);
     }
@@ -45,29 +59,61 @@ const ForgotPassword = () => {
   const handleChangePassword = async () => {
     setErrors({});
     setIsButtonDisabled(true);
+    setStatusMessage("");
+
+    // Password validation
+    let passwordErrors = {};
 
     if (!otp || !password) {
-      setErrors({
-        otp: !otp ? 'OTP is required.' : '',
-        password: !password ? 'Password is required.' : '',
-      });
+      passwordErrors.otp = !otp ? 'OTP is required.' : '';
+      passwordErrors.password = !password ? 'Password is required.' : '';
+
+      if (!otp) {
+        showCustomAlert('Please enter the OTP sent to your email.');
+      } else if (!password) {
+        showCustomAlert('Please enter your new password.');
+      }
+
+      setErrors(passwordErrors);
+      setIsButtonDisabled(false);
+      return;
+    }
+
+    if (password.length < 8) {
+      passwordErrors.password = 'Password must be at least 8 characters.';
+    }
+
+    if (/^[a-z]+$/.test(password) || !/\d/.test(password) || !/[!@#$%^&*]/.test(password)) {
+      passwordErrors.password = 'Your password is weak. Please include a mix of uppercase, lowercase, numbers, and special characters.';
+    }
+
+    if (Object.keys(passwordErrors).length > 0) {
+      setErrors(passwordErrors);
+      showCustomAlert(Object.values(passwordErrors)[0]);
       setIsButtonDisabled(false);
       return;
     }
 
     try {
-      const response = await axios.post('http://192.168.1.19:8080/user/verify-forgot-password', {
+      const response = await axios.post('https://amused-gnu-legally.ngrok-free.app/user/verify-forgot-password', {
         username,
         otp,
         password,
       });
+
       if (response.status === 200) {
-        navigation.navigate('Login');
+        setStatusMessage("Password has been changed successfully.");
+        showCustomAlert('Password has been changed successfully.');
+        setTimeout(() => {
+          navigation.navigate('Login');
+        }, 2000);
       } else {
         setErrors({ otp: 'Failed to reset password. Please try again.' });
+        setStatusMessage("");
       }
     } catch (error) {
       setErrors({ otp: error.response?.data?.message || 'An error occurred.' });
+      setStatusMessage("");
     } finally {
       setIsButtonDisabled(false);
     }
@@ -79,7 +125,7 @@ const ForgotPassword = () => {
         <View style={styles.content}>
           <Text style={styles.headerText}>{`FORGOT\nPASSWORD`}</Text>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, errors.username && styles.errorBorder]}>
             <TextInput
               style={styles.input}
               placeholder="Username"
@@ -88,7 +134,7 @@ const ForgotPassword = () => {
               onChangeText={setUsername}
             />
           </View>
-          {errors.username && <Text style={styles.errorText}>{errors.username}</Text>}
+          {statusMessage && <Text style={styles.statusText}>{statusMessage}</Text>}
 
           <TouchableOpacity onPress={handleUsernameSubmit} style={styles.submitButton} disabled={isButtonDisabled}>
             <Text style={styles.submitButtonText}>Submit</Text>
@@ -108,7 +154,7 @@ const ForgotPassword = () => {
             />
           </View>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, errors.otp && styles.errorBorder]}>
             <TextInput
               style={styles.input}
               placeholder="OTP"
@@ -118,9 +164,8 @@ const ForgotPassword = () => {
               keyboardType="numeric"
             />
           </View>
-          {errors.otp && <Text style={styles.errorText}>{errors.otp}</Text>}
 
-          <View style={styles.passwordContainer}>
+          <View style={[styles.passwordContainer, errors.password && styles.errorBorder]}>
             <TextInput
               style={styles.input}
               placeholder="New Password"
@@ -136,7 +181,7 @@ const ForgotPassword = () => {
               />
             </TouchableOpacity>
           </View>
-          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+          {statusMessage && <Text style={styles.statuspasswordText}>{statusMessage}</Text>}
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.cancelButton} onPress={() => setShowSecondScreen(false)}>
@@ -149,6 +194,25 @@ const ForgotPassword = () => {
           </View>
         </View>
       )}
+
+      <Modal
+        visible={showAlertModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowAlertModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.alertMessage}>{alertMessage}</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowAlertModal(false)}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 };
@@ -178,6 +242,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 15,
     width: '90%',
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   passwordContainer: {
     flexDirection: 'row',
@@ -187,6 +253,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 30,
     width: '90%',
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   input: {
     flex: 1,
@@ -197,6 +265,18 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'red',
     fontSize: 12,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  statusText: {
+    color: 'yellow',
+    fontSize: 14,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  statuspasswordText: {
+    color: 'lightgreen',
+    fontSize: 14,
     marginBottom: 15,
     textAlign: 'center',
   },
@@ -247,6 +327,38 @@ const styles = StyleSheet.create({
     width: '50%',
   },
   changePasswordButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  errorBorder: {
+    borderColor: 'red',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  alertMessage: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: '#0042be',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  closeButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',

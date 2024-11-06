@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Image, Modal, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
@@ -18,6 +18,8 @@ const StudentClearanceRequest = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
   const navigation = useNavigation();
 
   const firstSemesterDepartments = [
@@ -63,7 +65,7 @@ const StudentClearanceRequest = () => {
     if (!role || !exp || exp * 1000 < currentTime) {
       handleLogout();
     } else if (role !== 'ROLE_ROLE_STUDENT') {
-      Alert.alert('Unauthorized access', 'You will be redirected to login.');
+      showCustomAlert('Unauthorized access. You will be redirected to login.');
       handleLogout();
     } else {
       await fetchStudentData(userId, token);
@@ -73,10 +75,10 @@ const StudentClearanceRequest = () => {
   const fetchStudentData = async (userId, token) => {
     try {
       const [semesterResponse, studentResponse] = await Promise.all([
-        axios.get('http://192.168.1.19:8080/Admin/semester/current', {
+        axios.get('https://amused-gnu-legally.ngrok-free.app/Admin/semester/current', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(`http://192.168.1.19:8080/Student/students/${userId}`, {
+        axios.get(`https://amused-gnu-legally.ngrok-free.app/Student/students/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -105,7 +107,7 @@ const StudentClearanceRequest = () => {
     const normalizedCurrentSemester = currentSemester.toLowerCase();
 
     if (normalizedSelectedSemester !== normalizedCurrentSemester) {
-      Alert.alert(`You are only allowed to choose ${currentSemester.replace('_', ' ')}.`);
+      showCustomAlert(`You are only allowed to choose ${currentSemester.replace('_', ' ')}.`);
     } else {
       setSemester(selectedSemester);
     }
@@ -113,7 +115,7 @@ const StudentClearanceRequest = () => {
 
   const handleSchoolYearChange = (selectedYear) => {
     if (selectedYear !== currentAcademicYear) {
-      Alert.alert(`You are only allowed to choose the current academic year: ${currentAcademicYear}.`);
+      showCustomAlert(`You are only allowed to choose the current academic year: ${currentAcademicYear}.`);
     } else {
       setSchoolYear(selectedYear);
     }
@@ -127,25 +129,25 @@ const StudentClearanceRequest = () => {
     const token = await AsyncStorage.getItem('token');
   
     if (!studentInternalId || !department || !semester || !schoolYear) {
-      Alert.alert('Error', 'Please fill in all fields.');
+      showCustomAlert('Please fill in all fields.');
       return;
     }
   
     try {
       const existingRequestResponse = await axios.get(
-        `http://192.168.1.19:8080/Requests/student/${studentInternalId}/department/${department}`,
+        `https://amused-gnu-legally.ngrok-free.app/Requests/student/${studentInternalId}/department/${department}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
   
       if (existingRequestResponse.data.length > 0) {
-        Alert.alert("You have already submitted a clearance request to this department.");
+        showCustomAlert('You have already submitted a clearance request to this department.');
         return;
       }
     } catch (error) {
       console.error('Error checking existing requests:', error);
-      Alert.alert('Error', 'Error checking existing requests. Please try again later.');
+      showCustomAlert('Error checking existing requests. Please try again later.');
       return;
     }
   
@@ -158,7 +160,7 @@ const StudentClearanceRequest = () => {
     };
   
     try {
-      const response = await fetch('http://192.168.1.19:8080/Requests/add', {
+      const response = await fetch('https://amused-gnu-legally.ngrok-free.app/Requests/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -168,14 +170,14 @@ const StudentClearanceRequest = () => {
       });
   
       if (response.ok) {
-        Alert.alert('Clearance request successfully added');
+        showCustomAlert('Clearance request successfully added.');
       } else {
         const errorMessage = await response.text();
-        Alert.alert(`Failed to add clearance request. Status code: ${response.status}`);
+        showCustomAlert(`Failed to add clearance request. Status code: ${response.status}`);
       }
     } catch (error) {
       console.error('Error submitting request:', error);
-      Alert.alert('Error', 'Failed to submit clearance request. Please try again.');
+      showCustomAlert('Failed to submit clearance request. Please try again.');
     }
   };
 
@@ -184,6 +186,11 @@ const StudentClearanceRequest = () => {
   const handleLogout = async () => {
     await AsyncStorage.clear();
     navigation.navigate('Auth', { screen: 'Login' });
+  };
+
+  const showCustomAlert = (message) => {
+    setAlertMessage(message);
+    setShowAlertModal(true);
   };
 
   if (loading) {
@@ -220,19 +227,19 @@ const StudentClearanceRequest = () => {
           <Text style={styles.title}>CLEARANCE REQUEST</Text>
 
           <View style={styles.pickerContainer}>
+            <Picker selectedValue={semester} onValueChange={handleSemesterChange} style={styles.picker}>
+              <Picker.Item label="Semester" value="" />
+              <Picker.Item label="First Semester" value="first" />
+              <Picker.Item label="Second Semester" value="second" />
+            </Picker>
+          </View>
+
+          <View style={styles.pickerContainer}>
             <Picker selectedValue={department} onValueChange={(itemValue) => setDepartment(itemValue)} style={styles.picker}>
               <Picker.Item label="Select Department" value="" />
               {availableDepartments.map(dept => (
                 <Picker.Item key={dept.id} label={dept.name} value={dept.id} />
               ))}
-            </Picker>
-          </View>
-
-          <View style={styles.pickerContainer}>
-            <Picker selectedValue={semester} onValueChange={handleSemesterChange} style={styles.picker}>
-              <Picker.Item label="Semester" value="" />
-              <Picker.Item label="First Semester" value="first" />
-              <Picker.Item label="Second Semester" value="second" />
             </Picker>
           </View>
 
@@ -274,6 +281,27 @@ const StudentClearanceRequest = () => {
           <Image source={require('../../assets/images/bluser.png')} style={styles.navIcon} />
         </TouchableOpacity>
       </View>
+
+      {/* Custom Alert Modal */}
+      <Modal
+        visible={showAlertModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowAlertModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.alertMessage}>{alertMessage}</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowAlertModal(false)}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       </SafeAreaView>
     </LinearGradient>
   );
@@ -287,7 +315,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    marginTop: 20,
+    marginTop: 0,
     marginBottom: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -307,13 +335,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-  },
-  contentContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    paddingTop: 0,
   },
   formContainer: {
     paddingHorizontal: 20,
@@ -366,6 +387,35 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     resizeMode: 'contain',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  alertMessage: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: '#0042be',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

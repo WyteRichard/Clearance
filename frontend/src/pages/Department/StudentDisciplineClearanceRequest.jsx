@@ -9,7 +9,7 @@ import clearedtoggle from '../../assets/clearedtoggle.svg';
 import pendingtoggle from '../../assets/pendingtoggle.svg';
 import avatar from '../../assets/avatar2.png';
 
-const ClusterCoordinatorClearanceRequest = () => {
+const StudentDisciplineClearanceRequest = () => {
     const [clearanceRequests, setClearanceRequests] = useState([]);
     const [filteredRequests, setFilteredRequests] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
@@ -68,7 +68,7 @@ const ClusterCoordinatorClearanceRequest = () => {
                 return;
             }
     
-            const departmentId = 4;
+            const departmentId = 12;
             const requestResponse = await axios.get(`http://localhost:8080/Requests/department/${departmentId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -236,7 +236,7 @@ const ClusterCoordinatorClearanceRequest = () => {
             </div>
             <div className={styles.mainContent}>
                 <header className={styles.header}>
-                    <h2 className={styles.dashboardTitle}>Cluster Coordinator Clearance Requests</h2>
+                    <h2 className={styles.dashboardTitle}>Student Discipline Clearance Requests</h2>
                     <div className={styles.headerRight}>
                         <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
                         <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
@@ -339,4 +339,4 @@ const ClusterCoordinatorClearanceRequest = () => {
     );
 };
 
-export default ClusterCoordinatorClearanceRequest;
+export default StudentDisciplineClearanceRequest;

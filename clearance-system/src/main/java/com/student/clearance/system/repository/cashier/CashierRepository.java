@@ -6,7 +6,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CashierRepository extends JpaRepository<Cashier, Long> {
-    boolean existsByCashierNumberAndEmail(String employeeNumber, String email);
+    boolean existsByCashierNumberAndEmail(String cashierNumber, String email);
+
+    boolean existsByCashierNumber(String cashierNumber);
 
     Cashier findByCashierNumber(String cashierNumber);
 }

@@ -7,7 +7,6 @@ import requestIcon from '../assets/notes.png';
 import statusIcon from '../assets/bidcard.png';
 import accountIcon from '../assets/user.png';
 import printIcon from '../assets/printIcon.svg';
-import logo from '../assets/logo.png';
 import avatar from '../assets/avatar2.png';
 
 const StudentClearanceStatus = () => {
@@ -95,13 +94,14 @@ const StudentClearanceStatus = () => {
     const handlePrint = () => {
         const printContent = document.getElementById('printable-content').innerHTML;
         const printWindow = window.open('', '', 'height=600,width=800');
+        
         printWindow.document.write('<html><head><title>Clearance Status</title>');
         printWindow.document.write(`
             <style>
                 @media print {
                     body { font-family: Arial, sans-serif; text-align: center; }
-                    .logo { display: block !important; width: 100px; margin: 0 auto 10px; }
-                    .invisible { display: block !important; margin-bottom: 20px; }
+                    .header-content { margin-bottom: 10px; text-align: center; }
+                    h1, p { margin: 0; }
                     table {
                         width: 80%;
                         margin: 20px auto;
@@ -117,11 +117,23 @@ const StudentClearanceStatus = () => {
             </style>
         `);
         printWindow.document.write('</head><body>');
+        
+        // Add the header with college information
+        printWindow.document.write(`
+            <div class="header-content">
+                <h1>Rogationist College</h1>
+                <p>Km. 53 Aguinaldo Highway, Lalaan II, Silang Cavite, 4118</p>
+                <p>Tel. No.: (046) 423-8677 / 423 - 8470</p>
+            </div>
+        `);
+    
+        // Insert the content from the component
         printWindow.document.write(printContent);
         printWindow.document.write('</body></html>');
         printWindow.document.close();
         printWindow.print();
     };
+    
 
     const toggleModal = () => setShowModal(!showModal);
     const handleProfile = () => navigate("/student-account");
@@ -201,7 +213,6 @@ const StudentClearanceStatus = () => {
 
                 <div id="printable-content" className={styles.tableContainer}>
                     <div className={styles.printHeader}>
-                        <img src={logo} alt="Logo" className={styles.logo} />
                     </div>
 
                 <div className={`${styles.studentInfo} ${styles.invisible}`}>

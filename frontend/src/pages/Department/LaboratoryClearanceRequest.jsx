@@ -15,9 +15,7 @@ const LaboratoryClearanceRequest = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     const [yearLevelFilter, setYearLevelFilter] = useState("");
-    const [courseFilter, setCourseFilter] = useState("");
     const [yearLevels, setYearLevels] = useState([]);
-    const [courses, setCourses] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [remarks, setRemarks] = useState("");
@@ -108,12 +106,6 @@ const LaboratoryClearanceRequest = () => {
         })
         .then(response => setYearLevels(response.data))
         .catch(error => console.error("Error fetching year levels:", error));
-
-        axios.get("http://localhost:8080/Course/courses", {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-        .then(response => setCourses(response.data))
-        .catch(error => console.error("Error fetching courses:", error));
     };
 
     const handleFilter = useCallback(() => {
@@ -136,12 +128,8 @@ const LaboratoryClearanceRequest = () => {
             filtered = filtered.filter(request => request.student?.yearLevel?.yearLevel === yearLevelFilter);
         }
 
-        if (courseFilter) {
-            filtered = filtered.filter(request => request.student?.course?.courseName === courseFilter);
-        }
-
         setFilteredRequests(filtered);
-    }, [clearanceRequests, searchTerm, statusFilter, yearLevelFilter, courseFilter]);
+    }, [clearanceRequests, searchTerm, statusFilter, yearLevelFilter]);
 
     useEffect(() => {
         handleFilter();
@@ -271,14 +259,6 @@ const LaboratoryClearanceRequest = () => {
                         {yearLevels.map(level => (
                             <option key={level.yearLevelId} value={level.yearLevel}>
                                 {level.yearLevel}
-                            </option>
-                        ))}
-                    </select>
-                    <select onChange={e => setCourseFilter(e.target.value)}>
-                        <option value="">Filter by course</option>
-                        {courses.map(course => (
-                            <option key={course.courseId} value={course.courseName}>
-                                {course.courseName}
                             </option>
                         ))}
                     </select>

@@ -6,6 +6,7 @@ import requestIcon from '../assets/dept.png';
 import userIcon from '../assets/user.png';
 import avatar from '../assets/avatar2.png';
 import checkIcon from '../assets/check.png';
+import errorIcon from '../assets/error.png';
 import announcementIcon from '../assets/announcement.png';
 import styles from '../styles/AdminDashboard.module.css';
 
@@ -338,12 +339,16 @@ const AdminDashboard = () => {
                 {alertMessage && (
                     <div className={`${styles.alert} ${styles[alertType]}`}>
                         <div className={styles.alertTopBar}></div>
-                        <div className={styles.alertContent}>
-                            <img src={checkIcon} alt="Success" className={styles.alertIcon} />
+                            <div className={styles.alertContent}>
+                                <img 
+                                src={alertType === 'error' ? errorIcon : checkIcon}
+                                alt={alertType === 'error' ? 'Error' : 'Success'} 
+                                className={styles.alertIcon} 
+                                />
                             <span>{alertMessage}</span>
-                            <button className={styles.closeButton} onClick={() => setAlertMessage(null)}>×</button>
-                        </div>
+                        <button className={styles.closeButton} onClick={() => setAlertMessage(null)}>×</button>
                     </div>
+                </div>
                 )}
 
                 <div className={styles.topRow}>

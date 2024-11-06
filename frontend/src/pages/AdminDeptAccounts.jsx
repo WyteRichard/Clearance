@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/AdminDeptAccounts.module.css';
 import homeIcon from '../assets/home.png';
+import checkIcon from '../assets/check.png';
+import errorIcon from '../assets/error.png';
 import requestIcon from '../assets/bdept.png';
 import userIcon from '../assets/user.png';
 import deleteIcon from '../assets/delete.svg';
@@ -26,6 +28,8 @@ const ConfirmationModal = ({ isOpen, message, onConfirm, onCancel }) => {
 };
 
 const AdminDeptAccounts = () => {
+    const [alertMessage, setAlertMessage] = useState(null);
+    const [alertType, setAlertType] = useState('success');
     const [advisers, setAdvisers] = useState([]);
     const [cashiers, setCashiers] = useState([]);
     const [clinics, setClinics] = useState([]);
@@ -63,6 +67,12 @@ const AdminDeptAccounts = () => {
             fetchSemesterData();
         }
     }, []);
+
+    const showAlert = (message, type) => {
+        setAlertMessage(message);
+        setAlertType(type);
+        setTimeout(() => setAlertMessage(null), 3000);
+    };
 
     const fetchData = () => {
         const token = localStorage.getItem('token');
@@ -151,13 +161,12 @@ const AdminDeptAccounts = () => {
             headers: { 'Authorization': `Bearer ${token}` }
         })
         .then(() => {
-            alert('Item deleted successfully');
+            showAlert("Account successfully deleted!", "success");
             setIsModalOpen(false);
             fetchData();
         })
-        .catch(error => {
-            console.error("Error deleting item", error);
-            setIsModalOpen(false);
+        .catch(() => {
+            showAlert("Failed to delete account.", "error");
         });
     };
 
@@ -244,6 +253,21 @@ const AdminDeptAccounts = () => {
                     </div>
                 </div>
 
+                {alertMessage && (
+                    <div className={`${styles.alert} ${styles[alertType]}`}>
+                        <div className={styles.alertTopBar}></div>
+                            <div className={styles.alertContent}>
+                                <img 
+                                src={alertType === 'error' ? errorIcon : checkIcon}
+                                alt={alertType === 'error' ? 'Error' : 'Success'} 
+                                className={styles.alertIcon} 
+                                />
+                            <span>{alertMessage}</span>
+                        <button className={styles.closeButton} onClick={() => setAlertMessage(null)}>×</button>
+                    </div>
+                </div>
+)}
+
                 <div className={styles.filterContainer}>
                     <div className={styles.inputBox}>
                         <input
@@ -279,49 +303,51 @@ const AdminDeptAccounts = () => {
                     </div>
                 </div>
 
-                <table className={styles.clearanceTable}>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Department</th>
-                            <th>Name</th>
-                            <th>Employee Number</th>
-                            <th>Address</th>
-                            <th>Contact Number</th>
-                            <th>Email</th>
-                            <th>Civil Status</th>
-                            <th>Birthday</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredDepartments.map(person => (
-                            <tr key={person.id}>
-                                <td>{person.id}</td>
-                                <td>{getType(person)}</td>
-                                <td>{person.firstName} {person.middleName || ''} {person.lastName}</td>
-                                <td>{person.employeeNumber || ''} {person.adviserNumber || ''} {person.cashierNumber || ''} {person.clinicNumber || ''}
-                                    {person.clusterCoordinatorNumber || ''} {person.deanNumber || ''} {person.guidanceNumber || ''} {person.laboratoryNumber || ''} 
-                                    {person.libraryNumber || ''} {person.registrarNumber || ''} {person.spiritualAffairsNumber || ''} {person.studentAffairsNumber || ''} 
-                                    {person.studentDisciplineNumber || ''} {person.supremeStudentCouncilNumber || ''}
-                                </td>
-                                <td>{person.address || "N/A"}</td>
-                                <td>{person.contactNumber || "N/A"}</td>
-                                <td>{person.email || "N/A"}</td>
-                                <td>{person.civilStatus || "N/A"}</td>
-                                <td>{person.birthdate ? new Date(person.birthdate).toLocaleDateString() : "N/A"}</td>
-                                <td>
-                                    <img
-                                        src={deleteIcon}
-                                        alt="Delete"
-                                        className={styles.actionIcon}
-                                        onClick={() => handleDeleteClick(person.id, getType(person))}
-                                    />
-                                </td>
+                <div className={styles.tableContainer}>
+                    <table className={styles.clearanceTable}>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Department</th>
+                                <th>Name</th>
+                                <th>Employee Number</th>
+                                <th>Address</th>
+                                <th>Contact Number</th>
+                                <th>Email</th>
+                                <th>Civil Status</th>
+                                <th>Birthday</th>
+                                <th>Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {filteredDepartments.map(person => (
+                                <tr key={person.id}>
+                                    <td>{person.id}</td>
+                                    <td>{getType(person)}</td>
+                                    <td>{person.firstName} {person.middleName || ''} {person.lastName}</td>
+                                    <td>{person.employeeNumber || ''} {person.adviserNumber || ''} {person.cashierNumber || ''} {person.clinicNumber || ''}
+                                        {person.clusterCoordinatorNumber || ''} {person.deanNumber || ''} {person.guidanceNumber || ''} {person.laboratoryNumber || ''} 
+                                        {person.libraryNumber || ''} {person.registrarNumber || ''} {person.spiritualAffairsNumber || ''} {person.studentAffairsNumber || ''} 
+                                        {person.studentDisciplineNumber || ''} {person.supremeStudentCouncilNumber || ''}
+                                    </td>
+                                    <td>{person.address || "N/A"}</td>
+                                    <td>{person.contactNumber || "N/A"}</td>
+                                    <td>{person.email || "N/A"}</td>
+                                    <td>{person.civilStatus || "N/A"}</td>
+                                    <td>{person.birthdate ? new Date(person.birthdate).toLocaleDateString() : "N/A"}</td>
+                                    <td>
+                                        <img
+                                            src={deleteIcon}
+                                            alt="Delete"
+                                            className={styles.actionIcon}
+                                            onClick={() => handleDeleteClick(person.id, getType(person))}
+                                        />
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <ConfirmationModal

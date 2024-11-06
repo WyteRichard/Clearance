@@ -9,7 +9,9 @@ import java.util.List;
 
 @Repository
 public interface AdviserRepository extends JpaRepository<Adviser, Long> {
-    boolean existsByAdviserNumberAndEmail(String employeeNumber, String email);
+    boolean existsByAdviserNumberAndEmail(String adviserNumber, String email);
+
+    boolean existsByAdviserNumber(String adviserNumber);
 
     Adviser findByAdviserNumber(String adviserNumber);
 

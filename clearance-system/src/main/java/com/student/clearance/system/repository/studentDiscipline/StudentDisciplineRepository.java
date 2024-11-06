@@ -8,7 +8,9 @@ import java.util.List;
 
 @Repository
 public interface StudentDisciplineRepository extends JpaRepository<StudentDiscipline, Long> {
-    boolean existsByStudentDisciplineNumberAndEmail(String employeeNumber, String email);
+    boolean existsByStudentDisciplineNumberAndEmail(String studentDisciplineNumber, String email);
+
+    boolean existsByStudentDisciplineNumber(String studentDisciplineNumber);
 
     StudentDiscipline findByStudentDisciplineNumber(String studentDisciplineNumber);
 

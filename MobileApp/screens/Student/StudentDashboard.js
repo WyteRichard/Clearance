@@ -43,7 +43,7 @@ const StudentDashboard = () => {
 
   const fetchFirstName = async (userId, token) => {
     try {
-      const response = await axios.get(`http://192.168.1.19:8080/Student/students/${userId}`, {
+      const response = await axios.get(`https://amused-gnu-legally.ngrok-free.app/Student/students/${userId}`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       setFirstName(response.data.firstName);
@@ -55,7 +55,7 @@ const StudentDashboard = () => {
 
   const fetchSemesterData = async (token) => {
     try {
-      const response = await axios.get('http://192.168.1.19:8080/Admin/semester/current', {
+      const response = await axios.get('https://amused-gnu-legally.ngrok-free.app/Admin/semester/current', {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       const { currentSemester, academicYear } = response.data;
@@ -69,7 +69,7 @@ const StudentDashboard = () => {
 
   const fetchStatusCounts = async (userId, token) => {
     try {
-      const response = await axios.get(`http://192.168.1.19:8080/Status/student/${userId}/status-counts`, {
+      const response = await axios.get(`https://amused-gnu-legally.ngrok-free.app/Status/student/${userId}/status-counts`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       const { cleared, pending, remarks } = response.data;
@@ -84,7 +84,7 @@ const StudentDashboard = () => {
 
   const fetchImportantDates = async (token) => {
     try {
-      const response = await axios.get('http://192.168.1.19:8080/announcements/all', {
+      const response = await axios.get('https://amused-gnu-legally.ngrok-free.app/announcements/all', {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (Array.isArray(response.data)) {
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    marginTop: 20,
+    marginTop: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

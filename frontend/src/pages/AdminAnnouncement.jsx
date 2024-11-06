@@ -3,7 +3,9 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import homeIcon from '../assets/home.png';
 import requestIcon from '../assets/dept.png';
+import errorIcon from '../assets/error.png';
 import userIcon from '../assets/user.png';
+import checkIcon from '../assets/check.png';
 import announcementIcon from '../assets/bannouncement.png';
 import styles from '../styles/AdminAnnouncement.module.css';
 import avatar from '../assets/avatar2.png';
@@ -43,14 +45,18 @@ const Announcement = () => {
             if (Array.isArray(response.data)) {
                 setAnnouncements(response.data);
             } else {
-                setAlertMessage("Failed to fetch announcements.");
-                setAlertType("error");
+                showAlert("Failed to fetch announcements.", "error");
             }
         })
         .catch(() => {
-            setAlertMessage("Error fetching announcements.");
-            setAlertType("error");
+            showAlert("Error fetching announcements.", "error");
         });
+    };
+
+    const showAlert = (message, type) => {
+        setAlertMessage(message);
+        setAlertType(type);
+        setTimeout(() => setAlertMessage(null), 3000);
     };
 
     const handleSubmitAnnouncement = (e) => {
@@ -61,19 +67,15 @@ const Announcement = () => {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
         .then(() => {
-            setAlertMessage("Announcement successfully added!");
-            setAlertType('success');
+            showAlert("Announcement successfully added!", "success");
             setAnnouncementTitle("");
             setAnnouncementDate("");
             setAnnouncementDetails("");
             fetchAnnouncements();
         })
         .catch(() => {
-            setAlertMessage("Failed to add announcement.");
-            setAlertType('error');
+            showAlert("Failed to add announcement.", "error");
         });
-
-        setTimeout(() => setAlertMessage(null), 3000);
     };
 
     const handleDeleteAnnouncement = (id) => {
@@ -81,16 +83,12 @@ const Announcement = () => {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
         .then(() => {
-            setAlertMessage("Announcement successfully deleted!");
-            setAlertType('success');
+            showAlert("Announcement successfully deleted!", "success");
             fetchAnnouncements();
         })
         .catch(() => {
-            setAlertMessage("Failed to delete announcement.");
-            setAlertType('error');
+            showAlert("Failed to delete announcement.", "error");
         });
-
-        setTimeout(() => setAlertMessage(null), 3000);
     };
 
     const fetchSemesterData = () => {
@@ -146,8 +144,8 @@ const Announcement = () => {
                 <div className={styles.header}>
                     <h2 className={styles.dashboardTitle}>Announcement</h2>
                     <div className={styles.headerRight}>
-                    <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
-                    <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
+                        <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
+                        <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
                         <div className={styles.avatar} onClick={toggleModal}>
                             <img src={avatar} alt="Avatar" />
                         </div>
@@ -163,9 +161,17 @@ const Announcement = () => {
 
                 {alertMessage && (
                     <div className={`${styles.alert} ${styles[alertType]}`}>
-                        <span>{alertMessage}</span>
-                        <button onClick={() => setAlertMessage(null)}>×</button>
+                        <div className={styles.alertTopBar}></div>
+                            <div className={styles.alertContent}>
+                                <img 
+                                src={alertType === 'error' ? errorIcon : checkIcon}
+                                alt={alertType === 'error' ? 'Error' : 'Success'} 
+                                className={styles.alertIcon} 
+                                />
+                            <span>{alertMessage}</span>
+                        <button className={styles.closeButton} onClick={() => setAlertMessage(null)}>×</button>
                     </div>
+                </div>
                 )}
 
                 <div className={styles.announcementForm}>

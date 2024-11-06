@@ -20,6 +20,9 @@ const RegisterPage = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [emailShake, setEmailShake] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const togglePasswordVisibility = () => {
     setPasswordShown(!passwordShown);
@@ -47,83 +50,127 @@ const RegisterPage = () => {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMessage('');
-    setIsSubmitting(true);
-  
-    const selectedRole = userType === "Authorized Office" ? officeRole : userType;
-  
-    if (formData.username === '' || !/^[a-zA-Z0-9]+$/.test(formData.username)) {
-      setErrorMessage('Please enter a valid username (alphanumeric characters only).');
-      setIsSubmitting(false);
-      return;
-    }
-    if (formData.password === '') {
-      setErrorMessage('Please enter a password.');
-      setIsSubmitting(false);
-      return;
-    }
-    if (formData.memberNumber === '') {
-      setErrorMessage(`Please enter your ${getPlaceholderText().toLowerCase()}.`);
-      setIsSubmitting(false);
-      return;
-    }
-    if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(formData.email)) {
-      setErrorMessage('Please enter a valid email address.');
-      setIsSubmitting(false);
-      return;
-    }
-  
-    try {
-      const roleMap = {
-        Adviser: "adviser",
-        Cashier: "cashier",
-        Clinic: "clinic",
-        "Cluster Coordinator": "clusterCoordinator",
-        Dean: "dean",
-        Guidance: "guidance",
-        Laboratory: "laboratory",
-        Library: "library",
-        Registrar: "registrar",
-        "Spiritual Affairs": "spiritualAffairs",
-        "Student Affairs": "studentAffairs",
-        "Student Discipline": "studentDiscipline",
-        "Supreme Student Council": "supremeStudentCouncil",
-        Student: "student",
-        Admin: "admin"
-      };
-  
-      const roleField = roleMap[selectedRole];
-      const payload = {
-        username: formData.username,
-        password: formData.password,
-        [roleField]: {
-          [`${roleField}Number`]: formData.memberNumber,
-          email: formData.email
-        }
-      };
-      
-      const response = await Axios.post('http://localhost:8080/user/register', payload, {
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (response.status === 200) {
-        navigate('/verify-otp');
-      } else if (response.data) {
-        setErrorMessage(response.data.message || 'An error occurred.');
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setErrorMessage('');
+      setEmailError('');
+      setIsSubmitting(true);
+    
+      const selectedRole = userType === "Authorized Office" ? officeRole : userType;
+    
+      if (formData.username === '' || !/^[a-zA-Z0-9]+$/.test(formData.username)) {
+        setErrorMessage('Please enter a valid username (alphanumeric characters only).');
+        setShowModal(true);
+        setEmailShake(true);
+        setIsSubmitting(false);
+        
+        setTimeout(() => setShowModal(false), 3000);
+        return;
       }
-    } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'An error occurred while processing your request.');
-    }
-  
-    setIsSubmitting(false);
-  };
+    
+      if (formData.password.length < 8) {
+        setErrorMessage('Password must be at least 8 characters.');
+        setShowModal(true);
+        setEmailShake(true);
+        setIsSubmitting(false);
+        
+        setTimeout(() => setShowModal(false), 3000);
+        return;
+      }
+    
+      const hasUpperCase = /[A-Z]/.test(formData.password);
+      const hasLowerCase = /[a-z]/.test(formData.password);
+      const hasNumber = /[0-9]/.test(formData.password);
+      const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(formData.password);
+      
+      if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+        setErrorMessage('Your password is weak. Please include a mix of uppercase, lowercase, numbers, and special characters.');
+        setShowModal(true);
+        setEmailShake(true);
+        setIsSubmitting(false);
+      
+        setTimeout(() => setShowModal(false), 3000);
+        return;
+      }
+    
+      if (formData.memberNumber === '') {
+        setErrorMessage(`Please enter your ${getPlaceholderText().toLowerCase()}.`);
+        setShowModal(true);
+        setEmailShake(true);
+        setIsSubmitting(false);
+        
+        setTimeout(() => setShowModal(false), 3000);
+        return;
+      }
+      
+      if (!formData.email.includes('@')) {
+        setEmailError('Please include an "@" in the email address.');
+        setShowModal(true);
+        setEmailShake(true);
+        setIsSubmitting(false);
+        
+        setTimeout(() => setShowModal(false), 3000);
+        return;
+      }
+
+      if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(formData.email)) {
+        setErrorMessage('Please enter a valid email address.');
+        setShowModal(true);
+        setEmailShake(true);
+        setIsSubmitting(false);
+        
+        setTimeout(() => setShowModal(false), 3000);
+        return;
+      }
+    
+      setTimeout(() => {
+        setEmailShake(false);
+      }, 500); 
+      
+      try {
+        const roleMap = {
+          Adviser: "adviser",
+          Cashier: "cashier",
+          Clinic: "clinic",
+          "Cluster Coordinator": "clusterCoordinator",
+          Dean: "dean",
+          Guidance: "guidance",
+          Laboratory: "laboratory",
+          Library: "library",
+          Registrar: "registrar",
+          "Spiritual Affairs": "spiritualAffairs",
+          "Student Affairs": "studentAffairs",
+          "Student Discipline": "studentDiscipline",
+          "Supreme Student Council": "supremeStudentCouncil",
+          Student: "student",
+          Admin: "admin"
+        };
+    
+        const roleField = roleMap[selectedRole];
+        const payload = {
+          username: formData.username,
+          password: formData.password,
+          [roleField]: {
+            [`${roleField}Number`]: formData.memberNumber,
+            email: formData.email
+          }
+        };
+        
+        const response = await Axios.post('http://localhost:8080/user/register', payload, {
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.status === 200) {
+          navigate('/verify-otp');
+        } else if (response.data) {
+          setErrorMessage(response.data.message || 'An error occurred.');
+        }
+      } catch (error) {
+        setErrorMessage(error.response?.data?.message || 'An error occurred while processing your request.');
+      }
+    
+      setIsSubmitting(false);
+    };    
   
 
   return (
@@ -176,14 +223,14 @@ const RegisterPage = () => {
               </div>
             )}
 
-            <div className={styles.inputContainer}>
+<div className={styles.inputContainer}>
               <input
                 type="text"
                 placeholder="Username"
                 className={styles.inputField}
                 name="username"
                 value={formData.username}
-                onChange={handleChange}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 required
               />
             </div>
@@ -195,7 +242,7 @@ const RegisterPage = () => {
                 className={styles.inputField}
                 name="password"
                 value={formData.password}
-                onChange={handleChange}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
               />
               <img
@@ -213,7 +260,7 @@ const RegisterPage = () => {
                 className={styles.inputField}
                 name="memberNumber"
                 value={formData.memberNumber}
-                onChange={handleChange}
+                onChange={(e) => setFormData({ ...formData, memberNumber: e.target.value })}
                 required
               />
             </div>
@@ -222,18 +269,18 @@ const RegisterPage = () => {
               <input
                 type="email"
                 placeholder="Email Address"
-                className={styles.inputField}
+                className={`${styles.inputField} ${emailShake ? styles.shake : ''}`}
                 name="email"
                 value={formData.email}
-                onChange={handleChange}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
               />
+              {emailError && <p className={styles.errorMessage}>{emailError}</p>}
             </div>
 
             <button type="submit" className={styles.registerButton} disabled={isSubmitting}>
               {isSubmitting ? 'Submitting...' : 'Register'}
             </button>
-            {errorMessage && <p className={styles.errorMessage}>{errorMessage}</p>}
           </form>
 
           <p className={styles.loginPrompt}>
@@ -247,6 +294,14 @@ const RegisterPage = () => {
           <p>Manage your academic clearance with ease</p>
         </div>
       </div>
+
+      {showModal && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <p>{errorMessage}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

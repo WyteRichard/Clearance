@@ -4,7 +4,6 @@ import rcBackground1 from '../assets/rc background 1.jpg';
 import user from '../assets/rc_logo.png';
 import eyeclose from '../assets/eyeclose.png';
 import eyeopen from '../assets/eyeopen.png';
-
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
@@ -15,10 +14,14 @@ const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [usernameError, setUsernameError] = useState(false);
+    const [passwordError, setPasswordError] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setErrorMessage('');
+        setUsernameError(false);
+        setPasswordError(false);
 
         const userData = { username, password };
 
@@ -78,7 +81,7 @@ const Login = () => {
                         navigate('/discipline-dashboard');
                     } else if (authorities.includes("ROLE_ROLE_COUNCIL")) {
                         localStorage.setItem('role', "ROLE_ROLE_COUNCIL");
-                        navigate('/student-council-dashboard');
+                        navigate('/ssc-dashboard');
                     } else if (authorities.includes("ROLE_ROLE_ADMIN")) {
                         localStorage.setItem('role', "ROLE_ROLE_ADMIN");
                         navigate('/admin-dashboard');
@@ -89,17 +92,40 @@ const Login = () => {
                 }
             } else {
                 console.error('Login failed:', response.statusText);
-                alert('Login failed. Please check your credentials and try again.');
+                handleError();
             }
         } catch (error) {
-            console.error('Error:', error.message);
-            if (error.response && error.response.data && error.response.data.message) {
-                setErrorMessage(error.response.data.message);
-            } else {
-                setErrorMessage('An error occurred while processing your request.');
-            }
+            handleError(error);
         }
     };
+
+    const handleError = (error) => {
+        if (error.response && error.response.data) {
+            const errorMessage = error.response.data.message || '';
+            const status = error.response.status;
+
+            setUsernameError(false);
+            setPasswordError(false);
+        
+            if (status === 401 && errorMessage.toLowerCase().includes("locked")) {
+                setErrorMessage("Your account has been locked, contact the administrator.");
+            } else if (errorMessage.toLowerCase().includes("invalid username")) {
+                setErrorMessage("Incorrect username");
+                setUsernameError(true);
+            } else if (errorMessage.toLowerCase().includes("invalid password")) {
+                setErrorMessage("Incorrect password");
+                setPasswordError(true);
+            } else {
+                setErrorMessage("Incorrect username or password");
+                setUsernameError(true);
+                setPasswordError(true);
+            }
+        } else {
+            setErrorMessage("An error occurred. Please try again.");
+            setUsernameError(false);
+            setPasswordError(false);
+        }
+    };   
 
     const togglePasswordVisibility = () => {
         setPasswordShown(!passwordShown);
@@ -118,7 +144,7 @@ const Login = () => {
                             <input
                                 type="text"
                                 placeholder="Username"
-                                className={styles.inputField}
+                                className={`${styles.inputField} ${usernameError ? styles.errorInput : ''}`}
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 required
@@ -130,7 +156,7 @@ const Login = () => {
                             <input
                                 type={passwordShown ? "text" : "password"}
                                 placeholder="Password"
-                                className={styles.inputField}
+                                className={`${styles.inputField} ${passwordError ? styles.errorInput : ''}`}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -138,7 +164,7 @@ const Login = () => {
                             <img
                                 src={passwordShown ? eyeopen : eyeclose}
                                 alt="Toggle visibility"
-                                className={styles.eyeIcon}
+                                className={styles.eyeIcon}  
                                 onClick={togglePasswordVisibility}
                             />
                         </div>

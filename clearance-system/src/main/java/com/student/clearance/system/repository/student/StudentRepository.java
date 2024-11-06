@@ -11,6 +11,8 @@ import java.util.List;
 public interface StudentRepository extends JpaRepository<Student, Long> {
     boolean existsByStudentNumberAndEmail(String studentNumber, String email);
 
+    boolean existsByStudentNumber(String studentNumber);
+
     Student findByStudentNumber(String studentNumber);
 
     List<Student> findAllByStudentNumber(String studentNumber);

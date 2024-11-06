@@ -6,7 +6,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LibraryRepository extends JpaRepository<Library, Long> {
-    boolean existsByLibraryNumberAndEmail(String employeeNumber, String email);
+    boolean existsByLibraryNumberAndEmail(String libraryNumber, String email);
+
+    boolean existsByLibraryNumber(String libraryNumber);
 
     Library findByLibraryNumber(String libraryNumber);
 }

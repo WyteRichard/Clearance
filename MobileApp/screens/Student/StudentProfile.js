@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-const StudentAccount = () => {
+const StudentProfile = () => {
   const navigation = useNavigation();
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -36,7 +36,7 @@ const StudentAccount = () => {
   const fetchStudentData = async (userId, token) => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://192.168.1.19:8080/Student/students/${userId}`, {
+      const response = await axios.get(`https://amused-gnu-legally.ngrok-free.app/Student/students/${userId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setStudent(response.data);
@@ -96,18 +96,13 @@ const StudentAccount = () => {
           </View>
 
           <View style={styles.infoItem}>
-            <Image source={require('../../assets/images/bphone.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{student ? student.contactNumber : "N/A"}</Text>
-          </View>
-
-          <View style={styles.infoItem}>
-            <Image source={require('../../assets/images/bmail.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{student ? student.email : "N/A"}</Text>
-          </View>
-
-          <View style={styles.infoItem}>
             <Image source={require('../../assets/images/bsid.png')} style={styles.icon} />
             <Text style={styles.infoText}>{student ? student.studentNumber : "N/A"}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <Image source={require('../../assets/images/bghat.png')} style={styles.icon} />
+            <Text style={styles.infoText}>{student ? student.yearLevel?.yearLevel : "N/A"}</Text>
           </View>
 
           <View style={styles.infoItem}>
@@ -116,8 +111,13 @@ const StudentAccount = () => {
           </View>
 
           <View style={styles.infoItem}>
-            <Image source={require('../../assets/images/bghat.png')} style={styles.icon} />
-            <Text style={styles.infoText}>{student ? student.yearLevel?.yearLevel : "N/A"}</Text>
+            <Image source={require('../../assets/images/bphone.png')} style={styles.icon} />
+            <Text style={styles.infoText}>{student ? student.contactNumber : "N/A"}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <Image source={require('../../assets/images/bmail.png')} style={styles.icon} />
+            <Text style={styles.infoText}>{student ? student.email : "N/A"}</Text>
           </View>
 
           <View style={styles.infoItem}>
@@ -169,9 +169,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 40,
+    paddingTop: 20,
     paddingHorizontal: 16,
-    paddingBottom: 20,
+    paddingBottom: 10,
   },
   backButton: { marginRight: 16 },
   backIcon: {
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 20,
+    marginBottom: 0,
   },
   contentContainer: { flex: 1 },
   card: {
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',
-    marginVertical: 90,
+    marginVertical: 10,
     marginHorizontal: 16,
   },
   logoutButtonText: {
@@ -228,4 +228,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default StudentAccount;
+export default StudentProfile;

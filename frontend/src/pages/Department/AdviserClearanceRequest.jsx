@@ -15,9 +15,7 @@ const AdviserClearanceRequest = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     const [yearLevelFilter, setYearLevelFilter] = useState("");
-    const [courseFilter, setCourseFilter] = useState("");
     const [yearLevels, setYearLevels] = useState([]);
-    const [courses, setCourses] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [remarks, setRemarks] = useState("");
@@ -108,44 +106,34 @@ const AdviserClearanceRequest = () => {
         })
         .then(response => setYearLevels(response.data))
         .catch(error => console.error("Error fetching year levels:", error));
-
-        axios.get("http://localhost:8080/Course/courses", {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-        .then(response => setCourses(response.data))
-        .catch(error => console.error("Error fetching courses:", error));
     };
 
     const handleFilter = useCallback(() => {
-    let filtered = [...clearanceRequests];
+        let filtered = [...clearanceRequests];
 
-    if (searchTerm) {
-        const searchTerms = searchTerm.toLowerCase().split(/\s+/);
-        filtered = filtered.filter(request => {
-            const student = request.student || {};
-            const fullName = `${student.firstName || ''} ${student.middleName || ''} ${student.lastName || ''}`.toLowerCase();
-            return searchTerms.every(term => fullName.includes(term));
-        });
-    }
+        if (searchTerm) {
+            const searchTerms = searchTerm.toLowerCase().split(/\s+/);
+            filtered = filtered.filter(request => {
+                const student = request.student || {};
+                const fullName = `${student.firstName || ''} ${student.middleName || ''} ${student.lastName || ''}`.toLowerCase();
+                return searchTerms.every(term => fullName.includes(term));
+            });
+        }
 
-    if (statusFilter) {
-        filtered = filtered.filter(request => request.status?.toLowerCase() === statusFilter.toLowerCase());
-    }
+        if (statusFilter) {
+            filtered = filtered.filter(request => request.status?.toLowerCase() === statusFilter.toLowerCase());
+        }
 
-    if (yearLevelFilter) {
-        filtered = filtered.filter(request => request.student?.yearLevel?.yearLevel === yearLevelFilter);
-    }
+        if (yearLevelFilter) {
+            filtered = filtered.filter(request => request.student?.yearLevel?.yearLevel === yearLevelFilter);
+        }
 
-    if (courseFilter) {
-        filtered = filtered.filter(request => request.student?.course?.courseName === courseFilter);
-    }
+        setFilteredRequests(filtered);
+    }, [clearanceRequests, searchTerm, statusFilter, yearLevelFilter]);
 
-    setFilteredRequests(filtered);
-}, [clearanceRequests, searchTerm, statusFilter, yearLevelFilter, courseFilter]);
-
-useEffect(() => {
-    handleFilter();
-}, [handleFilter]);
+    useEffect(() => {
+        handleFilter();
+    }, [handleFilter]);
 
     const toggleStatus = async (id, currentStatus) => {
         const newStatus = currentStatus?.toLowerCase() === "cleared" ? "PENDING" : "CLEARED";
@@ -230,7 +218,7 @@ useEffect(() => {
                         <img src={homeIcon} alt="Dashboard" className={styles.navIcon} />
                         Dashboard
                     </button>
-                    <button className={styles.whiteButton} onClick={() => navigate('/adviser-request-clearance')}>
+                    <button className={styles.whiteButton} onClick={() => navigate('/adviser-clearance-request')}>
                         <img src={requestIcon} alt="Clearance Request" className={styles.navIcon} />
                         Clearance Request
                     </button>
@@ -271,14 +259,6 @@ useEffect(() => {
                         {yearLevels.map(level => (
                             <option key={level.yearLevelId} value={level.yearLevel}>
                                 {level.yearLevel}
-                            </option>
-                        ))}
-                    </select>
-                    <select onChange={e => setCourseFilter(e.target.value)}>
-                        <option value="">Filter by course</option>
-                        {courses.map(course => (
-                            <option key={course.courseId} value={course.courseName}>
-                                {course.courseName}
                             </option>
                         ))}
                     </select>

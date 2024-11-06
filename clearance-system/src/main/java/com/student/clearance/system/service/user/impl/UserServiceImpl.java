@@ -163,239 +163,359 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         user.setPassword(passwordEncoder.encode(newUser.getPassword()));
         user.setJoinDate(new Date());
         user.setActive(true);
+
         if (newUser.getStudent() != null && newUser.getStudent().getStudentNumber() != null) {
             String studentNumber = newUser.getStudent().getStudentNumber();
             String email = newUser.getStudent().getEmail();
-            boolean isStudentExists = studentRepository.existsByStudentNumberAndEmail(studentNumber, email);
+
+            boolean isStudentNumberExists = studentRepository.existsByStudentNumber(studentNumber);
+            boolean isEmailExistsForStudent = studentRepository.existsByStudentNumberAndEmail(studentNumber, email);
             boolean isUserIdExists = userRepository.existsByUserId(newUser.getStudent().getStudentNumber());
-            if (!isStudentExists) {
+            if (!isStudentNumberExists) {
                 throw new PersonExistsException("Student Number Does Not Exist!!");
-            } else if (isUserIdExists) {
+            }
+            if (!isEmailExistsForStudent) {
+                throw new PersonExistsException("Email Address Does Not Match the Given Student Number!!");
+            }
+            if (isUserIdExists) {
                 throw new PersonExistsException("Student Already Exists!");
             }
-
             emailService.sendNewPasswordEmail(email, otp);
             user.setUserId(newUser.getStudent().getStudentNumber());
             user.setOtp(otp);
             user.setLocked(true);
             user.setRole(ROLE_STUDENT.name());
             user.setAuthorities(Arrays.stream(ROLE_STUDENT.getAuthorities()).toList());
-        } else if (newUser.getSupremeStudentCouncil() != null && newUser.getSupremeStudentCouncil().getSupremeStudentCouncilNumber() != null) {
+        }
+
+
+
+        else if (newUser.getSupremeStudentCouncil() != null && newUser.getSupremeStudentCouncil().getSupremeStudentCouncilNumber() != null) {
             String supremeStudentCouncilNumber = newUser.getSupremeStudentCouncil().getSupremeStudentCouncilNumber();
             String email = newUser.getSupremeStudentCouncil().getEmail();
-            boolean isSupremeStudentCouncilExists = supremeStudentCouncilRepository.existsBySupremeStudentCouncilNumberAndEmail(supremeStudentCouncilNumber, email);
+
+            boolean isSupremeStudentCouncilNumberExists = supremeStudentCouncilRepository.existsBySupremeStudentCouncilNumber(supremeStudentCouncilNumber);
+            boolean isEmailExistsForSupremeStudentCouncil = supremeStudentCouncilRepository.existsBySupremeStudentCouncilNumberAndEmail(supremeStudentCouncilNumber, email);
             boolean isUserIdExists = userRepository.existsByUserId(newUser.getSupremeStudentCouncil().getSupremeStudentCouncilNumber());
-            if (!isSupremeStudentCouncilExists) {
+            if (!isSupremeStudentCouncilNumberExists) {
                 throw new PersonExistsException("SSC Number Does Not Exist!!");
-            } else if (isUserIdExists) {
+            }
+            if (!isEmailExistsForSupremeStudentCouncil) {
+                throw new PersonExistsException("Email Address Does Not Match the Given SSC Number!!");
+            }
+            if (isUserIdExists) {
                 throw new PersonExistsException("SSC Already Exists!");
             }
-
             emailService.sendNewPasswordEmail(email, otp);
             user.setUserId(newUser.getSupremeStudentCouncil().getSupremeStudentCouncilNumber());
             user.setOtp(otp);
             user.setLocked(true);
             user.setRole(ROLE_COUNCIL.name());
-            List<String> authorities = Arrays.stream(ROLE_COUNCIL.getAuthorities()).toList();
-            if (authorities == null || authorities.isEmpty()) {
-                throw new IllegalArgumentException("Authorities for Supreme Student Council cannot be null or empty");
-            }
-            user.setAuthorities(authorities);
-        } else if (newUser.getStudentAffairs() != null && newUser.getStudentAffairs().getStudentAffairsNumber() != null) {
+            user.setAuthorities(Arrays.stream(ROLE_COUNCIL.getAuthorities()).toList());
+        }
+
+
+
+        else if (newUser.getStudentAffairs() != null && newUser.getStudentAffairs().getStudentAffairsNumber() != null) {
             String studentAffairsNumber = newUser.getStudentAffairs().getStudentAffairsNumber();
             String email = newUser.getStudentAffairs().getEmail();
-            boolean isStudentAffairsExists = studentAffairsRepository.existsByStudentAffairsNumberAndEmail(studentAffairsNumber, email);
+
+            boolean isStudentAffairsNumberExists = studentAffairsRepository.existsByStudentAffairsNumber(studentAffairsNumber);
+            boolean isEmailExistsForStudentAffairs = studentAffairsRepository.existsByStudentAffairsNumberAndEmail(studentAffairsNumber, email);
             boolean isUserIdExists = userRepository.existsByUserId(newUser.getStudentAffairs().getStudentAffairsNumber());
-            if (!isStudentAffairsExists) {
+            if (!isStudentAffairsNumberExists) {
                 throw new PersonExistsException("Student Affairs Number Does Not Exist!!");
-            } else if (isUserIdExists) {
+            }
+            if (!isEmailExistsForStudentAffairs) {
+                throw new PersonExistsException("Email Address Does Not Match the Given Student Affairs Number!!");
+            }
+            if (isUserIdExists) {
                 throw new PersonExistsException("Student Affairs Already Exists!");
             }
-
             emailService.sendNewPasswordEmail(email, otp);
             user.setUserId(newUser.getStudentAffairs().getStudentAffairsNumber());
             user.setOtp(otp);
             user.setLocked(true);
             user.setRole(ROLE_AFFAIRS.name());
             user.setAuthorities(Arrays.stream(ROLE_AFFAIRS.getAuthorities()).toList());
-        } else if (newUser.getSpiritualAffairs() != null && newUser.getSpiritualAffairs().getSpiritualAffairsNumber() != null) {
+        }
+
+
+
+        else if (newUser.getSpiritualAffairs() != null && newUser.getSpiritualAffairs().getSpiritualAffairsNumber() != null) {
             String spiritualAffairsNumber = newUser.getSpiritualAffairs().getSpiritualAffairsNumber();
             String email = newUser.getSpiritualAffairs().getEmail();
-            boolean isSpiritualAffairsExists = spiritualAffairsRepository.existsBySpiritualAffairsNumberAndEmail(spiritualAffairsNumber, email);
+
+            boolean isSpiritualAffairsNumberExists = spiritualAffairsRepository.existsBySpiritualAffairsNumber(spiritualAffairsNumber);
+            boolean isEmailExistsForSpiritualAffairs = spiritualAffairsRepository.existsBySpiritualAffairsNumberAndEmail(spiritualAffairsNumber, email);
             boolean isUserIdExists = userRepository.existsByUserId(newUser.getSpiritualAffairs().getSpiritualAffairsNumber());
-            if (!isSpiritualAffairsExists) {
+            if (!isSpiritualAffairsNumberExists) {
                 throw new PersonExistsException("Spiritual Affairs Number Does Not Exist!!");
-            } else if (isUserIdExists) {
+            }
+            if (!isEmailExistsForSpiritualAffairs) {
+                throw new PersonExistsException("Email Address Does Not Match the Given Spiritual Affairs Number!!");
+            }
+            if (isUserIdExists) {
                 throw new PersonExistsException("Spiritual Affairs Already Exists!");
             }
-
             emailService.sendNewPasswordEmail(email, otp);
             user.setUserId(newUser.getSpiritualAffairs().getSpiritualAffairsNumber());
             user.setOtp(otp);
             user.setLocked(true);
             user.setRole(ROLE_SPIRITUAL.name());
             user.setAuthorities(Arrays.stream(ROLE_SPIRITUAL.getAuthorities()).toList());
-        } else if (newUser.getStudentDiscipline() != null && newUser.getStudentDiscipline().getStudentDisciplineNumber() != null) {
+        }
+
+
+
+        else if (newUser.getStudentDiscipline() != null && newUser.getStudentDiscipline().getStudentDisciplineNumber() != null) {
             String studentDisciplineNumber = newUser.getStudentDiscipline().getStudentDisciplineNumber();
             String email = newUser.getStudentDiscipline().getEmail();
-            boolean isStudentDisciplineExists = studentDisciplineRepository.existsByStudentDisciplineNumberAndEmail(studentDisciplineNumber, email);
+
+            boolean isStudentDisciplineNumberExists = studentDisciplineRepository.existsByStudentDisciplineNumber(studentDisciplineNumber);
+            boolean isEmailExistsForStudentDiscipline = studentDisciplineRepository.existsByStudentDisciplineNumberAndEmail(studentDisciplineNumber, email);
             boolean isUserIdExists = userRepository.existsByUserId(newUser.getStudentDiscipline().getStudentDisciplineNumber());
-            if (!isStudentDisciplineExists) {
+            if (!isStudentDisciplineNumberExists) {
                 throw new PersonExistsException("Student Discipline Number Does Not Exist!!");
-            } else if (isUserIdExists) {
+            }
+            if (!isEmailExistsForStudentDiscipline) {
+                throw new PersonExistsException("Email Address Does Not Match the Given Student Discipline Number!!");
+            }
+            if (isUserIdExists) {
                 throw new PersonExistsException("Student Discipline Already Exists!");
             }
-
             emailService.sendNewPasswordEmail(email, otp);
             user.setUserId(newUser.getStudentDiscipline().getStudentDisciplineNumber());
             user.setOtp(otp);
             user.setLocked(true);
             user.setRole(ROLE_DISCIPLINE.name());
             user.setAuthorities(Arrays.stream(ROLE_DISCIPLINE.getAuthorities()).toList());
-        } else if (newUser.getGuidance() != null && newUser.getGuidance().getGuidanceNumber() != null) {
+        }
+
+
+
+        else if (newUser.getGuidance() != null && newUser.getGuidance().getGuidanceNumber() != null) {
             String guidanceNumber = newUser.getGuidance().getGuidanceNumber();
             String email = newUser.getGuidance().getEmail();
-            boolean isGuidanceExists = guidanceRepository.existsByGuidanceNumberAndEmail(guidanceNumber, email);
+
+            boolean isGuidanceNumberExists = guidanceRepository.existsByGuidanceNumber(guidanceNumber);
+            boolean isEmailExistsForGuidance = guidanceRepository.existsByGuidanceNumberAndEmail(guidanceNumber, email);
             boolean isUserIdExists = userRepository.existsByUserId(newUser.getGuidance().getGuidanceNumber());
-            if (!isGuidanceExists) {
+            if (!isGuidanceNumberExists) {
                 throw new PersonExistsException("Guidance Number Does Not Exist!!");
-            } else if (isUserIdExists) {
+            }
+            if (!isEmailExistsForGuidance) {
+                throw new PersonExistsException("Email Address Does Not Match the Given Guidance Number!!");
+            }
+            if (isUserIdExists) {
                 throw new PersonExistsException("Guidance Already Exists!");
             }
-
             emailService.sendNewPasswordEmail(email, otp);
             user.setUserId(newUser.getGuidance().getGuidanceNumber());
             user.setOtp(otp);
             user.setLocked(true);
             user.setRole(ROLE_GUIDANCE.name());
             user.setAuthorities(Arrays.stream(ROLE_GUIDANCE.getAuthorities()).toList());
-        } else if (newUser.getLibrary() != null && newUser.getLibrary().getLibraryNumber() != null) {
+        }
+
+
+
+        else if (newUser.getLibrary() != null && newUser.getLibrary().getLibraryNumber() != null) {
             String libraryNumber = newUser.getLibrary().getLibraryNumber();
             String email = newUser.getLibrary().getEmail();
-            boolean isLibraryExists = libraryRepository.existsByLibraryNumberAndEmail(libraryNumber, email);
+
+            boolean isLibraryNumberExists = libraryRepository.existsByLibraryNumber(libraryNumber);
+            boolean isEmailExistsForLibrary = libraryRepository.existsByLibraryNumberAndEmail(libraryNumber, email);
             boolean isUserIdExists = userRepository.existsByUserId(newUser.getLibrary().getLibraryNumber());
-            if (!isLibraryExists) {
+            if (!isLibraryNumberExists) {
                 throw new PersonExistsException("Library Number Does Not Exist!!");
-            } else if (isUserIdExists) {
+            }
+            if (!isEmailExistsForLibrary) {
+                throw new PersonExistsException("Email Address Does Not Match the Given Library Number!!");
+            }
+            if (isUserIdExists) {
                 throw new PersonExistsException("Library Already Exists!");
             }
-
             emailService.sendNewPasswordEmail(email, otp);
             user.setUserId(newUser.getLibrary().getLibraryNumber());
             user.setOtp(otp);
             user.setLocked(true);
             user.setRole(ROLE_LIBRARY.name());
             user.setAuthorities(Arrays.stream(ROLE_LIBRARY.getAuthorities()).toList());
-        } else if (newUser.getLaboratory() != null && newUser.getLaboratory().getLaboratoryNumber() != null) {
+        }
+
+
+
+        else if (newUser.getLaboratory() != null && newUser.getLaboratory().getLaboratoryNumber() != null) {
             String laboratoryNumber = newUser.getLaboratory().getLaboratoryNumber();
             String email = newUser.getLaboratory().getEmail();
-            boolean isLaboratoryExists = laboratoryRepository.existsByLaboratoryNumberAndEmail(laboratoryNumber, email);
+
+            boolean isLaboratoryNumberExists = laboratoryRepository.existsByLaboratoryNumber(laboratoryNumber);
+            boolean isEmailExistsForLaboratory = laboratoryRepository.existsByLaboratoryNumberAndEmail(laboratoryNumber, email);
             boolean isUserIdExists = userRepository.existsByUserId(newUser.getLaboratory().getLaboratoryNumber());
-            if (!isLaboratoryExists) {
+            if (!isLaboratoryNumberExists) {
                 throw new PersonExistsException("Laboratory Number Does Not Exist!!");
-            } else if (isUserIdExists) {
+            }
+            if (!isEmailExistsForLaboratory) {
+                throw new PersonExistsException("Email Address Does Not Match the Given Laboratory Number!!");
+            }
+            if (isUserIdExists) {
                 throw new PersonExistsException("Laboratory Already Exists!");
             }
-
             emailService.sendNewPasswordEmail(email, otp);
             user.setUserId(newUser.getLaboratory().getLaboratoryNumber());
             user.setOtp(otp);
             user.setLocked(true);
             user.setRole(ROLE_LABORATORY.name());
             user.setAuthorities(Arrays.stream(ROLE_LABORATORY.getAuthorities()).toList());
-        } else if (newUser.getClinic() != null && newUser.getClinic().getClinicNumber() != null) {
+        }
+
+
+
+        else if (newUser.getClinic() != null && newUser.getClinic().getClinicNumber() != null) {
             String clinicNumber = newUser.getClinic().getClinicNumber();
             String email = newUser.getClinic().getEmail();
-            boolean isClinicExists = clinicRepository.existsByClinicNumberAndEmail(clinicNumber, email);
+
+            boolean isClinicNumberExists = clinicRepository.existsByClinicNumber(clinicNumber);
+            boolean isEmailExistsForClinic = clinicRepository.existsByClinicNumberAndEmail(clinicNumber, email);
             boolean isUserIdExists = userRepository.existsByUserId(newUser.getClinic().getClinicNumber());
-            if (!isClinicExists) {
+            if (!isClinicNumberExists) {
                 throw new PersonExistsException("Clinic Number Does Not Exist!!");
-            } else if (isUserIdExists) {
+            }
+            if (!isEmailExistsForClinic) {
+                throw new PersonExistsException("Email Address Does Not Match the Given Clinic Number!!");
+            }
+            if (isUserIdExists) {
                 throw new PersonExistsException("Clinic Already Exists!");
             }
-
             emailService.sendNewPasswordEmail(email, otp);
             user.setUserId(newUser.getClinic().getClinicNumber());
             user.setOtp(otp);
             user.setLocked(true);
             user.setRole(ROLE_CLINIC.name());
             user.setAuthorities(Arrays.stream(ROLE_CLINIC.getAuthorities()).toList());
-        } else if (newUser.getCashier() != null && newUser.getCashier().getCashierNumber() != null) {
+        }
+
+
+
+        else if (newUser.getCashier() != null && newUser.getCashier().getCashierNumber() != null) {
             String cashierNumber = newUser.getCashier().getCashierNumber();
             String email = newUser.getCashier().getEmail();
-            boolean isCashierExists = cashierRepository.existsByCashierNumberAndEmail(cashierNumber, email);
+
+            boolean isCashierNumberExists = cashierRepository.existsByCashierNumber(cashierNumber);
+            boolean isEmailExistsForCashier = cashierRepository.existsByCashierNumberAndEmail(cashierNumber, email);
             boolean isUserIdExists = userRepository.existsByUserId(newUser.getCashier().getCashierNumber());
-            if (!isCashierExists) {
+            if (!isCashierNumberExists) {
                 throw new PersonExistsException("Cashier Number Does Not Exist!!");
-            } else if (isUserIdExists) {
+            }
+            if (!isEmailExistsForCashier) {
+                throw new PersonExistsException("Email Address Does Not Match the Given Cashier Number!!");
+            }
+            if (isUserIdExists) {
                 throw new PersonExistsException("Cashier Already Exists!");
             }
-
             emailService.sendNewPasswordEmail(email, otp);
             user.setUserId(newUser.getCashier().getCashierNumber());
             user.setOtp(otp);
             user.setLocked(true);
             user.setRole(ROLE_CASHIER.name());
             user.setAuthorities(Arrays.stream(ROLE_CASHIER.getAuthorities()).toList());
-        } else if (newUser.getAdviser() != null && newUser.getAdviser().getAdviserNumber() != null) {
+        }
+
+
+
+        else if (newUser.getAdviser() != null && newUser.getAdviser().getAdviserNumber() != null) {
             String adviserNumber = newUser.getAdviser().getAdviserNumber();
             String email = newUser.getAdviser().getEmail();
-            boolean isAdviserExists = adviserRepository.existsByAdviserNumberAndEmail(adviserNumber, email);
+
+            boolean isAdviserNumberExists = adviserRepository.existsByAdviserNumber(adviserNumber);
+            boolean isEmailExistsForAdviser = adviserRepository.existsByAdviserNumberAndEmail(adviserNumber, email);
             boolean isUserIdExists = userRepository.existsByUserId(newUser.getAdviser().getAdviserNumber());
-            if (!isAdviserExists) {
+            if (!isAdviserNumberExists) {
                 throw new PersonExistsException("Adviser Number Does Not Exist!!");
-            } else if (isUserIdExists) {
+            }
+            if (!isEmailExistsForAdviser) {
+                throw new PersonExistsException("Email Address Does Not Match the Given Adviser Number!!");
+            }
+            if (isUserIdExists) {
                 throw new PersonExistsException("Adviser Already Exists!");
             }
-
             emailService.sendNewPasswordEmail(email, otp);
             user.setUserId(newUser.getAdviser().getAdviserNumber());
             user.setOtp(otp);
             user.setLocked(true);
             user.setRole(ROLE_ADVISER.name());
             user.setAuthorities(Arrays.stream(ROLE_ADVISER.getAuthorities()).toList());
-        } else if (newUser.getClusterCoordinator() != null && newUser.getClusterCoordinator().getClusterCoordinatorNumber() != null) {
+        }
+
+
+
+        else if (newUser.getClusterCoordinator() != null && newUser.getClusterCoordinator().getClusterCoordinatorNumber() != null) {
             String clusterCoordinatorNumber = newUser.getClusterCoordinator().getClusterCoordinatorNumber();
             String email = newUser.getClusterCoordinator().getEmail();
-            boolean isClusterCoordinatorExists = clusterCoordinatorRepository.existsByClusterCoordinatorNumberAndEmail(clusterCoordinatorNumber, email);
+
+            boolean isClusterCoordinatorNumberExists = clusterCoordinatorRepository.existsByClusterCoordinatorNumber(clusterCoordinatorNumber);
+            boolean isEmailExistsForClusterCoordinator = clusterCoordinatorRepository.existsByClusterCoordinatorNumberAndEmail(clusterCoordinatorNumber, email);
             boolean isUserIdExists = userRepository.existsByUserId(newUser.getClusterCoordinator().getClusterCoordinatorNumber());
-            if (!isClusterCoordinatorExists) {
+            if (!isClusterCoordinatorNumberExists) {
                 throw new PersonExistsException("Cluster Coordinator Number Does Not Exist!!");
-            } else if (isUserIdExists) {
+            }
+            if (!isEmailExistsForClusterCoordinator) {
+                throw new PersonExistsException("Email Address Does Not Match the Given Cluster Coordinator Number!!");
+            }
+            if (isUserIdExists) {
                 throw new PersonExistsException("Cluster Coordinator Already Exists!");
             }
-
             emailService.sendNewPasswordEmail(email, otp);
             user.setUserId(newUser.getClusterCoordinator().getClusterCoordinatorNumber());
             user.setOtp(otp);
             user.setLocked(true);
             user.setRole(ROLE_COORDINATOR.name());
             user.setAuthorities(Arrays.stream(ROLE_COORDINATOR.getAuthorities()).toList());
-        } else if (newUser.getRegistrar() != null && newUser.getRegistrar().getRegistrarNumber() != null) {
+        }
+
+
+
+        else if (newUser.getRegistrar() != null && newUser.getRegistrar().getRegistrarNumber() != null) {
             String registrarNumber = newUser.getRegistrar().getRegistrarNumber();
             String email = newUser.getRegistrar().getEmail();
-            boolean isRegistrarExists = registrarRepository.existsByRegistrarNumberAndEmail(registrarNumber, email);
+
+            boolean isRegistrarNumberExists = registrarRepository.existsByRegistrarNumber(registrarNumber);
+            boolean isEmailExistsForRegistrar = registrarRepository.existsByRegistrarNumberAndEmail(registrarNumber, email);
             boolean isUserIdExists = userRepository.existsByUserId(newUser.getRegistrar().getRegistrarNumber());
-            if (!isRegistrarExists) {
+            if (!isRegistrarNumberExists) {
                 throw new PersonExistsException("Registrar Number Does Not Exist!!");
-            } else if (isUserIdExists) {
+            }
+            if (!isEmailExistsForRegistrar) {
+                throw new PersonExistsException("Email Address Does Not Match the Given Registrar Number!!");
+            }
+            if (isUserIdExists) {
                 throw new PersonExistsException("Registrar Already Exists!");
             }
-
             emailService.sendNewPasswordEmail(email, otp);
             user.setUserId(newUser.getRegistrar().getRegistrarNumber());
             user.setOtp(otp);
             user.setLocked(true);
             user.setRole(ROLE_REGISTRAR.name());
             user.setAuthorities(Arrays.stream(ROLE_REGISTRAR.getAuthorities()).toList());
-        } else if (newUser.getDean() != null && newUser.getDean().getDeanNumber() != null) {
+        }
+
+
+
+        else if (newUser.getDean() != null && newUser.getDean().getDeanNumber() != null) {
             String deanNumber = newUser.getDean().getDeanNumber();
             String email = newUser.getDean().getEmail();
-            boolean isDeanExists = deanRepository.existsByDeanNumberAndEmail(deanNumber, email);
+
+            boolean isDeanNumberExists = deanRepository.existsByDeanNumber(deanNumber);
+            boolean isEmailExistsForDean = deanRepository.existsByDeanNumberAndEmail(deanNumber, email);
             boolean isUserIdExists = userRepository.existsByUserId(newUser.getDean().getDeanNumber());
-            if (!isDeanExists) {
+            if (!isDeanNumberExists) {
                 throw new PersonExistsException("Dean Number Does Not Exist!!");
-            } else if (isUserIdExists) {
+            }
+            if (!isEmailExistsForDean) {
+                throw new PersonExistsException("Email Address Does Not Match the Given Dean Number!!");
+            }
+            if (isUserIdExists) {
                 throw new PersonExistsException("Dean Already Exists!");
             }
             emailService.sendNewPasswordEmail(email, otp);
@@ -404,14 +524,24 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             user.setLocked(true);
             user.setRole(ROLE_DEAN.name());
             user.setAuthorities(Arrays.stream(ROLE_DEAN.getAuthorities()).toList());
-        } else if (newUser.getAdmin() != null && newUser.getAdmin().getAdminNumber() != null) {
+        }
+
+
+
+        else if (newUser.getAdmin() != null && newUser.getAdmin().getAdminNumber() != null) {
             String adminNumber = newUser.getAdmin().getAdminNumber();
             String email = newUser.getAdmin().getEmail();
-            boolean isAdminExists = adminRepository.existsByAdminNumberAndEmail(adminNumber, email);
+
+            boolean isAdminNumberExists = adminRepository.existsByAdminNumber(adminNumber);
+            boolean isEmailExistsForAdmin = adminRepository.existsByAdminNumberAndEmail(adminNumber, email);
             boolean isUserIdExists = userRepository.existsByUserId(newUser.getAdmin().getAdminNumber());
-            if (!isAdminExists) {
+            if (!isAdminNumberExists) {
                 throw new PersonExistsException("Admin Number Does Not Exist!!");
-            } else if (isUserIdExists) {
+            }
+            if (!isEmailExistsForAdmin) {
+                throw new PersonExistsException("Email Address Does Not Match the Given Admin Number!!");
+            }
+            if (isUserIdExists) {
                 throw new PersonExistsException("Admin Already Exists!");
             }
             emailService.sendNewPasswordEmail(email, otp);
@@ -517,11 +647,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private void validatePassword(String password) throws PersonExistsException {
         String passwordPattern = ".*[^a-zA-Z0-9].*";
         if (!password.matches(passwordPattern)) {
-            throw new PersonExistsException("Please create a stronger password. Password should contain special characters.");
+            throw new PersonExistsException("");
         }
     }
     private String generateOTP() {
-        int otp = 100000 + (int) (Math.random() * 900000); // Generates a 6-digit number
+        int otp = 100000 + (int) (Math.random() * 900000);
         return String.valueOf(otp);
     }
     private String generateUserId() {
