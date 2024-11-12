@@ -3,6 +3,7 @@ package com.student.clearance.system.controller.clearanceRequest;
 import com.student.clearance.system.domain.clearanceRequest.ClearanceRequest;
 import com.student.clearance.system.service.clearanceRequest.ClearanceRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -64,9 +65,16 @@ public class ClearanceRequestController {
         }
     }
 
-    @PostMapping("/add")
-    public ClearanceRequest createClearanceRequest(@RequestBody ClearanceRequest clearanceRequest) {
-        return clearanceRequestService.createClearanceRequest(clearanceRequest);
+    @PostMapping("/addRequests")
+    public ResponseEntity<Void> createClearanceRequestForAllDepartments(@RequestBody ClearanceRequest clearanceRequest) {
+        clearanceRequestService.createClearanceRequestForAllDepartments(clearanceRequest);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/addSelectedRequests")
+    public ResponseEntity<Void> createClearanceRequestForSelectedDepartments(@RequestBody ClearanceRequest clearanceRequest) {
+        clearanceRequestService.createClearanceRequestForSelectedDepartments(clearanceRequest);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}")
@@ -92,6 +100,23 @@ public class ClearanceRequestController {
             @PathVariable Long studentId,
             @PathVariable Long departmentId) {
         return clearanceRequestService.getClearanceRequestsByStudentIdAndDepartmentId(studentId, departmentId);
+    }
+
+    @GetMapping("/student/{studentId}/exists")
+    public ResponseEntity<Boolean> clearanceRequestExists(@PathVariable Long studentId) {
+        try {
+            boolean exists = clearanceRequestService.clearanceRequestExistsByStudentId(studentId);
+            return ResponseEntity.ok(exists);
+        } catch (Exception e) {
+            e.printStackTrace(); // Log the error stack trace for debugging
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
+        }
+    }
+
+    @GetMapping("/student/number/{studentNumber}")
+    public ResponseEntity<List<ClearanceRequest>> getClearanceRequestsByStudentNumber(@PathVariable String studentNumber) {
+        List<ClearanceRequest> clearanceRequests = clearanceRequestService.getClearanceRequestsByStudentNumber(studentNumber);
+        return ResponseEntity.ok(clearanceRequests);
     }
 
 }

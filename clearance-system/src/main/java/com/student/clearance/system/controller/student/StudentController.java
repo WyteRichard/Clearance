@@ -93,4 +93,23 @@ public class StudentController {
         int count = studentService.getStudentCount();
         return ResponseEntity.ok(count);
     }
+
+    @PutMapping("/student/{studentNumber}/summer")
+    public ResponseEntity<Student> updateSummer(
+            @PathVariable String studentNumber,
+            @RequestParam("summer") boolean summer) {
+        try {
+            Student student = studentService.getStudentByStudentNumber(studentNumber);
+            if (student == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+
+            student.setSummer(summer);
+            Student updatedStudent = studentService.updateStudentByStudentNumber(studentNumber, student);
+            return ResponseEntity.ok(updatedStudent);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
 }

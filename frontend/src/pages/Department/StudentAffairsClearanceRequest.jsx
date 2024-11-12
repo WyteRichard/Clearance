@@ -10,6 +10,7 @@ import pendingtoggle from '../../assets/pendingtoggle.svg';
 import avatar from '../../assets/avatar2.png';
 
 const StudentAffairsClearanceRequest = () => {
+    const departmentId = 11;
     const [clearanceRequests, setClearanceRequests] = useState([]);
     const [filteredRequests, setFilteredRequests] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
@@ -24,6 +25,8 @@ const StudentAffairsClearanceRequest = () => {
     const [currentSemester, setCurrentSemester] = useState("Loading...");
     const [currentAcademicYear, setCurrentAcademicYear] = useState("Loading...");
     const [showModal, setShowModal] = useState(false);
+    const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
+    const [transactionLogs, setTransactionLogs] = useState([]);
     
     const navigate = useNavigate();
 
@@ -126,30 +129,78 @@ const StudentAffairsClearanceRequest = () => {
     }
 
     setFilteredRequests(filtered);
-}, [clearanceRequests, searchTerm, statusFilter, yearLevelFilter, courseFilter]);
+    }, [clearanceRequests, searchTerm, statusFilter, yearLevelFilter, courseFilter]);
 
-useEffect(() => {
-    handleFilter();
-}, [handleFilter]);
+    useEffect(() => {
+        handleFilter();
+    }, [handleFilter]);
 
-    const toggleStatus = async (id, currentStatus) => {
-        const newStatus = currentStatus?.toLowerCase() === "cleared" ? "PENDING" : "CLEARED";
+    const logTransaction = async (studentNumber, message) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.put(`http://localhost:8080/Status/update-status/${id}`, {
-                status: newStatus
-            }, {
+            const logData = {
+                studentId: studentNumber,
+                departmentId: 11,
+                transactionType: "Clearance Update",
+                details: message,
+                timestamp: new Date().toISOString()
+            };
+    
+            console.log("Log Data:", logData);
+    
+            await axios.post(
+                'http://localhost:8080/Status/log-transaction',
+                logData,
+                {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }
+            );
+        } catch (error) {
+            console.error("Error logging transaction:", error);
+        }
+    };
+    
+    const fetchTransactionLogs = async (studentNumber) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`http://localhost:8080/Status/logs/${studentNumber}/department/${departmentId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            setTransactionLogs(response.data);
+            setIsLogsModalOpen(true);
+        } catch (error) {
+            console.error("Error fetching transaction logs:", error);
+        }
+    };
     
-            console.log("Backend response:", response.data);
-            
-            if (response.status === 200) {
-                setClearanceRequests(prevRequests =>
-                    prevRequests.map(request =>
-                        request.id === id ? { ...request, status: newStatus } : request
-                    )
-                );
+    const toggleStatus = async (id, currentStatus) => {
+        const newStatus = currentStatus?.toLowerCase() === "cleared" ? "PENDING" : "CLEARED";
+            try {
+                const token = localStorage.getItem('token');
+                const response = await axios.put(`http://localhost:8080/Status/update-status/${id}`, {
+                    status: newStatus
+                }, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+    
+                console.log("Backend response:", response.data);
+                
+                if (response.status === 200) {
+                    setClearanceRequests(prevRequests =>
+                        prevRequests.map(request =>
+                            request.id === id ? { ...request, status: newStatus } : request
+                        )
+                    );
+
+                const updatedRequest = clearanceRequests.find(request => request.id === id);
+                const studentNumber = updatedRequest?.student?.studentNumber;
+
+                if (studentNumber) {
+                    const message = `Status updated from ${currentStatus} to ${newStatus}`;
+                    await logTransaction(studentNumber, message);
+                } else {
+                    console.error("Student number not found for log transaction.");
+                }
             } else {
                 console.error("Failed to update status on the backend.");
             }
@@ -157,13 +208,13 @@ useEffect(() => {
             console.error("Error updating status:", error);
         }
     };
-
+    
     const openModal = (request) => {
         setSelectedRequest(request);
         setRemarks(request.remarks || '');
         setIsModalOpen(true);
     };
-
+    
     const handleSaveRemarks = async () => {
         if (selectedRequest) {
             try {
@@ -180,6 +231,13 @@ useEffect(() => {
                         request.id === selectedRequest.id ? { ...request, remarks } : request
                     )
                 );
+
+                const message = `Remarks updated to: '${remarks}'`;
+                console.log("Logging transaction for remarks update:", {
+                    studentNumber: selectedRequest.student.studentNumber,
+                    message
+                });
+                await logTransaction(selectedRequest.student.studentNumber, message);
                 setIsModalOpen(false);
             } catch (error) {
                 console.error("Error updating remarks:", error);
@@ -295,9 +353,14 @@ useEffect(() => {
                                             style={{ cursor: 'pointer' }}
                                         />
                                     </td>
-                                    <td>{request.remarks}</td>
+                                    <td className="remarks-cell">{request.remarks}</td>
                                     <td>
                                         <button className={styles.editButton} onClick={() => openModal(request)}>Edit</button>
+                                        <button 
+                                            className={styles.viewLogsButton} 
+                                            onClick={() => fetchTransactionLogs(request.student?.studentNumber)}>
+                                            Logs
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -322,6 +385,27 @@ useEffect(() => {
                     </div>
                 </Modal>
             )}
+
+            {isLogsModalOpen && (
+                <Modal isOpen={isLogsModalOpen} onRequestClose={() => setIsLogsModalOpen(false)} className={styles.modal}>
+                    <h2 className={styles.modalTitle}>Transaction Logs</h2>
+                    <div className={styles.logsContainer}>
+                        {transactionLogs.length > 0 ? (
+                            transactionLogs.map((log, index) => (
+                                <div key={index} className={styles.logEntry}>
+                                    <p><strong>Date:</strong> {new Date(log.timestamp).toLocaleString()}</p>
+                                    <p><strong>Transaction Type:</strong> {log.transactionType}</p>
+                                    <p><strong>Details:</strong> {log.details}</p>
+                                </div>
+                            ))
+                        ) : (
+                            <p>No transaction logs available.</p>
+                        )}
+                    </div>
+                    <button className={styles.closeButton} onClick={() => setIsLogsModalOpen(false)}>Close</button>
+                </Modal>
+            )}
+
         </div>
     );
 };

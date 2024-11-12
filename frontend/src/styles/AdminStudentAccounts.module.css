@@ -23,8 +23,8 @@ body, html {
   padding: 20px;
   display: flex;
   flex-direction: column;
-  position: fixed; /* Make the sidebar fixed */
-  height: 100%; /* Ensure it occupies full height */
+  position: fixed;
+  height: 100%;
   overflow-y: auto;
 }
 
@@ -82,19 +82,19 @@ body, html {
   }
 
 .mainContent {
-  margin-left: 250px; /* Add margin to ensure content doesn't overlap with the sidebar */
+  margin-left: 250px;
   padding: 20px;
   flex-grow: 1;
   overflow-y: auto;
 }
 
 .tableContainer {
-  overflow-y: auto; /* Allow vertical scrolling if the table exceeds height */
-  max-height: calc(100vh - 150px); /* Adjust this value based on your layout */
-  padding: 10px; /* Add padding if needed */
-  background-color: white; /* Background for the table container */
-  border-radius: 8px; /* Match with your table style */
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Optional shadow for separation */
+  overflow-y: auto;
+  max-height: calc(100vh - 150px);
+  padding: 10px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .dashboardTitle {
@@ -130,6 +130,19 @@ body, html {
     height: 100%;
     object-fit: cover;
 }
+
+.actionIcon {
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+}
+
+.toggleIconLarge {
+  width: 45px !important;
+  height: 45px !important;
+}
+
+
 
 .header {
     display: flex;
@@ -184,7 +197,7 @@ body, html {
 }
 
 .clearanceTable th, .clearanceTable td {
-  padding: 8px 10px; /* Reduced padding to decrease row height */
+  padding: 8px 10px;
   text-align: left;
   border-bottom: 1px solid #ddd;
   line-height: 1.2;

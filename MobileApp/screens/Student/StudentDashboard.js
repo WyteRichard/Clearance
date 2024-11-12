@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Image, Alert, ScrollView, RefreshControl } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Image, Alert, ScrollView, RefreshControl, Animated, PanResponder } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,6 +16,8 @@ const StudentDashboard = () => {
   const [importantDates, setImportantDates] = useState([]);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [isSidebarVisible, setSidebarVisible] = useState(false);
+  const sidebarAnimation = useRef(new Animated.Value(300)).current; // Sidebar starts off-screen
 
   useEffect(() => {
     loadData();
@@ -107,7 +109,7 @@ const StudentDashboard = () => {
 
   const handleLogout = async () => {
     await AsyncStorage.clear();
-    navigation.navigate('Login');
+    navigation.navigate('Auth', { screen: 'Login' });
   };
 
   const onRefresh = async () => {
@@ -115,6 +117,22 @@ const StudentDashboard = () => {
     await loadData();
     setRefreshing(false);
   };
+
+  const toggleSidebar = () => {
+    setSidebarVisible(!isSidebarVisible);
+    Animated.timing(sidebarAnimation, {
+      toValue: isSidebarVisible ? -300 : 0, // Animate to 0 to open, -300 to close
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => Math.abs(gestureState.dx) > 20,
+    onPanResponderMove: (evt, gestureState) => {
+      if (gestureState.dx > 20) toggleSidebar(); // Close sidebar on swipe right
+    },
+  });
 
   return (
     <LinearGradient style={styles.container} colors={['#266ca9', '#0042be']}>
@@ -130,7 +148,9 @@ const StudentDashboard = () => {
               <Text style={styles.greeting}>Hello</Text>
               <Text style={styles.name}>{firstName}</Text>
             </View>
-            <Image source={require('../../assets/images/avatar2.png')} style={styles.avatar} />
+            <TouchableOpacity onPress={toggleSidebar}>
+              <Image source={require('../../assets/images/wmenu.png')} style={styles.menuIcon} />
+            </TouchableOpacity>
           </View>
 
           <View style={styles.card}>
@@ -170,21 +190,43 @@ const StudentDashboard = () => {
           {error && <Text style={styles.errorText}>{error}</Text>}
         </ScrollView>
 
-        {/* Fixed Navbar at the Bottom */}
-        <View style={styles.navbar}>
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentDashboard')}>
-            <Image source={require('../../assets/images/blhome.png')} style={styles.navIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentClearanceRequest')}>
-            <Image source={require('../../assets/images/blidcard.png')} style={styles.navIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentClearanceStatus')}>
-            <Image source={require('../../assets/images/blnotes.png')} style={styles.navIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentProfile')}>
-            <Image source={require('../../assets/images/bluser.png')} style={styles.navIcon} />
-          </TouchableOpacity>
-        </View>
+        {/* Sidebar */}
+        {isSidebarVisible && (
+          <Animated.View
+            style={[
+              styles.sidebar,
+              { transform: [{ translateX: sidebarAnimation }] }
+            ]}
+            {...panResponder.panHandlers}
+          >
+            <Text style={styles.sidebarTitle}>Menu</Text>
+
+            <TouchableOpacity onPress={() => { toggleSidebar(); navigation.navigate('StudentDashboard'); }} style={styles.sidebarLinkContainer}>
+              <Image source={require('../../assets/images/bhome.png')} style={styles.sidebarIcon} />
+              <Text style={styles.sidebarLink}>Dashboard</Text>
+              <Image source={require('../../assets/images/arrow.png')} style={styles.arrowIcon} />
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => { toggleSidebar(); navigation.navigate('StudentClearanceStatus'); }} style={styles.sidebarLinkContainer}>
+              <Image source={require('../../assets/images/bnotes.png')} style={styles.sidebarIcon} />
+              <Text style={styles.sidebarLink}>Clearance Status</Text>
+              <Image source={require('../../assets/images/arrow.png')} style={styles.arrowIcon} />
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => { toggleSidebar(); navigation.navigate('StudentProfile'); }} style={styles.sidebarLinkContainer}>
+              <Image source={require('../../assets/images/buser.png')} style={styles.sidebarIcon} />
+              <Text style={styles.sidebarLink}>My Profile</Text>
+              <Image source={require('../../assets/images/arrow.png')} style={styles.arrowIcon} />
+            </TouchableOpacity>
+
+            <View style={styles.logoutContainer}>
+              <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+                <Image source={require('../../assets/images/logout.png')} style={styles.logoutIcon} />
+                <Text style={styles.logoutText}>Logout</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        )}
       </SafeAreaView>
     </LinearGradient>
   );
@@ -213,10 +255,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
   },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  menuIcon: {
+    width: 35,
+    height: 35,
+  },
+  statusLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1565C0',
   },
   card: {
     backgroundColor: 'white',
@@ -230,12 +276,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginLeft: 16,
-    marginBottom: 8,
-  },
-  AnnouncementTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     marginLeft: 16,
@@ -257,22 +297,17 @@ const styles = StyleSheet.create({
   fullWidth: {
     width: '94%',
   },
-  statusLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1565C0',
-  },
-  statusValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1565C0',
-    marginTop: 8,
-  },
   importantDatesCard: {
     backgroundColor: 'white',
     borderRadius: 8,
     padding: 16,
     margin: 16,
+  },
+  AnnouncementTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 16,
+    marginBottom: 8,
   },
   dateItem: {
     flexDirection: 'row',
@@ -293,28 +328,65 @@ const styles = StyleSheet.create({
     color: '#555',
     marginTop: 4,
   },
-  navbar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    borderTopWidth: 1,
-    borderTopColor: '#1E88E5',
-    paddingVertical: 8,
+  sidebar: {
     position: 'absolute',
+    top: 0,
     bottom: 0,
-    left: 0,
     right: 0,
-    backgroundColor: '#fff',
+    width: '60%',
+    backgroundColor: 'white',
+    padding: 20,
   },
-  navItem: {
-    padding: 8,
+  sidebarTitle: {
+    fontSize: 26,
+    color: '#1457cc',
+    marginBottom: 20,
+    fontWeight: 'bold',
   },
-  navIcon: {
+  sidebarLinkContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  sidebarIcon: {
     width: 24,
     height: 24,
-    resizeMode: 'contain',
+    marginRight: 5,
+  },
+  sidebarLink: {
+    fontSize: 16,
+    color: '#266ca9',
+    paddingVertical: 10,
+  },
+  arrowIcon: {
+    marginLeft: 'auto',
+    width: 16,
+    height: 16,
+    tintColor: '#c0c0c0',
+  },
+  logoutContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingBottom: 20,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoutIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+    tintColor: '#E53935',
+  },
+  logoutText: {
+    fontSize: 18,
+    color: '#E53935',
   },
   errorText: {
-    color: 'red',
+    color: '#266ca9',
     textAlign: 'center',
     marginTop: 20,
   },

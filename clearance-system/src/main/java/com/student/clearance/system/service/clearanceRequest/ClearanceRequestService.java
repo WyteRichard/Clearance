@@ -2,6 +2,7 @@ package com.student.clearance.system.service.clearanceRequest;
 
 
 import com.student.clearance.system.domain.clearanceRequest.ClearanceRequest;
+import jakarta.transaction.Transactional;
 
 import java.util.List;
 
@@ -10,8 +11,6 @@ public interface ClearanceRequestService {
     List<ClearanceRequest> getAllClearanceRequests();
 
     ClearanceRequest getClearanceRequestById(Long id);
-
-    ClearanceRequest createClearanceRequest(ClearanceRequest clearanceRequest);
 
     ClearanceRequest updateClearanceRequest(Long id, ClearanceRequest clearanceRequest);
 
@@ -33,5 +32,12 @@ public interface ClearanceRequestService {
 
     List<ClearanceRequest> getClearanceRequestsByStudentIdAndDepartmentId(Long studentId, Long departmentId);
 
+    void createClearanceRequestForAllDepartments(ClearanceRequest clearanceRequest);
+
+    boolean clearanceRequestExistsByStudentId(Long studentId);
+
+    List<ClearanceRequest> getClearanceRequestsByStudentNumber(String studentNumber);
+
+    void createClearanceRequestForSelectedDepartments(ClearanceRequest clearanceRequest);
 
 }

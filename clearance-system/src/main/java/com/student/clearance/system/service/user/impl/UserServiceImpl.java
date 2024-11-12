@@ -691,4 +691,19 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             return false;
         }
     }
+
+    @Override
+    public void deleteUserById(String userId) throws UsernameNotFoundException {
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found."));
+        userRepository.delete(user);
+        LOGGER.info("User with userId {} deleted successfully.", userId);
+    }
+
+    @Override
+    public User findUserByUserId(String userId) throws UsernameNotFoundException {
+        return userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with userId: " + userId));
+    }
+
 }

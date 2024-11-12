@@ -18,6 +18,7 @@ public class SemesterControl {
 
     public enum SemesterType {
         FIRST_SEMESTER,
-        SECOND_SEMESTER
+        SECOND_SEMESTER,
+        SUMMER
     }
 }

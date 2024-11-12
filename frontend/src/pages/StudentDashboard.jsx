@@ -4,10 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import styles from '../styles/StudentDashboard.module.css';
 import dateIcon from '../assets/calendar.png';
 import dashIcon from '../assets/bhome.png';
-import requestIcon from '../assets/notes.png';
 import statusIcon from '../assets/idcard.png';
 import accountIcon from '../assets/user.png';
-import avatar from '../assets/avatar2.png';
 
 const StudentDashboard = () => {
     const [currentSemester, setCurrentSemester] = useState("Loading...");
@@ -16,7 +14,6 @@ const StudentDashboard = () => {
     const [pendingCount, setPendingCount] = useState(0);
     const [remarkCount, setRemarkCount] = useState(0);
     const [progress, setProgress] = useState(0);
-    const [showModal, setShowModal] = useState(false);
     const [importantDates, setImportantDates] = useState([]);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
@@ -101,16 +98,6 @@ const StudentDashboard = () => {
             setError("Error fetching announcements");
         }
     };
-    
-
-    const toggleModal = () => {
-        setShowModal(!showModal);
-    };
-
-    const handleProfile = () => {
-        console.log("View Profile");
-        navigate("/student-account");
-    };
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -127,10 +114,6 @@ const StudentDashboard = () => {
                     <button className={styles.whiteButton} onClick={() => navigate('/student-dashboard')}>
                         <img src={dashIcon} alt="Dashboard" className={styles.navIcon} />
                         Dashboard
-                    </button>
-                    <button className={styles.ghostButton} onClick={() => navigate('/request-clearance')}>
-                        <img src={requestIcon} alt="Clearance Request" className={styles.navIcon} />
-                        Clearance Request
                     </button>
                     <button className={styles.ghostButton} onClick={() => navigate('/student-clearance-status')}>
                         <img src={statusIcon} alt="Clearance Status" className={styles.navIcon} />
@@ -149,18 +132,6 @@ const StudentDashboard = () => {
                     <div className={styles.headerRight}>
                         <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
                         <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
-
-                        <div className={styles.avatar} onClick={toggleModal}>
-                            <img src={avatar} alt="Avatar" />
-                        </div>
-                        {showModal && (
-                          <div className={styles.modal}>
-                            <ul>
-                              <li onClick={handleProfile}>See Profile</li>
-                              <li onClick={handleLogout}>Log Out</li>
-                            </ul>
-                          </div>
-                        )}
                     </div>
                 </div>
 

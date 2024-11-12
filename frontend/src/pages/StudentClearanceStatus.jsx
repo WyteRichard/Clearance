@@ -3,11 +3,9 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/StudentClearanceStatus.module.css';
 import dashIcon from '../assets/home.png';
-import requestIcon from '../assets/notes.png';
 import statusIcon from '../assets/bidcard.png';
 import accountIcon from '../assets/user.png';
 import printIcon from '../assets/printIcon.svg';
-import avatar from '../assets/avatar2.png';
 
 const StudentClearanceStatus = () => {
     const [currentSemester, setCurrentSemester] = useState("Loading...");
@@ -18,9 +16,10 @@ const StudentClearanceStatus = () => {
     const [studentFirstName, setStudentFirstName] = useState('');
     const [studentMiddleName, setStudentMiddleName] = useState('');
     const [studentLastName, setStudentLastName] = useState('');
+    const [logs, setLogs] = useState([]);
+    const [showLogModal, setShowLogModal] = useState(false);
     const [studentNumber, setStudentNumber] = useState('');
     const [sectionName, setSectionName] = useState('');
-    const [showModal, setShowModal] = useState(false);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
     const studentId = localStorage.getItem('userId');
@@ -65,7 +64,6 @@ const StudentClearanceStatus = () => {
             setStudentNumber(studentNumber);
             setSectionName(section.sectionName);
         } catch (error) {
-            setError("Error fetching student information");
         }
     };
 
@@ -74,14 +72,36 @@ const StudentClearanceStatus = () => {
             const response = await axios.get(`http://localhost:8080/Status/student/${studentId}`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
-            const statuses = Object.values(response.data);
+            // Transform response data to an array
+            const statuses = Object.values(response.data).map((status, index) => ({
+                department: status.department,
+                status: status.status,
+                remarks: status.remarks,
+            }));
+            console.log("Transformed Clearance Statuses:", statuses); // Verify the transformation
             setClearanceStatuses(statuses);
             setFilteredStatuses(statuses);
         } catch (error) {
             setError("Error fetching clearance statuses");
         }
     };
+           
 
+    const fetchLogs = async (departmentName) => {
+        console.log("Fetching logs for student:", studentId, "department:", departmentName); // Should now show the department name
+        try {
+            const response = await axios.get(`http://localhost:8080/Status/logs/${studentId}/departmentName/${departmentName}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            setLogs(response.data);
+            setShowLogModal(true);
+        } catch (error) {
+            console.error("Error fetching logs:", error.response ? error.response.data : error.message);
+        }
+    };
+    
+    
+    
     const handleFilterChange = (e) => {
         setStatusFilter(e.target.value);
         if (e.target.value === '') {
@@ -92,6 +112,13 @@ const StudentClearanceStatus = () => {
     };
 
     const handlePrint = () => {
+        const allCleared = clearanceStatuses.every(status => status.status.toLowerCase() === 'cleared');
+    
+        if (!allCleared) {
+            alert("Finish all the clearance before proceeding to print.");
+            return;
+        }
+    
         const printContent = document.getElementById('printable-content').innerHTML;
         const printWindow = window.open('', '', 'height=600,width=800');
         
@@ -113,12 +140,14 @@ const StudentClearanceStatus = () => {
                         text-align: left;
                         border: 1px solid #ddd;
                     }
+                    th.actions-column, td.actions-column {
+                        display: none;
+                    }
                 }
             </style>
         `);
         printWindow.document.write('</head><body>');
         
-        // Add the header with college information
         printWindow.document.write(`
             <div class="header-content">
                 <h1>Rogationist College</h1>
@@ -126,17 +155,13 @@ const StudentClearanceStatus = () => {
                 <p>Tel. No.: (046) 423-8677 / 423 - 8470</p>
             </div>
         `);
-    
-        // Insert the content from the component
+        
         printWindow.document.write(printContent);
         printWindow.document.write('</body></html>');
         printWindow.document.close();
         printWindow.print();
     };
-    
-
-    const toggleModal = () => setShowModal(!showModal);
-    const handleProfile = () => navigate("/student-account");
+        
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -152,10 +177,6 @@ const StudentClearanceStatus = () => {
                     <button className={styles.ghostButton} onClick={() => navigate('/student-dashboard')}>
                         <img src={dashIcon} alt="Dashboard" className={styles.navIcon} />
                         Dashboard
-                    </button>
-                    <button className={styles.ghostButton} onClick={() => navigate('/request-clearance')}>
-                        <img src={requestIcon} alt="Clearance Request" className={styles.navIcon} />
-                        Clearance Request
                     </button>
                     <button className={styles.whiteButton} onClick={() => navigate('/student-clearance-status')}>
                         <img src={statusIcon} alt="Status Icon" className={styles.navIcon} />
@@ -174,17 +195,6 @@ const StudentClearanceStatus = () => {
                     <div className={styles.headerRight}>
                         <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
                         <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
-                        <div className={styles.avatar} onClick={toggleModal}>
-                            <img src={avatar} alt="Avatar" />
-                        </div>
-                        {showModal && (
-                            <div className={styles.modal}>
-                                <ul>
-                                    <li onClick={handleProfile}>See Profile</li>
-                                    <li onClick={handleLogout}>Log Out</li>
-                                </ul>
-                            </div>
-                        )}
                     </div>
                 </div>
 
@@ -229,7 +239,8 @@ const StudentClearanceStatus = () => {
                             <tr>
                                 <th>Department</th>
                                 <th>Status</th>
-                                <th>Remarks</th>
+                                <th className={styles.remarksColumn}>Remarks</th>
+                                <th className="actions-column">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -237,13 +248,42 @@ const StudentClearanceStatus = () => {
                                 <tr key={index}>
                                     <td>{status.department}</td>
                                     <td>{status.status}</td>
-                                    <td>{status.remarks}</td>
+                                    <td className={styles.remarksColumn}>{status.remarks}</td>
+                                    <td className="actions-column">
+                                        <button onClick={() => fetchLogs(status.department)} className={styles.viewLogsButton}>
+                                            View Logs
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            {showLogModal && (
+                <div className={styles.modalBackdrop}>
+                    <div className={styles.modalContent}>
+                        <h3 className={styles.modalTitle}>Transaction Logs</h3>
+                        <div className={styles.logsContainer}>
+                            {logs.length > 0 ? (
+                                logs.map((log, index) => (
+                                    <div key={index} className={styles.logEntry}>
+                                        <p><strong>Date:</strong> {new Date(log.timestamp).toLocaleString()}</p>
+                                        <p><strong>Transaction Type:</strong> {log.transactionType}</p>
+                                        <p><strong>Details:</strong> {log.details}</p>
+                                    </div>
+                                ))
+                            ) : (
+                                <p>No transaction logs available.</p>
+                            )}
+                        </div>
+                        <button onClick={() => setShowLogModal(false)} className={styles.closeButton}>Close</button>
+                    </div>
+                </div>
+            )}
+
+
         </div>
     );
 };

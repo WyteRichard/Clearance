@@ -56,13 +56,22 @@ const Announcement = () => {
     const showAlert = (message, type) => {
         setAlertMessage(message);
         setAlertType(type);
-        setTimeout(() => setAlertMessage(null), 3000);
+        setTimeout(() => setAlertMessage(null), 1500);
     };
 
     const handleSubmitAnnouncement = (e) => {
         e.preventDefault();
-        const announcementData = { title: announcementTitle, announcementDate, details: announcementDetails };
+        
+        const currentDate = new Date();
+        const selectedDate = new Date(announcementDate);
 
+        if (selectedDate < currentDate.setHours(0, 0, 0, 0)) {
+            showAlert("Invalid date.", "error");
+            return;
+        }
+    
+        const announcementData = { title: announcementTitle, announcementDate, details: announcementDetails };
+    
         axios.post('http://localhost:8080/announcements/add', announcementData, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
@@ -77,7 +86,7 @@ const Announcement = () => {
             showAlert("Failed to add announcement.", "error");
         });
     };
-
+    
     const handleDeleteAnnouncement = (id) => {
         axios.delete(`http://localhost:8080/announcements/${id}`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }

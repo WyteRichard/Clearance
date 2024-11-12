@@ -11,6 +11,8 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
+  margin-right: 20px;
+  overflow-y: auto;
 }
 
 .logoContainer {
@@ -71,27 +73,192 @@
   margin-right: 5px;
 }
 
-.mainContent {
-  flex-grow: 1;
+.icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
   padding: 20px;
+  height: 100vh;
+  background-color: #f0f0f0;
+  overflow: hidden;
+}
+
+.mainContent {
+  width: 60%;
+  max-height: 100vh;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   overflow-y: auto;
+  margin: auto;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  width: 100%;
+  padding: 10px 20px;
+  background-color: #4285f4;
+  border-radius: 8px 8px 0 0;
+  color: white;
 }
 
 .dashboardTitle {
   font-size: 24px;
-  color: #333;
+  font-weight: bold;
+  color: white;
+}
+
+.headerButtons {
+  display: flex;
+  gap: 10px;
 }
 
 .headerRight {
   display: flex;
   gap: 12px;
+}
+
+.changePasswordButton, .editProfileButton {
+  background-color: white;
+  color: #000;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.changePasswordButton:hover, .editProfileButton:hover {
+  background-color: #d1e7ff;
+}
+
+.logoutButtonContainer {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: 0px;
+}
+
+.logoutButton {
+  padding: 8px 16px;
+  color: red;
+  border: 1px solid red;
+  background: transparent;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoutButton:hover {
+  background-color: rgba(255, 0, 0, 0.1);
+}
+
+.logoutIcon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+}
+
+.cardContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+  padding: 20px 0;
+  width: 100%;
+  padding-bottom: 40px;
+}
+
+.infoCard {
+  flex: 1 1 calc(50% - 30px);
+  background-color: #e0f0ff;
+  padding: 20px;
+  border-radius: 12px;
+  min-width: 250px;
+  text-align: left;
+  margin: 8px 0;
+  font-size: 13px;
+  color: #003366;
+  box-shadow: none;
+}
+
+.infoCard h3 {
+  font-size: 18px;
+  color: #003366;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.infoCard p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #003366;
+}
+
+.infoCard p strong {
+  color: #003366;
+}
+
+.infoCard p span {
+  color: #1a73e8;
+}
+
+.infoCard p:not(:last-child) {
+  border-bottom: 1px solid #b3d1ff;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.saveButton, .cancelButton, .editButton, .confirmButton {
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.saveButton {
+  background-color: #42c3ff;
+  color: white;
+  border: none;
+}
+
+.cancelButton {
+  background-color: #ffffff;
+  color: 000;
+  border-width: 1px;
+  border-color: #42c3ff;
+}
+
+.editButton {
+  background-color: #2196f3;
+  color: white;
+}
+
+.confirmButton {
+  border: none;
+  background-color: #42c3ff;
+  color: white;
 }
 
 .avatar {
@@ -167,145 +334,9 @@
   text-align: center;
 }
 
-.studentInfo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
-.studentDetails {
-  margin-top: 20px;
-  width: 90%;
-  text-align: center;
-}
-
-.studentDetails h2 {
-  font-size: 20px;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.studentDetails p {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 5px;
-}
-
-.profilePic {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-  background-color: #f0f0f0;
-}
-
-.profileImage {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-}
-
 .placeholder {
   font-size: 4rem;
   color: #888;
-}
-
-.generalInfo {
-  background-color: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  width: 700px;
-  min-height: 300px;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  margin-bottom: 10px;
-}
-
-.generalInfoContent {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.generalInfoLabel {
-  font-size: 16px;
-  color: #666;
-  flex: 1;
-  text-align: left;
-}
-
-.generalInfoValue {
-  font-size: 16px;
-  color: #333;
-  flex: 1;
-  text-align: right;
-}
-
-.buttonContainer {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 20px;
-}
-
-.saveButton {
-  padding: 10px 20px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  margin-right: 10px;
-  transition: background-color 0.3s;
-}
-
-.saveButton:hover {
-  background-color: #218838;
-}
-
-.cancelButton {
-  padding: 10px 20px;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
-}
-
-.cancelButton:hover {
-  background-color: #c82333;
-}
-
-.buttonContainer {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 20px;
-}
-
-.editButton {
-  padding: 10px 20px;
-  background-color: #0042be;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
-}
-
-.editButton:hover {
-  background-color: #3D97FF;
 }
 
 .studentAccountContainer {
@@ -351,19 +382,32 @@
   box-shadow: 0 0 5px rgba(0, 66, 190, 0.5);
 }
 
+.input {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  color: #003366;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f7f7f7;
+  transition: border-color 0.3s;
+}
+
+.editingInput {
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: #4285f4;
+  box-shadow: 0 0 5px rgba(66, 133, 244, 0.5);
+  outline: none;
+}
+
 .studentAccountContainer .buttonContainer {
   display: flex;
   justify-content: flex-end;
-}
-
-.studentAccountContainer .saveButton,
-.studentAccountContainer .cancelButton,
-.studentAccountContainer .editButton {
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  margin: 0 5px;
 }
 
 @media (max-width: 768px) {
@@ -423,9 +467,122 @@
   .generalInfoLabel, .generalInfoValue {
     font-size: 12px;
   }
-
-  .editButton {
-    padding: 8px 12px;
-  }
   
 }
+
+.modalBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background-color: white;
+  border: 1px solid #e1e4e8;
+  border-radius: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+  width: 420px;
+  max-width: 90%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.modal h2 {
+  margin-bottom: 15px;
+  font-size: 1.5em;
+}
+
+.modal p {
+  margin-bottom: 15px;
+  font-size: 1em;
+  color: #333;
+}
+
+.modalInput {
+  width: 100% !important;
+  padding: 10px;
+  padding-right: 40px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.userInput {
+  width: 70% !important;
+  padding: 10px;
+  padding-right: 40px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 40px;
+}
+
+.passwordContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.eyeToggleButton {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.eyeIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.inputContainer {
+  position: relative;
+  width: 100% !important;
+  margin-bottom: 15px;
+}
+
+input[type="password"]::-ms-reveal, /* For Edge */
+input[type="password"]::-ms-clear, /* For Edge */
+input[type="password"]::-webkit-textfield-decoration-container, /* For Webkit browsers */
+input[type="password"]::-webkit-clear-button,
+input[type="password"]::-webkit-inner-spin-button,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+    display: none !important;
+}
+
+/* Additional styles for any potential pseudo-elements */
+input[type="password"]::before,
+input[type="password"]::after {
+    display: none !important;
+    content: none !important;
+}
+
+input[type="password"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+

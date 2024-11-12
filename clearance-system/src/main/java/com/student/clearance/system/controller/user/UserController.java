@@ -93,4 +93,28 @@ public class UserController {
         headers.add(JWT_TOKEN_HEADER, jwtTokenProvider.generateJwtToken(userPrincipal));
         return headers;
     }
+
+    @DeleteMapping("/delete/{userId}")
+    public ResponseEntity<String> deleteAccount(@PathVariable("userId") String userId) {
+        try {
+            userService.deleteUserById(userId);
+            return new ResponseEntity<>("User account deleted successfully", HttpStatus.OK);
+        } catch (UsernameNotFoundException e) {
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Unable to delete user account", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/get-login/{userId}")
+    public ResponseEntity<User> getLoginByUserId(@PathVariable("userId") String userId) {
+        try {
+            User user = userService.findUserByUserId(userId);
+            return new ResponseEntity<>(user, HttpStatus.OK);
+        } catch (UsernameNotFoundException e) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+    }
+
+
 }

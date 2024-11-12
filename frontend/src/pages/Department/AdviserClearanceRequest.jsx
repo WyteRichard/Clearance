@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback  } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
@@ -10,6 +10,7 @@ import pendingtoggle from '../../assets/pendingtoggle.svg';
 import avatar from '../../assets/avatar2.png';
 
 const AdviserClearanceRequest = () => {
+    const departmentId = 1;
     const [clearanceRequests, setClearanceRequests] = useState([]);
     const [filteredRequests, setFilteredRequests] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
@@ -22,7 +23,9 @@ const AdviserClearanceRequest = () => {
     const [currentSemester, setCurrentSemester] = useState("Loading...");
     const [currentAcademicYear, setCurrentAcademicYear] = useState("Loading...");
     const [showModal, setShowModal] = useState(false);
-    
+    const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
+    const [transactionLogs, setTransactionLogs] = useState([]);
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -55,28 +58,28 @@ const AdviserClearanceRequest = () => {
         try {
             const token = localStorage.getItem('token');
             const adviserId = localStorage.getItem('userId');
-    
+
             const adviserResponse = await axios.get(`http://localhost:8080/Adviser/advisers/${adviserId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const adviserCourse = adviserResponse.data?.course?.courseName;
-    
+
             if (!adviserCourse) {
                 console.error("Adviser course not found.");
                 return;
             }
-    
+
             const departmentId = 1;
             const requestResponse = await axios.get(`http://localhost:8080/Requests/department/${departmentId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-    
+
             const requestsData = requestResponse.data || [];
-    
+
             const filteredRequestsByCourse = requestsData.filter(request => {
                 return request.student?.course?.courseName === adviserCourse;
             });
-    
+
             const requestsWithRemarks = await Promise.all(
                 filteredRequestsByCourse.map(async (request) => {
                     try {
@@ -90,7 +93,7 @@ const AdviserClearanceRequest = () => {
                     }
                 })
             );
-    
+
             setClearanceRequests(requestsWithRemarks);
             setFilteredRequests(requestsWithRemarks);
         } catch (error) {
@@ -135,6 +138,50 @@ const AdviserClearanceRequest = () => {
         handleFilter();
     }, [handleFilter]);
 
+    const logTransaction = async (studentNumber, message, transactionType) => {
+        try {
+            const token = localStorage.getItem('token');
+            
+            const currentDate = new Date();
+            currentDate.setHours(currentDate.getHours() + 8);
+            const adjustedTimestamp = currentDate.toISOString();
+            
+            const logData = {
+                studentId: studentNumber,
+                departmentId: 1,
+                transactionType: transactionType,
+                details: message,
+                timestamp: adjustedTimestamp
+            };
+    
+            console.log("Log Data:", logData);
+    
+            await axios.post(
+                'http://localhost:8080/Status/log-transaction',
+                logData,
+                {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }
+            );
+        } catch (error) {
+            console.error("Error logging transaction:", error);
+        }
+    };
+    
+
+    const fetchTransactionLogs = async (studentNumber) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`http://localhost:8080/Status/logs/${studentNumber}/department/${departmentId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            setTransactionLogs(response.data);
+            setIsLogsModalOpen(true);
+        } catch (error) {
+            console.error("Error fetching transaction logs:", error);
+        }
+    };
+
     const toggleStatus = async (id, currentStatus) => {
         const newStatus = currentStatus?.toLowerCase() === "cleared" ? "PENDING" : "CLEARED";
         try {
@@ -145,14 +192,22 @@ const AdviserClearanceRequest = () => {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
     
-            console.log("Backend response:", response.data);
-            
             if (response.status === 200) {
                 setClearanceRequests(prevRequests =>
                     prevRequests.map(request =>
                         request.id === id ? { ...request, status: newStatus } : request
                     )
                 );
+    
+                const updatedRequest = clearanceRequests.find(request => request.id === id);
+                const studentNumber = updatedRequest?.student?.studentNumber;
+    
+                if (studentNumber) {
+                    const message = `Status updated from ${currentStatus} to ${newStatus}`;
+                    await logTransaction(studentNumber, message, "Status Update");
+                } else {
+                    console.error("Student number not found for log transaction.");
+                }
             } else {
                 console.error("Failed to update status on the backend.");
             }
@@ -160,6 +215,7 @@ const AdviserClearanceRequest = () => {
             console.error("Error updating status:", error);
         }
     };
+    
 
     const openModal = (request) => {
         setSelectedRequest(request);
@@ -177,12 +233,19 @@ const AdviserClearanceRequest = () => {
                 }, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-
+    
                 setClearanceRequests(prevRequests =>
                     prevRequests.map(request =>
                         request.id === selectedRequest.id ? { ...request, remarks } : request
                     )
                 );
+    
+                const message = `Remarks updated to: '${remarks}'`;
+                console.log("Logging transaction for remarks update:", {
+                    studentNumber: selectedRequest.student.studentNumber,
+                    message
+                });
+                await logTransaction(selectedRequest.student.studentNumber, message, "Remarks Update");
                 setIsModalOpen(false);
             } catch (error) {
                 console.error("Error updating remarks:", error);
@@ -190,6 +253,7 @@ const AdviserClearanceRequest = () => {
             }
         }
     };
+    
 
     const closeModal = () => {
         setIsModalOpen(false);
@@ -228,8 +292,8 @@ const AdviserClearanceRequest = () => {
                 <header className={styles.header}>
                     <h2 className={styles.dashboardTitle}>Adviser Clearance Requests</h2>
                     <div className={styles.headerRight}>
-                    <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
-                    <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
+                        <span className={styles.academicYear}>A.Y. {currentAcademicYear}</span>
+                        <span className={styles.semesterBadge}>{currentSemester.replace('_', ' ')}</span>
                         <div className={styles.avatar} onClick={toggleModal}>
                             <img src={avatar} alt="Avatar" />
                         </div>
@@ -290,9 +354,14 @@ const AdviserClearanceRequest = () => {
                                             style={{ cursor: 'pointer' }}
                                         />
                                     </td>
-                                    <td>{request.remarks}</td>
+                                    <td className="remarks-cell">{request.remarks}</td>
                                     <td>
                                         <button className={styles.editButton} onClick={() => openModal(request)}>Edit</button>
+                                        <button 
+                                            className={styles.viewLogsButton} 
+                                            onClick={() => fetchTransactionLogs(request.student?.studentNumber)}>
+                                            Logs
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -317,6 +386,32 @@ const AdviserClearanceRequest = () => {
                     </div>
                 </Modal>
             )}
+
+            {isLogsModalOpen && (
+                <Modal
+                    isOpen={isLogsModalOpen}
+                    onRequestClose={() => setIsLogsModalOpen(false)}
+                    overlayClassName={styles.modalOverlay}
+                    className={styles.modalContent}
+                >
+                    <h2 className={styles.modalTitle}>Transaction Logs</h2>
+                    <div className={styles.logsContainer}>
+                        {transactionLogs.length > 0 ? (
+                            transactionLogs.map((log, index) => (
+                                <div key={index} className={styles.logEntry}>
+                                    <p><strong>Date:</strong> {new Date(log.timestamp).toLocaleString()}</p>
+                                    <p><strong>Transaction Type:</strong> {log.transactionType}</p>
+                                    <p><strong>Details:</strong> {log.details}</p>
+                                </div>
+                            ))
+                        ) : (
+                            <p>No transaction logs available.</p>
+                        )}
+                    </div>
+                    <button className={styles.closeButton} onClick={() => setIsLogsModalOpen(false)}>Close</button>
+                </Modal>
+            )}
+
         </div>
     );
 };

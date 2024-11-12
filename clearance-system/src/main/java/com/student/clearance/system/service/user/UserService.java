@@ -20,4 +20,10 @@ public interface UserService {
 
     boolean verifyOtp(String username, String otp);
 
+    void deleteUserById(String userId) throws UsernameNotFoundException;
+
+    User findUserByUserId(String userId) throws UsernameNotFoundException;
+
+
+
 }

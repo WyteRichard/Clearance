@@ -22,13 +22,8 @@ const Login = () => {
   const handleLogin = async () => {
     setErrorMessage('');
 
-    if (!username.trim()) {
-      setErrorMessage('Username is required.');
-      setShowErrorModal(true);
-      return;
-    }
-    if (!password.trim()) {
-      setErrorMessage('Password is required.');
+    if (!username.trim() || !password.trim()) {
+      setErrorMessage('Username and password are required.');
       setShowErrorModal(true);
       return;
     }
@@ -56,6 +51,18 @@ const Login = () => {
 
         if (authorities.includes("ROLE_ROLE_STUDENT")) {
           await AsyncStorage.setItem('role', "ROLE_ROLE_STUDENT");
+
+          const currentSemester = await fetchCurrentSemester(token);
+          if (currentSemester === 'SUMMER') {
+            const isEligibleForSummer = await checkSummerEligibility(response.data.userId, token);
+            if (!isEligibleForSummer) {
+              setErrorMessage("Login restricted to summer-eligible students during summer semester.");
+              setShowErrorModal(true);
+              return;
+            }
+          }
+
+          await initiateClearanceRequests(response.data.userId, currentSemester, token);
           navigation.replace('Main', { screen: 'StudentDashboard' });
         } else {
           setErrorMessage("Unauthorized role");
@@ -63,25 +70,150 @@ const Login = () => {
         }
       }
     } catch (error) {
-      if (error.response) {
-        const status = error.response.status;
-
-        if (status === 404) {
-          setErrorMessage('The username is not existing.');
-        } else if (status === 401) {
-          setErrorMessage('Your account has been locked, contact the administrator.');
-        } else {
-          setErrorMessage('The username / password is incorrect.');
-        }
-        setShowErrorModal(true);
-      } else if (error.request) {
-        setErrorMessage('No response from server. Check your network connection.');
-        setShowErrorModal(true);
-      } else {
-        setErrorMessage('An error occurred while sending the request.');
-        setShowErrorModal(true);
-      }
+      handleLoginError(error);
     }
+  };
+
+  const fetchCurrentSemester = async (token) => {
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const response = await axios.get('https://amused-gnu-legally.ngrok-free.app/Admin/semester/current', config);
+      return response.data.currentSemester;
+    } catch (error) {
+      console.error("Error fetching current semester:", error);
+      return null;
+    }
+  };
+
+  const checkSummerEligibility = async (userId, token) => {
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const response = await axios.get(`https://amused-gnu-legally.ngrok-free.app/Student/students/${userId}`, config);
+      return response.data.summer;
+    } catch (error) {
+      console.error("Error checking summer eligibility:", error);
+      return false;
+    }
+  };
+
+  const initiateClearanceRequests = async (userId, currentSemester, token) => {
+    try {
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+
+        // Get the student's information
+        const studentResponse = await axios.get(`https://amused-gnu-legally.ngrok-free.app/Student/students/${userId}`, config);
+        const { id: studentId, studentNumber } = studentResponse.data;
+
+        // Check if a clearance request already exists
+        const requestExistsUrl = `https://amused-gnu-legally.ngrok-free.app/Requests/student/${studentId}/exists`;
+        const requestExistsResponse = await axios.get(requestExistsUrl, config);
+
+        // If a clearance request already exists, exit the function
+        if (requestExistsResponse.data) {
+            console.log("Clearance request already exists. Skipping...");
+            return;
+        }
+
+        // Get the current semester and academic year
+        const semesterResponse = await axios.get('https://amused-gnu-legally.ngrok-free.app/Admin/semester/current', config);
+        const { currentSemester, academicYear: schoolYear } = semesterResponse.data;
+
+        // Determine the correct URL based on the semester type
+        const isSummerOrFirstSemester = currentSemester === 'FIRST_SEMESTER' || currentSemester === 'SUMMER';
+        const clearanceRequestUrl = isSummerOrFirstSemester
+            ? 'https://amused-gnu-legally.ngrok-free.app/Requests/addSelectedRequests'
+            : 'https://amused-gnu-legally.ngrok-free.app/Requests/addRequests';
+
+        const semester = currentSemester === 'SECOND_SEMESTER' ? 'Second Semester' : 'First Semester';
+
+        // Send the clearance request
+        await axios.post(clearanceRequestUrl, {
+            student: { id: studentId },
+            schoolYear,
+            semester
+        }, config);
+
+        console.log(`Submitted clearance request for ${semester} ${schoolYear}`);
+
+        // Send transaction logs if clearance request was sent successfully
+        const message = `Submitted clearance request for ${semester} ${schoolYear}`;
+        await sendLogsToDepartments(studentNumber, message, "Clearance Request Submission", isSummerOrFirstSemester, token);
+
+    } catch (error) {
+        console.error("Error initiating clearance requests:", error.response ? error.response.data : error.message);
+    }
+};
+
+const sendLogsToDepartments = async (studentNumber, message, transactionType, isSummerOrFirstSemester, token) => {
+  try {
+      const config = { 
+          headers: { 
+              Authorization: `Bearer ${token}`, 
+              'Content-Type': 'application/json' 
+          } 
+      };
+
+      // Define specific departments for summer or first semester
+      const specificDepartments = ["Discipline", "Library", "Cashier", "Student Affairs", "Dean", "Registrar", "Guidance"];
+      
+      // Fetch all departments from the backend
+      const departmentResponse = await axios.get(`https://amused-gnu-legally.ngrok-free.app/Department/departments`, config);
+      const allDepartments = departmentResponse.data;
+
+      // Filter departments based on semester type
+      const departmentsToLog = isSummerOrFirstSemester
+          ? allDepartments.filter(department => specificDepartments.includes(department.name))
+          : allDepartments;
+
+      const currentDate = new Date();
+      currentDate.setHours(currentDate.getHours() + 8); // Adjust to local timezone if needed
+      const adjustedTimestamp = currentDate.toISOString();
+
+      // Prepare logs for each department
+      const logs = departmentsToLog.map(department => ({
+          studentId: studentNumber,
+          departmentId: department.id,
+          transactionType,
+          details: message,
+          timestamp: adjustedTimestamp
+      }));
+
+      // Check if there are any logs to send
+      if (logs.length === 0) {
+          console.error("No departments matched for logging, skipping log submission.");
+          return;
+      }
+
+      // Send logs in batch
+      const response = await axios.post(
+          'https://amused-gnu-legally.ngrok-free.app/Status/log-transactions-batch',
+          logs,
+          config
+      );
+
+      if (response.status === 200 || response.status === 201) {
+          console.log("Transaction logs have been sent to all relevant departments.");
+      } else {
+          console.error("Failed to send batch logs:", response.data);
+      }
+  } catch (error) {
+      console.error("Error sending logs to departments:", error.response ? error.response.data : error.message);
+  }
+};
+
+
+  const handleLoginError = (error) => {
+    if (error.response) {
+      const status = error.response.status;
+      setErrorMessage(
+        status === 404 ? 'The username is not existing.' :
+        status === 401 ? 'Your account has been locked, contact the administrator.' :
+        'The username / password is incorrect.'
+      );
+    } else {
+      setErrorMessage('An error occurred. Please try again.');
+    }
+    setShowErrorModal(true);
   };
 
   const onRefresh = () => {

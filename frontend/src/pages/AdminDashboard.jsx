@@ -306,6 +306,7 @@ const AdminDashboard = () => {
                             {!currentSemester && <option value="" disabled hidden>Select Semester</option>}
                             <option value="FIRST_SEMESTER">First Semester</option>
                             <option value="SECOND_SEMESTER">Second Semester</option>
+                            <option value="SUMMER">Summer</option>
                         </select>
                     </div>
 

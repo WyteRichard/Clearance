@@ -98,10 +98,15 @@ public class AdminController {
         try {
             SemesterControl updatedSemester = semesterControlService.switchSemester(semesterType, academicYear);
             return new ResponseEntity<>(updatedSemester, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
+            // Log the full stack trace to identify the root cause of the error
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
     @GetMapping("/semester/current")
     public ResponseEntity<SemesterControl> getCurrentSemester() {

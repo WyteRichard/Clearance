@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, Image, Alert, ActivityIndicator, StyleSheet, RefreshControl } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, Image, Alert, ActivityIndicator, StyleSheet, RefreshControl, Animated, PanResponder, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
@@ -20,8 +20,13 @@ const StudentClearanceStatus = () => {
   const [sectionName, setSectionName] = useState('Loading...');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isSidebarVisible, setSidebarVisible] = useState(false);
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logs, setLogs] = useState([]);
+  const [selectedDepartment, setSelectedDepartment] = useState('');
   const [error, setError] = useState(null);
   const navigation = useNavigation();
+  const sidebarAnimation = useRef(new Animated.Value(300)).current;
 
   useEffect(() => {
     loadData();
@@ -93,6 +98,63 @@ const StudentClearanceStatus = () => {
   const handleStatusFilterChange = (selectedFilter) => {
     setStatusFilter(selectedFilter);
   };
+
+  const fetchLogs = async (departmentName) => {
+    setSelectedDepartment(departmentName);
+    setLogs([]);  // Clear any previous logs
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      const token = await AsyncStorage.getItem('token');
+  
+      if (!userId || !token) {
+        console.log("User ID or token is missing.");
+        Alert.alert("Error", "User ID or token not found.");
+        return;
+      }
+  
+      console.log(`Fetching logs for student ID: ${userId} in department: ${departmentName}`);
+  
+      const response = await axios.get(
+        `https://amused-gnu-legally.ngrok-free.app/Status/logs/${userId}/departmentName/${departmentName}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+  
+      if (response.data) {
+        console.log("Logs fetched successfully:", response.data);
+        setLogs(response.data);
+      } else {
+        console.log("No logs found for this department.");
+        Alert.alert("Info", "No transaction logs available for this department.");
+      }
+  
+      setShowLogModal(true);
+    } catch (error) {
+      console.error("Error fetching logs:", error);
+      Alert.alert("Error", "Unable to fetch logs. Please check your network connection or try again later.");
+    }
+  };
+  
+
+  const handleLogsPress = (departmentName) => {
+    console.log("Logs button pressed for department:", departmentName);
+    fetchLogs(departmentName);
+  };
+
+  const toggleSidebar = () => {
+    setSidebarVisible(!isSidebarVisible);
+    Animated.timing(sidebarAnimation, {
+      toValue: isSidebarVisible ? -300 : 0, // Animate to 0 to open, -300 to close
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => Math.abs(gestureState.dx) > 20,
+    onPanResponderMove: (evt, gestureState) => {
+      if (gestureState.dx > 20) toggleSidebar(); // Close sidebar on swipe right
+    },
+  });
 
   const handlePrint = async () => {
     const currentDate = new Date();
@@ -167,20 +229,17 @@ const StudentClearanceStatus = () => {
   }
 
   return (
-    <LinearGradient
-      style={styles.container}
-      colors={['#266ca9', '#0042be']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
+    <LinearGradient style={styles.container} colors={['#266ca9', '#0042be']}>
       <SafeAreaView style={styles.content}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Hello</Text>
-            <Text style={styles.name}>{studentFirstName || 'N/A'}</Text>
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.greeting}>Hello</Text>
+              <Text style={styles.name}>{studentFirstName}</Text>
+            </View>
+            <TouchableOpacity onPress={toggleSidebar}>
+              <Image source={require('../../assets/images/wmenu.png')} style={styles.menuIcon} />
+            </TouchableOpacity>
           </View>
-          <Image source={require('../../assets/images/avatar2.png')} style={styles.avatar} />
-        </View>
 
         <View style={[styles.infoContainer, styles.invisible]}>
           <Text style={styles.infoText}>A.Y. {currentAcademicYear || 'N/A'}</Text>
@@ -218,17 +277,27 @@ const StudentClearanceStatus = () => {
               <Text style={[styles.headerCell, styles.departmentCell]}>Department</Text>
               <Text style={[styles.headerCell, styles.statusCell]}>Status</Text>
               <Text style={[styles.headerCell, styles.remarksCell]}>Remarks</Text>
+              <Text style={[styles.headerCell, styles.actionCell]}>Action</Text>
             </View>
 
             <ScrollView style={styles.tableContent} nestedScrollEnabled={true}>
               {filteredStatuses.length > 0 ? (
-                filteredStatuses.map((item, index) => (
-                  <View key={index} style={styles.tableRow}>
-                    <Text style={[styles.cell, styles.departmentCell]}>{item.department || 'N/A'}</Text>
-                    <Text style={[styles.cell, styles.statusCell, item.status === 'Cleared' ? styles.cleared : styles.pending]}>{item.status || 'N/A'}</Text>
-                    <Text style={[styles.cell, styles.remarksCell]}>{item.remarks || 'N/A'}</Text>
-                  </View>
-                ))
+                filteredStatuses.map((item, index) => {
+                  console.log("Department name in item:", item.department); // Debugging
+                  return (
+                    <View key={index} style={styles.tableRow}>
+                      <Text style={[styles.cell, styles.departmentCell]}>{item.department || 'N/A'}</Text>
+                      <Text style={[styles.cell, styles.statusCell, item.status === 'Cleared' ? styles.cleared : styles.pending]}>{item.status || 'N/A'}</Text>
+                      <Text style={[styles.cell, styles.remarksCell]}>{item.remarks || 'N/A'}</Text>
+                      <TouchableOpacity
+                        style={styles.logsButton}
+                        onPress={() => handleLogsPress(item.department)}
+                      >
+                        <Text style={styles.logsButtonText}>Logs</Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })
               ) : (
                 <View style={styles.noDataContainer}>
                   <Text style={styles.noDataText}>No clearance data available.</Text>
@@ -238,20 +307,73 @@ const StudentClearanceStatus = () => {
           </View>
         </ScrollView>
 
-        <View style={styles.navbar}>
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentDashboard')}>
-            <Image source={require('../../assets/images/blhome.png')} style={styles.navIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentClearanceRequest')}>
-            <Image source={require('../../assets/images/blidcard.png')} style={styles.navIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentClearanceStatus')}>
-            <Image source={require('../../assets/images/blnotes.png')} style={styles.navIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentProfile')}>
-            <Image source={require('../../assets/images/bluser.png')} style={styles.navIcon} />
-          </TouchableOpacity>
-        </View>
+
+        <Modal visible={showLogModal} transparent={true} animationType="slide">
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Transaction Logs - {selectedDepartment}</Text>
+              <ScrollView style={styles.logsContainer}>
+                {logs.length > 0 ? (
+                  logs.map((log, index) => (
+                    <View key={index} style={styles.logEntry}>
+                      <Text style={styles.logText}>
+                        <Text style={styles.logLabel}>Date:</Text> {new Date(log.timestamp).toLocaleString()}
+                      </Text>
+                      <Text style={styles.logText}>
+                        <Text style={styles.logLabel}>Transaction Type:</Text> {log.transactionType}
+                      </Text>
+                      <Text style={styles.logText}>
+                        <Text style={styles.logLabel}>Details:</Text> {log.details}
+                      </Text>
+                    </View>
+                  ))
+                ) : (
+                  <Text>No transaction logs available.</Text>
+                )}
+              </ScrollView>
+              <TouchableOpacity style={styles.closeButton} onPress={() => setShowLogModal(false)}>
+                <Text style={styles.closeButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {isSidebarVisible && (
+          <Animated.View
+            style={[
+              styles.sidebar,
+              { transform: [{ translateX: sidebarAnimation }] }
+            ]}
+            {...panResponder.panHandlers}
+          >
+            <Text style={styles.sidebarTitle}>Menu</Text>
+
+            <TouchableOpacity onPress={() => { toggleSidebar(); navigation.navigate('StudentDashboard'); }} style={styles.sidebarLinkContainer}>
+              <Image source={require('../../assets/images/bhome.png')} style={styles.sidebarIcon} />
+              <Text style={styles.sidebarLink}>Dashboard</Text>
+              <Image source={require('../../assets/images/arrow.png')} style={styles.arrowIcon} />
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => { toggleSidebar(); navigation.navigate('StudentClearanceStatus'); }} style={styles.sidebarLinkContainer}>
+              <Image source={require('../../assets/images/bnotes.png')} style={styles.sidebarIcon} />
+              <Text style={styles.sidebarLink}>Clearance Status</Text>
+              <Image source={require('../../assets/images/arrow.png')} style={styles.arrowIcon} />
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => { toggleSidebar(); navigation.navigate('StudentProfile'); }} style={styles.sidebarLinkContainer}>
+              <Image source={require('../../assets/images/buser.png')} style={styles.sidebarIcon} />
+              <Text style={styles.sidebarLink}>My Profile</Text>
+              <Image source={require('../../assets/images/arrow.png')} style={styles.arrowIcon} />
+            </TouchableOpacity>
+
+            <View style={styles.logoutContainer}>
+              <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+                <Image source={require('../../assets/images/logout.png')} style={styles.logoutIcon} />
+                <Text style={styles.logoutText}>Logout</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        )}
       </SafeAreaView>
     </LinearGradient>
   );
@@ -289,10 +411,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
   },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  menuIcon: {
+    width: 35,
+    height: 35,
   },
   infoContainer: {
     padding: 16,
@@ -303,6 +424,63 @@ const styles = StyleSheet.create({
   infoText: {
     color: 'white',
     fontSize: 14,
+  },
+  sidebar: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    width: '60%',
+    backgroundColor: 'white',
+    padding: 20,
+  },
+  sidebarTitle: {
+    fontSize: 26,
+    color: '#1457cc',
+    marginBottom: 20,
+    fontWeight: 'bold',
+  },
+  sidebarLinkContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  sidebarIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 5,
+  },
+  sidebarLink: {
+    fontSize: 16,
+    color: '#266ca9',
+    paddingVertical: 10,
+  },
+  arrowIcon: {
+    marginLeft: 'auto',
+    width: 16,
+    height: 16,
+    tintColor: '#c0c0c0',
+  },
+  logoutContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingBottom: 20,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoutIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+    tintColor: '#E53935',
+  },
+  logoutText: {
+    fontSize: 18,
+    color: '#E53935',
   },
   filterContainer: {
     flexDirection: 'row',
@@ -362,6 +540,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     paddingHorizontal: 8,
   },
+  actionCell: {
+    flex: 1,
+    textAlign: 'center',
+  },
   tableContent: {
     flexGrow: 1,
     maxHeight: 400,
@@ -385,6 +567,58 @@ const styles = StyleSheet.create({
   cell: {
     fontSize: 14,
     paddingVertical: 12,
+  },
+  logsButton: {
+    marginTop: 5,
+    backgroundColor: '#0042be',
+    paddingVertical: 2,  // Adjust vertical padding
+    paddingHorizontal: 2,  // Adjust horizontal padding
+    borderRadius: 6,  // Adjust button corner radius
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,  // Set a fixed width if desired
+    height: 30,
+  },
+  logsButtonText: {
+    color: 'white',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  logsContainer: {
+    maxHeight: 300,
+    width: '100%',
+  },
+  logEntry: {
+    marginBottom: 10,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  closeButton: {
+    marginTop: 10,
+    backgroundColor: '#0042be',
+    padding: 10,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
   navbar: {
     position: 'absolute',

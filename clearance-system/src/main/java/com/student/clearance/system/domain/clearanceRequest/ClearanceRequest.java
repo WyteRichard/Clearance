@@ -29,6 +29,4 @@ public class ClearanceRequest implements Serializable {
     @Column(nullable = false)
     private String semester;
 
-    @Column(nullable = false)
-    private Boolean graduating;
 }

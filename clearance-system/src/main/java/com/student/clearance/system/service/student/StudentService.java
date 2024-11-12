@@ -13,4 +13,6 @@ public interface StudentService {
     Student addStudent(Student student);
     void deleteStudentByStudentNumber(String studentNumber);
     int getStudentCount();
+    Student updateStudentSummerStatus(String studentNumber, boolean summer);
+
 }

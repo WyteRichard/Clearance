@@ -10,6 +10,8 @@ import userIcon from "../assets/buser.png";
 import deleteIcon from "../assets/delete.svg";
 import announcementIcon from '../assets/announcement.png';
 import avatar from '../assets/avatar2.png';
+import truetoggle from '../assets/cleared.png'; 
+import falsetoggle from '../assets/pending.png';
 
 const ConfirmationModal = ({ isOpen, message, onConfirm, onCancel }) => {
     if (!isOpen) return null;
@@ -42,11 +44,13 @@ const AdminStudentAccounts = () => {
     const [currentAcademicYear, setCurrentAcademicYear] = useState("Loading...");
     const [logins, setLogins] = useState([]);
     const navigate = useNavigate();
-
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedStudentNumber, setSelectedStudentNumber] = useState(null);
     const [clearanceStatuses, setClearanceStatuses] = useState({});
     const [openClearanceRow, setOpenClearanceRow] = useState(null);
+    const [updatedStudents, setUpdatedStudents] = useState([]);
+    const [searchSummerStatus, setSearchSummerStatus] = useState("");
+
 
     useEffect(() => {
         const role = localStorage.getItem('role');
@@ -69,10 +73,10 @@ const AdminStudentAccounts = () => {
 
     useEffect(() => {
         if (students.length > 0 && logins.length > 0) {
-            const updatedStudents = checkRegistrationStatus(students, logins);
-            setStudents(updatedStudents);
+            const newStudents = checkRegistrationStatus(students, logins);
+            setUpdatedStudents(newStudents);
         }
-    }, [students, logins]);
+    }, [students, logins]);   
 
     const fetchStudentData = async () => {
         try {
@@ -147,6 +151,47 @@ const AdminStudentAccounts = () => {
         });
     };
 
+    const handleSummerToggle = async (student) => {
+        const updatedSummerStatus = !student.summer;
+        setStudents(prevStudents =>
+            prevStudents.map(stud =>
+                stud.studentNumber === student.studentNumber
+                    ? { ...stud, summer: updatedSummerStatus }
+                    : stud
+            )
+        );
+    
+        try {
+            await axios.put(
+                `http://localhost:8080/Student/student/${student.studentNumber}/summer`,
+                null,
+                {
+                    params: { summer: updatedSummerStatus },
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                }
+            );
+
+            console.log("Summer status updated successfully on the backend.");
+    
+        } catch (error) {
+            console.error("Error updating summer status on the backend:", error);
+    
+            setStudents(prevStudents =>
+                prevStudents.map(stud =>
+                    stud.studentNumber === student.studentNumber
+                        ? { ...stud, summer: student.summer }
+                        : stud
+                )
+            );
+
+            const serverMessage = error.response?.data?.message || "Failed to update summer status.";
+            showAlert(`Error: ${serverMessage}`, 'error');
+        }
+    };
+    
+    
+    
+
     const handleDeleteClick = (studentNumber) => {
         setSelectedStudentNumber(studentNumber);
         setIsModalOpen(true);
@@ -177,6 +222,13 @@ const AdminStudentAccounts = () => {
             });
         })
         .then(() => {
+            return axios.delete(`http://localhost:8080/user/delete/${selectedStudentNumber}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+        })
+        .then(() => {
             setStudents(students.filter(student => student.studentNumber !== selectedStudentNumber));
             showAlert("Student and all related records deleted successfully!", 'success');
         })
@@ -197,6 +249,7 @@ const AdminStudentAccounts = () => {
             setSelectedStudentNumber(null);
         });
     };
+    
 
     const fetchClearanceStatuses = async (studentId) => {
         try {
@@ -232,13 +285,15 @@ const AdminStudentAccounts = () => {
         navigate('/login');
     };
 
-    const filteredStudents = checkRegistrationStatus(students, logins).filter(student => {
+    const filteredStudents = updatedStudents.filter(student => {
         const nameMatch = `${student.firstName} ${student.middleName} ${student.lastName}`.toLowerCase().includes(searchName.toLowerCase());
         const yearMatch = searchYearLevel === "" || student.yearLevel?.yearLevel === searchYearLevel;
         const courseMatch = searchCourse === "" || student.course?.courseName === searchCourse;
         const registrationMatch = searchRegistrationStatus === "" || student.registrationStatus === searchRegistrationStatus;
-        return nameMatch && yearMatch && courseMatch && registrationMatch;
+        const summerMatch = searchSummerStatus === "" || String(student.summer) === searchSummerStatus;
+        return nameMatch && yearMatch && courseMatch && registrationMatch && summerMatch;
     });
+    
     
 
     const toggleModal = () => setShowModal(!showModal);
@@ -344,6 +399,18 @@ const AdminStudentAccounts = () => {
                     <div className={styles.inputBox}>
                         <select
                             className={styles.searchInput}
+                            value={searchSummerStatus}
+                            onChange={(e) => setSearchSummerStatus(e.target.value)}
+                        >
+                            <option value="">All Summer Status</option>
+                            <option value="true">Enrolled in Summer</option>
+                            <option value="false">Not Enrolled in Summer</option>
+                        </select>
+                    </div>
+
+                    <div className={styles.inputBox}>
+                        <select
+                            className={styles.searchInput}
                             value={searchRegistrationStatus}
                             onChange={(e) => setSearchRegistrationStatus(e.target.value)}
                         >
@@ -365,8 +432,8 @@ const AdminStudentAccounts = () => {
                                 <th>Address</th>
                                 <th>Contact Number</th>
                                 <th>Email</th>
-                                <th>Birthday</th>
                                 <th>Registration Status</th>
+                                <th>Summer</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -382,8 +449,15 @@ const AdminStudentAccounts = () => {
                                             <td>{student.address || "N/A"}</td>
                                             <td>{student.contactNumber || "N/A"}</td>
                                             <td>{student.email || "N/A"}</td>
-                                            <td>{student.birthdate ? new Date(student.birthdate).toLocaleDateString() : "N/A"}</td>
                                             <td>{student.registrationStatus}</td>
+                                            <td>
+                                                <img
+                                                    src={student.summer ? truetoggle : falsetoggle}
+                                                    alt="Toggle Summer"
+                                                    className={`${styles.toggleIconLarge} ${styles.actionIcon}`}
+                                                    onClick={() => handleSummerToggle(student)}
+                                                />
+                                            </td>
                                             <td>
                                                 <img
                                                     src={deleteIcon}

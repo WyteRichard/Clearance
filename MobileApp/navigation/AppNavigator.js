@@ -33,6 +33,7 @@ function StudentNavigator() {
         <StudentStack.Screen name="StudentClearanceStatus" component={StudentClearanceStatus} />
         <StudentStack.Screen name="StudentProfile" component={StudentProfile} />
         <StudentStack.Screen name="StudentDashboard" component={StudentDashboard} />
+        <StudentStack.Screen name="ChangePassword" component={ChangePassword} />
       </StudentStack.Navigator>
     );
   }

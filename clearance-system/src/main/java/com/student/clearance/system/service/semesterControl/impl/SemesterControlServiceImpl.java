@@ -27,6 +27,14 @@ public class SemesterControlServiceImpl implements SemesterControlService {
 
     @Override
     public SemesterControl switchSemester(SemesterControl.SemesterType semesterType, String academicYear) {
+        // Validate that the semesterType is valid
+        if (semesterType != SemesterControl.SemesterType.FIRST_SEMESTER &&
+                semesterType != SemesterControl.SemesterType.SECOND_SEMESTER &&
+                semesterType != SemesterControl.SemesterType.SUMMER) {
+
+            throw new IllegalArgumentException("Invalid semester type");
+        }
+
         // Find the existing record or create a new one if it doesn't exist
         SemesterControl semesterControl = semesterControlRepository.findAll().stream()
                 .findFirst()

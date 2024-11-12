@@ -92,4 +92,17 @@ public class StudentServiceImpl implements StudentService {
         // Save the updated student back to the database
         return studentRepository.save(existingStudent);
     }
+
+    @Override
+    @Transactional
+    public Student updateStudentSummerStatus(String studentNumber, boolean summer) {
+        Student student = studentRepository.findByStudentNumber(studentNumber);
+        if (student == null) {
+            throw new RuntimeException("Student not found with student number: " + studentNumber);
+        }
+
+        student.setSummer(summer);
+        return studentRepository.save(student);
+    }
+
 }
